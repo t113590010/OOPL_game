@@ -1,0 +1,44 @@
+#ifndef GAME_SCENE_HPP
+#define GAME_SCENE_HPP
+
+#include <vector>
+#include <memory>
+#include "Entity/Cats/Cat.hpp"
+#include "Entity/Enemies/Enemy.hpp"
+#include "Entity/Base.hpp"
+#include "GameConfig.hpp"
+#include "System/UIText.hpp"
+#include "Util/Text.hpp"
+#include "System/WorldText.hpp"
+#include "System/Background.hpp"
+class GameScene {
+public:
+    GameScene();
+
+    void Update(float dt);          // 每幀更新
+    void SpawnCat();                // 按鍵生成貓
+    void SpawnEnemy();              // 自動生成敵人
+    void Draw();
+
+private:
+    void CheckCollisions();         // 碰撞檢測
+    void RemoveDeadEntities();      // 刪除死亡單位
+
+    std::vector<std::shared_ptr<Entity>> m_Entities;
+    std::shared_ptr<Base> m_PlayerBase;
+    std::shared_ptr<Base> m_EnemyBase;
+    std::shared_ptr<UIText> m_MoneyText;
+
+    float m_EnemySpawnTimer = 0.0f;
+    // 攝影機目前的 X 座標 (預設停在最左邊的貓咪基地)
+    float m_CameraX = -600.0f;
+
+    // 攝影機移動的速度
+    float m_CameraSpeed = 500.0f;
+    float m_CurrentMoney = GameConfig::INITIAL_MONEY;
+    std::shared_ptr<WorldText> m_BaseNameText;
+    std::shared_ptr<WorldText> m_EnemyBaseText;
+    std::shared_ptr<Background> m_Background;
+};
+
+#endif

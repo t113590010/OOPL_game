@@ -9,15 +9,15 @@ include(FetchContent)
 set(FETCHCONTENT_QUIET FALSE)
 
 FetchContent_Declare(
-    ptsd
+        ptsd
 
-    URL         https://github.com/ntut-open-source-club/practical-tools-for-simple-design/archive/refs/tags/v0.2.zip
+        URL         https://github.com/ntut-open-source-club/practical-tools-for-simple-design/archive/refs/tags/v0.2.zip
 
-    # Or alternatively if you want to use a specific git commit instead of a release:
-    # GIT_REPOSITORY  https://github.com/ntut-open-source-club/practical-tools-for-simple-design.git
-    # GIT_TAG         <git_tag>
+        # Or alternatively if you want to use a specific git commit instead of a release:
+        # GIT_REPOSITORY  https://github.com/ntut-open-source-club/practical-tools-for-simple-design.git
+        # GIT_TAG         <git_tag>
 
-    SOURCE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/PTSD
+        SOURCE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/PTSD
 )
 
 FetchContent_MakeAvailable(ptsd)
@@ -32,9 +32,9 @@ list(TRANSFORM INCLUDE_FILES PREPEND ${INCLUDE_DIR}/)
 # file(GLOB_RECURSE HEADER_FILES include/*)
 
 add_executable(${PROJECT_NAME}
-    ${SRC_DIR}/main.cpp
-    ${SRC_FILES}
-    ${HEADER_FILES}
+        ${SRC_DIR}/main.cpp
+        ${SRC_FILES}
+        ${INCLUDE_FILES}  # 修正：配合 files.cmake 的變數名稱
 )
 
 if(MSVC)
@@ -52,9 +52,22 @@ endif()
 
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${DEPENDENCY_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/PTSD/include)
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+# 將 include 根目錄納入，這樣你可以用 #include "Entity/Cats/Cat.hpp"
+target_include_directories(${PROJECT_NAME} PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+# 如果你希望直接用 #include "Cat.hpp" (不推薦，但如果你習慣這樣)：
+target_include_directories(${PROJECT_NAME} PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/Entity
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/Entity/Cats    # 💡 補上新目錄
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/Entity/Enemies # 💡 補上新目錄
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/Scene
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/System
+)
 
 target_link_libraries(${PROJECT_NAME}
-    SDL2::SDL2main
-    PTSD
+        SDL2::SDL2main
+        PTSD
 )

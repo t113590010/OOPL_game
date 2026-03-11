@@ -13,7 +13,9 @@ int main(int, char**) {
                 break;
 
             case App::State::UPDATE:
+
                 app.Update();
+
                 break;
 
             case App::State::END:
