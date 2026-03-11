@@ -1,7 +1,7 @@
 #include "Entity/Base.hpp"
 
 Base::Base(const Vector2& pos, int hp)
-    : Entity(pos, hp, 0.0f, 0, 0.0f, 0.0f, 0) {
+    : Entity(pos, hp, 0.0f, 0, 0.0f, 0.0f, 0, 0.0f) {
     m_IsMoving = false;
     m_Size = {200.0f, 200.0f};
 }

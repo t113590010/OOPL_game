@@ -22,15 +22,16 @@ struct Vector2 {
 class Entity {
 public:
     // 在 Entity.hpp 裡面
-    Entity(const Vector2& pos, int hp, float speed, int damage, float range, float attackCd, int cost)
-        : m_Position(pos),
-          m_HP(hp),       // 先寫 m_HP
-          m_MaxHP(hp),    // 再寫 m_MaxHP
-          m_Speed(speed),
-          m_AttackDamage(damage),
-          m_AttackRange(range),
-          m_AttackCooldown(attackCd),
-          m_UnitCost(cost) {}
+    Entity(const Vector2& pos, int hp, float speed, int damage, float range, float attackCd, int cost, float spawnCd)
+        : m_Position(pos), m_HP(hp), m_MaxHP(hp), m_Speed(speed), m_AttackDamage(damage),
+          m_AttackRange(range), m_AttackCooldown(attackCd), m_UnitCost(cost), m_SpawnCooldown(spawnCd) {}
+
+    // 💡 方案 B：新增的建構子 (給 Cat 和 LongLegCat 使用)
+    Entity(const Vector2& pos, int hp, float speed, int damage, float range, float attackCd, int cost, float spawnCd, const std::string& imgPath)
+        : Entity(pos, hp, speed, damage, range, attackCd, cost, spawnCd) { // 呼叫上面的建構子
+        m_ImagePath = imgPath;
+        m_Image = std::make_shared<Util::Image>(m_ImagePath);
+    }
 
     virtual ~Entity() = default;
 
@@ -64,7 +65,8 @@ public:
     float GetAttackRange() const { return m_AttackRange; }
     int GetUnitCost() const { return m_UnitCost; }
     void SetMoving(bool moving) { m_IsMoving = moving; }
-
+    float GetSpawnCooldown() const { return m_SpawnCooldown; }
+    std::string GetImgPath()const { return  m_ImagePath  ;}
     // 繪製邏輯 (考量相機偏移)
     virtual void Draw(float cameraX = 0.0f) {
         if (m_Image) {
@@ -94,9 +96,10 @@ protected:
     float m_AttackRange;
     float m_AttackCooldown;
     int m_UnitCost;
-
+    float m_SpawnCooldown;
     Vector2 m_Size = {100.0f, 100.0f};
     std::shared_ptr<Util::Image> m_Image;
+    std::string m_ImagePath;
     Util::GameObject m_Renderer;
 };
 

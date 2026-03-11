@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <memory>
-#include "Entity/Cats/Cat.hpp"
+#include "Entity/Cats/LongLegCat.hpp"
 #include "Entity/Enemies/Enemy.hpp"
 #include "Entity/Base.hpp"
 #include "GameConfig.hpp"
@@ -11,17 +11,20 @@
 #include "Util/Text.hpp"
 #include "System/WorldText.hpp"
 #include "System/Background.hpp"
+#include "Entity/UnitID.hpp"
+#include "System/SpawnSystem.hpp"
+#include "System/CollisionSystem.hpp"
+#include "System/UISystem.hpp"
 class GameScene {
 public:
-    GameScene();
+    GameScene(const std::vector<UnitID>& playerDeck);
 
     void Update(float dt);          // 每幀更新
-    void SpawnCat();                // 按鍵生成貓
-    void SpawnEnemy();              // 自動生成敵人
+
     void Draw();
 
 private:
-    void CheckCollisions();         // 碰撞檢測
+
     void RemoveDeadEntities();      // 刪除死亡單位
 
     std::vector<std::shared_ptr<Entity>> m_Entities;
@@ -29,7 +32,7 @@ private:
     std::shared_ptr<Base> m_EnemyBase;
     std::shared_ptr<UIText> m_MoneyText;
 
-    float m_EnemySpawnTimer = 0.0f;
+
     // 攝影機目前的 X 座標 (預設停在最左邊的貓咪基地)
     float m_CameraX = -600.0f;
 
@@ -39,6 +42,10 @@ private:
     std::shared_ptr<WorldText> m_BaseNameText;
     std::shared_ptr<WorldText> m_EnemyBaseText;
     std::shared_ptr<Background> m_Background;
+    SpawnSystem m_SpawnSystem;
+    CollisionSystem m_CollisionSystem;
+    std::vector<UnitID> m_EquippedDeck;
+    UISystem m_UISystem;
 };
 
 #endif

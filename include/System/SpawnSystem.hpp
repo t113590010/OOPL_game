@@ -5,26 +5,24 @@
 #include <memory>
 #include "Entity/Entity.hpp"
 #include "Entity/Base.hpp"
+#include "Entity/UnitID.hpp"
 
 class SpawnSystem {
 public:
-    // 💡 系統的 Update，需要把 GameScene 的資料「借」給它用 (使用 & 傳參考)
+    // 💡 參數新增了 const std::vector<UnitID>& playerDeck
     void Update(float dt,
                 std::vector<std::shared_ptr<Entity>>& entities,
                 float& currentMoney,
                 const std::shared_ptr<Base>& playerBase,
-                const std::shared_ptr<Base>& enemyBase);
+                const std::shared_ptr<Base>& enemyBase,
+                const std::vector<UnitID>& playerDeck); // 👈 這裡！
+
+    const float* GetCooldownTimers() const { return m_CooldownTimers; }
 
 private:
-    void SpawnCat(std::vector<std::shared_ptr<Entity>>& entities, float& currentMoney, const std::shared_ptr<Base>& playerBase);
-    void SpawnEnemy(std::vector<std::shared_ptr<Entity>>& entities, const std::shared_ptr<Base>& enemyBase);
-
-    // 💡 我們一直想加的計時器，現在乾淨地收攏在這裡了！
     float m_EnemySpawnTimer = 0.0f;
-    const float ENEMY_SPAWN_INTERVAL = 2.0f; // 敵人每 2 秒生一隻
-
-    float m_CatCooldownTimer = 0.0f;
-    const float CAT_COOLDOWN_TIME = 2.0f;    // 產貓冷卻 2 秒
+    float m_CooldownTimers[5] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    // ❌ 刪除原本寫死在這裡的 m_PlayerDeck
 };
 
 #endif

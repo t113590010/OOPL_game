@@ -3,6 +3,7 @@
 
 #include "pch.hpp" // IWYU pragma: export
 #include "Scene/GameScene.hpp"
+#include <memory>
 
 class App {
 public:
@@ -25,7 +26,7 @@ private:
 
 private:
     State m_CurrentState = State::START;
-    GameScene m_GameScene;
+    std::shared_ptr<GameScene> m_GameScene;
 };
 
 #endif

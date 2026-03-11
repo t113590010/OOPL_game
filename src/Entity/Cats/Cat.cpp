@@ -1,8 +1,8 @@
 #include "Entity/Cats/Cat.hpp"
 
 Cat::Cat(const Vector2& pos)
-    : Entity(pos, 100, 100.0f, 10, 80.0f, 1.0f, 50) {
-    m_Image = std::make_shared<Util::Image>(RESOURCE_DIR"/img/cat.png");
+    : Entity(pos, 100, 100.0f, 10, 80.0f, 1.0f, 50,2.0, RESOURCE_DIR"/img/cat.png") {
+
     m_IsPlayerTeam = true;
 }
 
