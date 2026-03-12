@@ -1,5 +1,5 @@
-#ifndef COLLISION_SYSTEM_HPP
-#define COLLISION_SYSTEM_HPP
+#ifndef COLLISIONSYSTEM_HPP
+#define COLLISIONSYSTEM_HPP
 
 #include <vector>
 #include <memory>
@@ -7,7 +7,7 @@
 
 class CollisionSystem {
 public:
-    // 只需要傳入實體清單
+    // 碰撞系統不需要知道時間 dt，只需要知道實體陣列
     void Update(std::vector<std::shared_ptr<Entity>>& entities);
 };
 

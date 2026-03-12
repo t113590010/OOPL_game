@@ -1,69 +1,107 @@
 #include "System/UISystem.hpp"
 #include "Entity/UnitFactory.hpp"
+#include "Entity/UnitData.hpp"
 #include "Util/Text.hpp"
 #include "Util/Color.hpp"
+#include "Util/Image.hpp"
 #include <string>
 
 UISystem::UISystem() {
-    // 💡 保持路徑註解，避免破圖，等到你有素材再解開
-    m_PanelBg = nullptr;
-    m_SlotBg = nullptr;
-    m_CooldownMask = nullptr;
+    m_SlotBg = std::make_shared<Util::Image>(RESOURCE_DIR"/img/slot_bg.png");
+    m_SlotFrame = std::make_shared<Util::Image>(RESOURCE_DIR"/img/slot_frame.png");
+    m_Rank1Bg = std::make_shared<Util::Image>(RESOURCE_DIR"/img/rank1.png");
+    m_Rank2Bg = std::make_shared<Util::Image>(RESOURCE_DIR"/img/rank2.png");
+    m_Rank3Bg = std::make_shared<Util::Image>(RESOURCE_DIR"/img/rank3.png");
+
+    // 💡 ZIndex 層級設定
+    m_BgRenderer.SetZIndex(10);    // 最底層
+    m_MaskRenderer.SetZIndex(15);  // 灰色遮罩層
+    m_RankRenderer.SetZIndex(20);  // 階級框
+    m_IconRenderer.SetZIndex(30);  // 貓咪頭像
+    m_FrameRenderer.SetZIndex(40); // 黑邊框
+    m_TextRenderer.SetZIndex(50);  // 文字
 }
+
+int UISystem::GetClickedSlot(const glm::vec2& mousePos) const {
+    float halfSize = SLOT_SIZE / 2.0f;
+    if (mousePos.y < UI_Y - halfSize || mousePos.y > UI_Y + halfSize) return -1;
+
+    for (int i = 0; i < 5; ++i) {
+        float centerX = SLOT_X_START + (static_cast<float>(i) * SLOT_SPACING);
+        if (mousePos.x >= centerX - halfSize && mousePos.x <= centerX + halfSize) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 void UISystem::Draw(const std::vector<UnitID>& deck, const float* cooldowns, float money) {
-    // --- 座標基準 ---
-    const float UI_Y = -310.0f;
-    const float SLOT_X_START = -250.0f;
-    const float SLOT_SPACING = 120.0f;
-    const float ICON_SIZE = 80.0f;
+    const float ICON_SIZE = 70.0f;
+    const float TEXT_Y_OFFSET = -25.0f;
+    const float TEXT_X_OFFSET = 5.0f;
 
-    // 💡 這裡！我把 X 和 Y 的偏移量全部拉出來讓你調
-    // 如果文字沒置中，你就調這個 X_OFFSET (例如 -10.0f 或 10.0f)
-    const float TEXT_X_OFFSET = 12.0f;
-    const float TEXT_Y_OFFSET = 50.0f;
-
-    for (size_t i = 0; i < deck.size() && i < 5; ++i) {
+    for (int i = 0; i < 5; ++i) {
         float x = SLOT_X_START + (static_cast<float>(i) * SLOT_SPACING);
-        UnitID id = deck[i];
-        if (id == UnitID::NONE) continue;
 
-        int cost = UnitFactory::GetUnitCost(id);
+        // 1. 永遠繪製底座 (Z: 10)
+        m_BgRenderer.SetDrawable(m_SlotBg);
+        m_BgRenderer.m_Transform.translation = glm::vec2(x, UI_Y);
+        m_BgRenderer.m_Transform.scale = glm::vec2(SLOT_SIZE / m_SlotBg->GetSize().x, SLOT_SIZE / m_SlotBg->GetSize().y);
+        m_BgRenderer.Draw();
 
-        // 1. 畫頭像 (不變)
-        auto icon = std::make_shared<Util::Image>(UnitFactory::GetUnitIconPath(id));
-        if (icon && icon->GetSize().x > 0) {
-            m_Renderer.SetDrawable(icon);
-            m_Renderer.m_Transform.translation = {x, UI_Y};
-            float finalScale = (money < static_cast<float>(cost)) ? ICON_SIZE * 0.75f : ICON_SIZE;
-            m_Renderer.m_Transform.scale = { finalScale / icon->GetSize().x, finalScale / icon->GetSize().y };
-            m_Renderer.Draw();
+        if (i < (int)deck.size() && deck[i] != UnitID::NONE) {
+            UnitID id = deck[i];
+            const auto& stats = UnitData::Get(id);
+            bool canAfford = (money >= static_cast<float>(stats.cost));
+            bool isReady = (cooldowns[i] <= 0.0f);
+
+            // 2. 只有在「可用」時才畫彩色階級框 (Z: 20)
+            if (canAfford && isReady) {
+                std::shared_ptr<Util::Image> rankImg = (stats.rank == 3) ? m_Rank3Bg : (stats.rank == 2 ? m_Rank2Bg : m_Rank1Bg);
+                m_RankRenderer.SetDrawable(rankImg);
+                m_RankRenderer.m_Transform.translation = glm::vec2(x, UI_Y);
+                m_RankRenderer.m_Transform.scale = glm::vec2(SLOT_SIZE / rankImg->GetSize().x, SLOT_SIZE / rankImg->GetSize().y);
+                m_RankRenderer.Draw();
+            }
+
+            // 3. 繪製貓咪頭像 (Z: 30)
+            if (m_IconCache.find(id) == m_IconCache.end()) {
+                m_IconCache[id] = std::make_shared<Util::Image>(UnitFactory::GetUnitIconPath(id));
+            }
+            auto icon = m_IconCache[id];
+            if (icon && icon->GetSize().x > 0) {
+                m_IconRenderer.SetDrawable(icon);
+                m_IconRenderer.m_Transform.translation = glm::vec2(x, UI_Y);
+                float finalScale = (canAfford && isReady) ? ICON_SIZE : ICON_SIZE * 0.7f;
+                m_IconRenderer.m_Transform.scale = glm::vec2(finalScale / icon->GetSize().x, finalScale / icon->GetSize().y);
+                m_IconRenderer.Draw();
+            }
+
+            // 4. 文字處理 (Z: 50)
+            if (!isReady) {
+                // 💡 冷卻中：只顯示秒數，不顯示價格
+                auto cdText = std::make_shared<::Util::Text>(
+                    RESOURCE_DIR"/Font/arial.ttf", 30, std::to_string((int)cooldowns[i] + 1), Util::Color(255, 255, 255, 255)
+                );
+                m_TextRenderer.SetDrawable(cdText);
+                m_TextRenderer.m_Transform.translation = glm::vec2(x, UI_Y);
+                m_TextRenderer.Draw();
+            } else {
+                // 💡 冷卻結束（Ready）：才顯示價格文字
+                auto costColor = canAfford ? Util::Color(0, 0, 0, 255) : Util::Color(255, 0, 0, 255);
+                auto costText = std::make_shared<::Util::Text>(
+                    RESOURCE_DIR"/Font/arial.ttf", 18, std::to_string(stats.cost), costColor
+                );
+                m_TextRenderer.SetDrawable(costText);
+                m_TextRenderer.m_Transform.translation = glm::vec2(x + TEXT_X_OFFSET, UI_Y + TEXT_Y_OFFSET);
+                m_TextRenderer.Draw();
+            }
         }
 
-        // 2. 💡 價格文字：同時套用 X 和 Y 的偏移
-        // 確保路徑與你電腦一致 /Font/arial.ttf
-        auto costText = std::make_shared<Util::Text>(
-            RESOURCE_DIR"/Font/arial.ttf",
-            20,
-            std::to_string(cost),
-            Util::Color(255, 255, 0, 255) // 黃色
-        );
-
-        if (costText) {
-            m_Renderer.SetDrawable(costText);
-            // 💡 這裡！x + TEXT_X_OFFSET 確保你左右能微調，UI_Y + TEXT_Y_OFFSET 確保上下對齊
-            m_Renderer.m_Transform.translation = { x + TEXT_X_OFFSET, UI_Y + TEXT_Y_OFFSET };
-            m_Renderer.m_Transform.scale = { 1.0f, 1.0f };
-            m_Renderer.Draw();
-        }
-
-        // 3. 冷卻遮罩 (維持原樣)
-        if (cooldowns[i] > 0 && m_CooldownMask && m_CooldownMask->GetSize().x > 0) {
-            float ratio = cooldowns[i] / UnitFactory::GetUnitSpawnCooldown(id);
-            m_Renderer.SetDrawable(m_CooldownMask);
-            m_Renderer.m_Transform.scale = { ICON_SIZE / m_CooldownMask->GetSize().x, (ICON_SIZE * ratio) / m_CooldownMask->GetSize().y };
-            float yOffset = (ICON_SIZE * (1.0f - ratio)) / 2.0f;
-            m_Renderer.m_Transform.translation = { x, UI_Y - yOffset };
-            m_Renderer.Draw();
-        }
+        // 5. 最外層黑邊框 (Z: 40)
+        m_FrameRenderer.SetDrawable(m_SlotFrame);
+        m_FrameRenderer.m_Transform.translation = glm::vec2(x, UI_Y);
+        m_FrameRenderer.m_Transform.scale = glm::vec2(SLOT_SIZE / m_SlotFrame->GetSize().x, SLOT_SIZE / m_SlotFrame->GetSize().y);
+        m_FrameRenderer.Draw();
     }
 }

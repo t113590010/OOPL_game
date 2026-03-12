@@ -7,7 +7,8 @@
 #include "Util/Image.hpp"
 #include "Util/GameObject.hpp"
 #include "GameConfig.hpp"
-
+#include "Entity/UnitData.hpp"
+#include <iostream>
 // 簡單的向量運算
 struct Vector2 {
     float x = 0;
@@ -31,6 +32,16 @@ public:
         : Entity(pos, hp, speed, damage, range, attackCd, cost, spawnCd) { // 呼叫上面的建構子
         m_ImagePath = imgPath;
         m_Image = std::make_shared<Util::Image>(m_ImagePath);
+
+    }
+
+    Entity(const Vector2& pos, int hp, float speed, int damage, float range, float attackCd, int cost, float spawnCd, int rank, const std::string& imgPath)
+        : Entity(pos, hp, speed, damage, range, attackCd, cost, spawnCd) {
+        m_Rank = rank;
+        m_ImagePath = imgPath;
+        m_Image = std::make_shared<Util::Image>(m_ImagePath);
+
+
     }
 
     virtual ~Entity() = default;
@@ -48,10 +59,37 @@ public:
     }
 
     // 碰撞與攻擊判定
-    bool CheckCollision(const std::shared_ptr<Entity>& other, float range) const {
-        return m_Position.DistanceTo(other->m_Position) < range;
-    }
+    bool CheckCollision(const std::shared_ptr<Entity>& other) const {
+        if (!other) return false;
 
+        float myHalfW = m_Size.x / 2.0f;
+        float myHalfH = m_Size.y / 2.0f;
+        float oHalfW  = other->GetSize().x / 2.0f;
+        float oHalfH  = other->GetSize().y / 2.0f;
+
+        float myTop    = m_Position.y + myHalfH;
+        float myBottom = m_Position.y - myHalfH;
+        float oTop     = other->GetPosition().y + oHalfH;
+        float oBottom  = other->GetPosition().y - oHalfH;
+        bool yOverlap  = (myBottom < oTop) && (myTop > oBottom);
+
+        // 3. X 軸判定 (把射程方向修正回來！)
+        float myLeft, myRight;
+        if (m_IsPlayerTeam) {
+            // 💡 貓咪是往左走的，所以射程要減在左邊！
+            myLeft  = m_Position.x - myHalfW - m_AttackRange;
+            myRight = m_Position.x + myHalfW;
+        } else {
+            // 💡 敵人是往右走的，所以射程要加在右邊！
+            myLeft  = m_Position.x - myHalfW;
+            myRight = m_Position.x + myHalfW + m_AttackRange;
+        }
+
+        float oLeft  = other->GetPosition().x - oHalfW;
+        float oRight = other->GetPosition().x + oHalfW;
+        bool xOverlap = (myLeft < oRight) && (myRight > oLeft);
+        return xOverlap && yOverlap;
+    }
     bool CanAttack() const { return m_AttackTimer <= 0.0f; }
     void ResetAttackTimer() { m_AttackTimer = m_AttackCooldown; }
     void UpdateCooldown(float dt) {
@@ -67,6 +105,15 @@ public:
     void SetMoving(bool moving) { m_IsMoving = moving; }
     float GetSpawnCooldown() const { return m_SpawnCooldown; }
     std::string GetImgPath()const { return  m_ImagePath  ;}
+    int GetRank() const { return m_Rank; }
+    void SetRank(int rank) { m_Rank = rank; }
+    Vector2 GetSize() const { return m_Size; }
+    void SetSize(const Vector2& size) { m_Size = size; }
+    void SetSize(float w, float h) {
+        m_Size.x = w;
+        m_Size.y = h;
+    }
+
     // 繪製邏輯 (考量相機偏移)
     virtual void Draw(float cameraX = 0.0f) {
         if (m_Image) {
@@ -97,10 +144,11 @@ protected:
     float m_AttackCooldown;
     int m_UnitCost;
     float m_SpawnCooldown;
-    Vector2 m_Size = {100.0f, 100.0f};
+    Vector2 m_Size = {GameConfig::CAT_SIZE_X, GameConfig::CAT_SIZE_Y};
     std::shared_ptr<Util::Image> m_Image;
     std::string m_ImagePath;
     Util::GameObject m_Renderer;
+    int m_Rank ;
 };
 
 #endif

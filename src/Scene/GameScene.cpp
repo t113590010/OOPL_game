@@ -5,21 +5,24 @@
 #include <iostream>
 #include <algorithm>
 GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(playerDeck){
-    m_CameraX = GameConfig::CAMERA_MIN_X;
+    m_CameraX = GameConfig::CAMERA_MAX_X;
+    m_CameraX = GameConfig::CAMERA_MAX_X;
     // 玩家基地放在左下角 (X 為負數，Y 為負數)
     m_PlayerBase = std::make_shared<Base>(Vector2{GameConfig::PLAYER_BASE_X, GameConfig::BASE_Y}, GameConfig::BASE_HP);
     m_PlayerBase->SetImage(RESOURCE_DIR "/img/catBase.png");
+    m_PlayerBase->SetSize(GameConfig::BASE_SIZE_X,GameConfig::BASE_SIZE_Y);
 
     // 敵人基地放在右下角 (X 為正數，Y 為負數)
     m_EnemyBase = std::make_shared<Base>(Vector2{GameConfig::ENEMY_BASE_X, GameConfig::BASE_Y}, GameConfig::BASE_HP);
     m_EnemyBase->SetImage(RESOURCE_DIR "/img/enemyBase.png");
     m_EnemyBase->SetTeam(false);
+    m_EnemyBase->SetSize(GameConfig::BASE_SIZE_X,GameConfig::BASE_SIZE_Y);
 
     m_Entities.push_back(m_PlayerBase);
     m_Entities.push_back(m_EnemyBase);
     m_Background = std::make_shared<Background>(RESOURCE_DIR "/img/bg.png");
     m_MoneyText = std::make_shared<UIText>(
-         0.8f, 0.8f,
+         GameConfig::MONEY_TEXT_X, GameConfig::MONEY_TEXT_Y,
          "MONEY: 0 / " + std::to_string(GameConfig::MAX_MONEY_LEVEL_1),
          30,
          Util::Color(255, 255, 0, 255)
@@ -58,7 +61,7 @@ void GameScene::Update(float dt) {
     // 4. 叫碰撞系統做事
     // 💡 以前那坨雙重迴圈變一行！
     m_CollisionSystem.Update(m_Entities);
-
+    m_BattleSystem.Update(dt, m_Entities);
     // 5. 移除死亡單位
     RemoveDeadEntities();
 

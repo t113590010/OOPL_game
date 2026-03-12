@@ -6,9 +6,13 @@ set(SRC_FILES
         "Scene/GameScene.cpp"
         "Entity/Cats/Cat.cpp"
         "Entity/Enemies/Enemy.cpp"
+        "Entity/Enemies/GAY.cpp"
+
         "Entity/Cats/LongLegCat.cpp"
         "Entity/Base.cpp"
         "Entity/UnitFactory.cpp"
+        "Entity/UnitData.cpp"
+
         "System/SpawnSystem.cpp"
         "System/BattleSystem.cpp"
         "System/CollisionSystem.cpp"
@@ -26,10 +30,13 @@ set(INCLUDE_FILES
         "Entity/Entity.hpp"
         "Entity/Cats/Cat.hpp"
         "Entity/Enemies/Enemy.hpp"
+        "Entity/Enemies/GAY.hpp"
+
         "Entity/Cats/LongLegCat.hpp"
         "Entity/Base.hpp"
         "Entity/UnitID.hpp"
         "Entity/UnitFactory.hpp"
+        "Entity/UnitData.hpp"
         "System/SpawnSystem.hpp"
         "System/BattleSystem.hpp"
         "System/Background.hpp"

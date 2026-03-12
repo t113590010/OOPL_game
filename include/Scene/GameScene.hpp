@@ -15,6 +15,8 @@
 #include "System/SpawnSystem.hpp"
 #include "System/CollisionSystem.hpp"
 #include "System/UISystem.hpp"
+#include "System/BattleSystem.hpp"
+
 class GameScene {
 public:
     GameScene(const std::vector<UnitID>& playerDeck);
@@ -46,6 +48,7 @@ private:
     CollisionSystem m_CollisionSystem;
     std::vector<UnitID> m_EquippedDeck;
     UISystem m_UISystem;
+    BattleSystem m_BattleSystem;
 };
 
 #endif

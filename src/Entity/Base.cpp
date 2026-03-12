@@ -3,7 +3,8 @@
 Base::Base(const Vector2& pos, int hp)
     : Entity(pos, hp, 0.0f, 0, 0.0f, 0.0f, 0, 0.0f) {
     m_IsMoving = false;
-    m_Size = {200.0f, 200.0f};
+    m_Size = {GameConfig::BASE_SIZE_X,GameConfig::BASE_SIZE_Y};
+    m_Renderer.SetZIndex(-1);
 }
 
 void Base::Update(float /*dt*/) {

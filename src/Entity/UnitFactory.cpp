@@ -1,46 +1,53 @@
 #include "Entity/UnitFactory.hpp"
-#include <map>
-
-// 💡 必須包含這些，編譯器才認識具體的貓和敵人
 #include "Entity/Cats/Cat.hpp"
 #include "Entity/Cats/LongLegCat.hpp"
-#include "Entity/Enemies/Enemy.hpp"
+#include "Entity/Enemies/Enemy.hpp" // 💡 記得補上
+#include "Entity/Enemies/GAY.hpp" // 💡 記得補上
 
-// 建立靜態快取，避免重複生成物件浪費效能
-static std::map<UnitID, std::shared_ptr<Entity>> s_SampleCache;
+#include "Entity/UnitData.hpp"     // 💡 核心：引入神級資料庫
 
-// 輔助函式：取得或建立樣本
-static std::shared_ptr<Entity> GetSample(UnitID id) {
-    if (id == UnitID::NONE) return nullptr;
-
-    // 如果沒生過，就生一隻存在展示櫃 (map) 裡
-    if (s_SampleCache.find(id) == s_SampleCache.end()) {
-        s_SampleCache[id] = UnitFactory::CreateUnit(id, {0,0});
-    }
-    return s_SampleCache[id];
-}
-
+// 💡 Getter 群現在變得超級乾淨，全部去 UnitData 拿
 int UnitFactory::GetUnitCost(UnitID id) {
-    auto sample = GetSample(id);
-    return sample ? sample->GetUnitCost() : 0;
+    return UnitData::Get(id).cost;
 }
 
 float UnitFactory::GetUnitSpawnCooldown(UnitID id) {
-    auto sample = GetSample(id);
-    return sample ? sample->GetSpawnCooldown() : 0.0f;
+    return UnitData::Get(id).spawnCd;
+}
+
+int UnitFactory::GetUnitRank(UnitID id) {
+    return UnitData::Get(id).rank;
 }
 
 std::string UnitFactory::GetUnitIconPath(UnitID id) {
-    auto sample = GetSample(id);
-    return sample ? sample->GetImgPath() : "";
+    // 優先回傳頭像路徑，如果沒有頭像就拿場上圖片路徑
+    auto& stats = UnitData::Get(id);
+    return stats.iconPath.empty() ? stats.imgPath : stats.iconPath;
 }
 
-// 實際戰鬥時生成的單位
-std::shared_ptr<Entity> UnitFactory::CreateUnit(UnitID id, const Vector2& pos) {
+// 實體產兵區
+std::shared_ptr<Entity> UnitFactory::CreateUnit(UnitID id, float x, float y, bool isPlayer) {
+    std::shared_ptr<Entity> newUnit = nullptr;
+
     switch (id) {
-        case UnitID::BASIC_CAT:    return std::make_shared<Cat>(pos);
-        case UnitID::LONG_LEG_CAT: return std::make_shared<LongLegCat>(pos);
-        case UnitID::BASIC_ENEMY:  return std::make_shared<Enemy>(pos);
-        default: return nullptr;
+        case UnitID::CAT:
+            newUnit = std::make_shared<Cat>(Vector2{x, y});
+            break;
+        case UnitID::LONG_LEG_CAT:
+            newUnit = std::make_shared<LongLegCat>(Vector2{x, y});
+            break;
+        case UnitID::BASIC_ENEMY:
+            newUnit = std::make_shared<Enemy>(Vector2{x, y});
+            break;
+        case UnitID::GAY:
+            newUnit = std::make_shared<GAY>(Vector2{x, y});
+            break;
+        default:
+            return nullptr;
     }
+
+    if (newUnit) {
+        newUnit->SetTeam(isPlayer);
+    }
+    return newUnit;
 }

@@ -11,7 +11,7 @@
         LOG_TRACE("Start");
         m_CurrentState = State::UPDATE;
         std::vector<UnitID> globalPlayerDeck = {
-            UnitID::BASIC_CAT,
+            UnitID::CAT,
             UnitID::LONG_LEG_CAT,
             UnitID::NONE,
             UnitID::NONE,
