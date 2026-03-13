@@ -24,7 +24,14 @@ public:
     void Update(float dt);          // 每幀更新
 
     void Draw();
+    bool IsGameOver() const {
+        return !m_PlayerBase->IsAlive() || !m_EnemyBase->IsAlive();
+    }
 
+    // (選用) 如果你之後要在 App 裡印出「勝利」或「失敗」的不同圖案，可以用這個來判斷
+    bool IsPlayerWin() const {
+        return !m_EnemyBase->IsAlive();
+    }
 private:
 
     void RemoveDeadEntities();      // 刪除死亡單位
@@ -49,6 +56,8 @@ private:
     std::vector<UnitID> m_EquippedDeck;
     UISystem m_UISystem;
     BattleSystem m_BattleSystem;
+    std::shared_ptr<UIText> m_WinText;
+    std::shared_ptr<UIText> m_LoseText;
 };
 
 #endif

@@ -4,6 +4,7 @@
 #include "GameConfig.hpp"
 #include <iostream>
 #include <algorithm>
+
 GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(playerDeck){
     m_CameraX = GameConfig::CAMERA_MAX_X;
     m_CameraX = GameConfig::CAMERA_MAX_X;
@@ -27,6 +28,10 @@ GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(play
          30,
          Util::Color(255, 255, 0, 255)
      );
+
+    m_WinText = std::make_shared<UIText>(0, 0, "VICTORY!", 30, SDL_Color{255, 215, 0, 255}); // 金色
+    m_LoseText = std::make_shared<UIText>(0, 0, "DEFEAT!", 30, SDL_Color{255, 0, 0, 255});   // 紅色
+
 
     m_BaseNameText = std::make_shared<WorldText>(
         GameConfig::PLAYER_BASE_X,
@@ -64,7 +69,18 @@ void GameScene::Update(float dt) {
     m_BattleSystem.Update(dt, m_Entities);
     // 5. 移除死亡單位
     RemoveDeadEntities();
+    if (!m_PlayerBase->IsAlive()) {
+        std::cout << "🚨 [Game Over] 玩家主堡被摧毀，你輸了！\n";
+        if (m_BaseNameText) m_BaseNameText->UpdateText(std::to_string(0));
 
+        return; // 遊戲結束，提早 return 停止更新
+    }
+    else if (!m_EnemyBase->IsAlive()) {
+        std::cout << "🏆 [Victory] 敵方主堡被摧毀，你贏了！\n";
+        if (m_EnemyBaseText) m_EnemyBaseText->UpdateText(std::to_string(0));
+
+        return; // 遊戲結束，提早 return 停止更新
+    }
     // 6. UI 更新 (保持不變)
     if (m_MoneyText) m_MoneyText->UpdateText("MONEY: " + std::to_string((int)m_CurrentMoney) + " / " + std::to_string(GameConfig::MAX_MONEY_LEVEL_1));
     if (m_BaseNameText) m_BaseNameText->UpdateText(std::to_string(m_PlayerBase->GetHP()));
@@ -92,4 +108,10 @@ void GameScene::Draw() {
         m_MoneyText->Draw(); // 👈 只要這短短一行就夠了！
     }
     m_UISystem.Draw(m_EquippedDeck, m_SpawnSystem.GetCooldownTimers(), m_CurrentMoney);
+    if (!m_PlayerBase->IsAlive()) {
+        if (m_LoseText) m_LoseText->Draw(); // 主堡死了，每一幀都狂畫 DEFEAT
+    }
+    else if (!m_EnemyBase->IsAlive()) {
+        if (m_WinText) m_WinText->Draw();   // 敵人死了，每一幀都狂畫 VICTORY
+    }
 }

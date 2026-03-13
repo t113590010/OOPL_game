@@ -1,47 +1,64 @@
-    #include "App.hpp"
+#include "App.hpp"
+#include "Util/Image.hpp"
+#include "Util/Input.hpp"
+#include "Util/Keycode.hpp"
+#include "Util/Logger.hpp"
+#include "Entity/UnitID.hpp"
+#include "Core/Context.hpp"
 
-    #include "Util/Image.hpp"
-    #include "Util/Input.hpp"
-    #include "Util/Keycode.hpp"
-    #include "Util/Logger.hpp"
-    #include "Entity/UnitID.hpp"
-    #include "Core/Context.hpp"
+void App::Start() {
+    LOG_TRACE("Start");
+    m_CurrentState = State::UPDATE; // 啟動後立刻告訴 main.cpp 進入 Update 迴圈
+    
+    std::vector<UnitID> globalPlayerDeck = {
+        UnitID::CAT,
+        UnitID::LONG_LEG_CAT,
+        UnitID::NONE,
+        UnitID::NONE,
+        UnitID::NONE
+    };
 
-    void App::Start() {
-        LOG_TRACE("Start");
-        m_CurrentState = State::UPDATE;
-        std::vector<UnitID> globalPlayerDeck = {
-            UnitID::CAT,
-            UnitID::LONG_LEG_CAT,
-            UnitID::NONE,
-            UnitID::NONE,
-            UnitID::NONE
-        };
+    m_GameScene = std::make_shared<GameScene>(globalPlayerDeck);
+}
 
-        // 💡 把全域資料「注入」給遊戲場景！GameScene 完全不需要知道這份名單是怎麼來的。
-        m_GameScene = std::make_shared<GameScene>(globalPlayerDeck);
+void App::Update() {
+    // 0. 監聽退出按鍵 (一旦執行，main.cpp 會切到 END 並直接關閉視窗)
+    if (Util::Input::IsKeyUp(Util::Keycode::ESCAPE) || Util::Input::IfExit()) {
+        m_CurrentState = State::END;
+        return; 
     }
 
-    void App::Update() {
-        // auto context = Core::Context::GetInstance();
-        //TODO: do your things here and delete this line <3
-        
-        /*
-         * Do not touch the code below as they serve the purpose for
-         * closing the window.
-         */
-        float dt = 0.016f; // 假設 60 FPS
-        if (m_GameScene) {
-            m_GameScene->Update(dt);
-            m_GameScene->Draw();
+    float dt = 0.016f; // 假設 60 FPS
+
+    if (m_GameScene) {
+        // ==========================================
+        // 💡 核心解耦：如果遊戲「還沒結束」，才推進時間
+        // ==========================================
+        if (!m_GameScene->IsGameOver()) {
+            m_GameScene->Update(dt); // 貓咪跟敵人繼續互毆
+        } 
+        else {
+            // 🚨 遊戲結束了！
+            // 這裡不呼叫 Update(dt)，所有的貓咪跟敵人都會瞬間「定格」
+            
+            // TODO: 你之後可以在這裡加上一行印出「勝利圖片」或「失敗圖片」的邏輯
+            // 例如：m_WinImage->Draw();
+            
+            // 如果玩家按下 Enter，就重新開始遊戲 (再 new 一個新的 GameScene)
+            if (Util::Input::IsKeyUp(Util::Keycode::RETURN)) {
+                Start(); // 重新觸發 Start，洗掉舊的場景
+            }
         }
 
-        if (Util::Input::IsKeyUp(Util::Keycode::ESCAPE) ||
-            Util::Input::IfExit()) {
-            m_CurrentState = State::END;
-        }
+        // ==========================================
+        // 💡 不管遊戲結不結束，都要繼續畫圖！
+        // 這樣就算定格了，玩家還是看得到死掉的主堡跟滿地的貓咪
+        // ==========================================
+        m_GameScene->Draw();
     }
+}
 
-    void App::End() { // NOLINT(this method will mutate members in the future)
-        LOG_TRACE("End");
-    }
+void App::End() { 
+    LOG_TRACE("End");
+    // 程式即將關閉，不用特別做什麼
+}

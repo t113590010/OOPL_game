@@ -115,10 +115,17 @@ public:
     }
 
     // 繪製邏輯 (考量相機偏移)
+    // 繪製邏輯 (考量相機偏移)
     virtual void Draw(float cameraX = 0.0f) {
         if (m_Image) {
             m_Renderer.SetDrawable(m_Image);
-            m_Renderer.m_Transform.translation = {m_Position.x - cameraX, m_Position.y};
+
+            // 💡 核心修改：算出半個身高
+            float halfHeight = m_Size.y / 2.0f;
+
+            // 💡 把 Y 座標「往上拉」半個身高
+            // 這樣 m_Position.y 就會剛好是這隻貓的「腳底板」位置
+            m_Renderer.m_Transform.translation = {m_Position.x - cameraX, m_Position.y + halfHeight};
 
             auto imgSize = m_Image->GetSize();
             if (imgSize.x > 0 && imgSize.y > 0) {

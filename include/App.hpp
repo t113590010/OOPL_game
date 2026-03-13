@@ -14,6 +14,7 @@ public:
     };
 
     State GetCurrentState() const { return m_CurrentState; }
+    void SetCurrentState(State s){  m_CurrentState=s; }
 
     void Start();
 
