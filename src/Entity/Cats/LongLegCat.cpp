@@ -11,8 +11,11 @@ LongLegCat::LongLegCat(const Vector2& pos)
         UnitData::Get(UnitID::LONG_LEG_CAT).cost,         // 價格
         UnitData::Get(UnitID::LONG_LEG_CAT).spawnCd,      // 產兵冷卻
         UnitData::Get(UnitID::LONG_LEG_CAT).rank,         // 階級
-        UnitData::Get(UnitID::LONG_LEG_CAT).imgPath       // 圖片路徑
+        UnitData::Get(UnitID::LONG_LEG_CAT).imgPath ,      // 圖片路徑
+        UnitData::Get(UnitID::LONG_LEG_CAT).kb   // 擊退
+
     ) {
+    SetAoE(UnitData::Get(UnitID::LONG_LEG_CAT).isAoE);
 
     m_IsPlayerTeam = true;
     SetSize(50,100);
@@ -20,6 +23,9 @@ LongLegCat::LongLegCat(const Vector2& pos)
 
 void LongLegCat::Update(float dt) {
     UpdateCooldown(dt);
+    if (UpdateKnockback(dt)) {
+        return;
+    }
     if (m_IsMoving) {
         m_Position.x -= m_Speed * dt;
     }

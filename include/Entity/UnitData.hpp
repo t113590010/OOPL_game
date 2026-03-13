@@ -16,6 +16,8 @@ struct UnitStats {
     int cost;
     float spawnCd;
     int rank;
+    int kb;
+    bool isAoE;
     std::string imgPath;
     std::string iconPath; // UI 專用的方形圖
 };
@@ -26,7 +28,7 @@ public:
     static const UnitStats& Get(UnitID id) {
         // 如果找不到，回傳一個防呆的預設值，保證不閃退！
         if (s_Stats.find(id) == s_Stats.end()) {
-            static const UnitStats defaultStats = {1, 0, 0, 0, 1.0f, 9999, 99.0f, 1, "", ""};
+            static const UnitStats defaultStats = {1, 0, 0, 0, 1.0f, 9999, 99.0f, 1, 3,false,"", ""};
             return defaultStats;
         }
         return s_Stats.at(id);

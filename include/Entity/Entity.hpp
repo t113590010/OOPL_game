@@ -28,18 +28,19 @@ public:
           m_AttackRange(range), m_AttackCooldown(attackCd), m_UnitCost(cost), m_SpawnCooldown(spawnCd) {}
 
     // 💡 方案 B：新增的建構子 (給 Cat 和 LongLegCat 使用)
-    Entity(const Vector2& pos, int hp, float speed, int damage, float range, float attackCd, int cost, float spawnCd, const std::string& imgPath)
+    Entity(const Vector2& pos, int hp, float speed, int damage, float range, float attackCd, int cost, float spawnCd, const std::string& imgPath,int kb)
         : Entity(pos, hp, speed, damage, range, attackCd, cost, spawnCd) { // 呼叫上面的建構子
         m_ImagePath = imgPath;
         m_Image = std::make_shared<Util::Image>(m_ImagePath);
-
+        m_MaxKBCount=kb;
     }
 
-    Entity(const Vector2& pos, int hp, float speed, int damage, float range, float attackCd, int cost, float spawnCd, int rank, const std::string& imgPath)
+    Entity(const Vector2& pos, int hp, float speed, int damage, float range, float attackCd, int cost, float spawnCd, int rank, const std::string& imgPath,int kb)
         : Entity(pos, hp, speed, damage, range, attackCd, cost, spawnCd) {
         m_Rank = rank;
         m_ImagePath = imgPath;
         m_Image = std::make_shared<Util::Image>(m_ImagePath);
+        m_MaxKBCount=kb;
 
 
     }
@@ -53,9 +54,46 @@ public:
     bool IsPlayerTeam() const { return m_IsPlayerTeam; }
     void SetTeam(bool isPlayer) { m_IsPlayerTeam = isPlayer; }
     bool IsAlive() const { return m_HP > 0; }
+    bool IsAoE() const { return m_IsAoE; }
+    void SetAoE(bool aoe) { m_IsAoE = aoe; }
 
     void TakeDamage(int dmg) {
         m_HP = std::max(0, m_HP - dmg);
+
+        // 如果還沒死，檢查是否跨越了「擊退血量門檻」
+        if (m_HP > 0 && m_MaxKBCount > 0) {
+            // 算出每扣多少血要擊退一次 (防呆：最少1滴血)
+            int hpPerKB = std::max(1, m_MaxHP / m_MaxKBCount);
+
+            // 算算看「以現在失去的血量，應該要被擊退幾次了？」
+            int expectedKBs = (m_MaxHP - m_HP) / hpPerKB;
+
+            // 如果應該擊退的次數 > 已經被擊退的次數，代表跨越門檻了！
+            if (expectedKBs > m_CurrentKBs) {
+                m_CurrentKBs = expectedKBs;          // 更新擊退次數
+                m_KnockbackTimer = m_KnockbackDuration; // ⏱️ 啟動擊退計時器
+
+                // 🚨 貓戰精髓：被擊退時，原本要揮出去的拳頭會被強制收回，重置冷卻！
+                m_AttackTimer = m_AttackCooldown;
+            }
+        }
+    }
+
+    // 💡 2. 新增：處理擊退位移的函式 (給子類別在 Update 呼叫)
+    bool UpdateKnockback(float dt) {
+        if (m_KnockbackTimer > 0.0f) {
+            m_KnockbackTimer -= dt;
+
+            // 🚨 方向鐵律：
+            // 玩家貓咪往左走(-)，所以被擊退要往「右」退(+)
+            // 敵人往右走(+)，所以被擊退要往「左」退(-)
+            float kbDir = m_IsPlayerTeam ? 1.0f : -1.0f;
+
+            m_Position.x += kbDir * m_KnockbackSpeed * dt;
+
+            return true; // 回傳 true 代表「正在被擊退中，不要做其他事」
+        }
+        return false; // 沒有被擊退
     }
 
     // 碰撞與攻擊判定
@@ -156,6 +194,14 @@ protected:
     std::string m_ImagePath;
     Util::GameObject m_Renderer;
     int m_Rank ;
+    float m_KnockbackTimer = 0.0f;        // 擊退計時器
+    float m_KnockbackDuration = 0.3f;     // 每次擊退要在空中滑行多久 (0.3秒)
+    float m_KnockbackSpeed = 200.0f;      // 擊退往後飛的速度 (可自行調大調小)
+
+    // 這裡預設寫死 3 次，未來你可以把它移到 UnitData 裡面讓每一隻怪的 KB 數不同
+    int m_MaxKBCount = 0;                 // 這隻怪總共可以被擊退幾次
+    int m_CurrentKBs = 0;                 // 目前已經被擊退了幾次
+    bool m_IsAoE = false;
 };
 
 #endif

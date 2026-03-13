@@ -48,6 +48,7 @@ std::shared_ptr<Entity> UnitFactory::CreateUnit(UnitID id, float x, float y, boo
 
     if (newUnit) {
         newUnit->SetTeam(isPlayer);
+
     }
     return newUnit;
 }

@@ -11,13 +11,19 @@ Enemy::Enemy(const Vector2& pos)
         UnitData::Get(UnitID::BASIC_ENEMY).cost,         // 0
         UnitData::Get(UnitID::BASIC_ENEMY).spawnCd,      // 0.0f
         UnitData::Get(UnitID::BASIC_ENEMY).rank,         // 1 (雖然敵人 UI 看不到，但建構子要填)
-        UnitData::Get(UnitID::BASIC_ENEMY).imgPath       // "/img/enemy.png"
+        UnitData::Get(UnitID::BASIC_ENEMY).imgPath,       // "/img/enemy.png"
+        UnitData::Get(UnitID::BASIC_ENEMY).kb       // kb
+
     ) {
+    SetAoE(UnitData::Get(UnitID::BASIC_ENEMY).isAoE);
 
     m_IsPlayerTeam = false; // 💡 敵人記得設為 false
 }
 void Enemy::Update(float dt) {
     UpdateCooldown(dt);
+    if (UpdateKnockback(dt)) {
+        return;
+    }
     if (m_IsMoving) {
         m_Position.x += m_Speed * dt;
     }

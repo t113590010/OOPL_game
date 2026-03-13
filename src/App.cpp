@@ -17,10 +17,10 @@ void App::Start() {
         UnitID::NONE,
         UnitID::NONE,
         UnitID::GAY,
-      UnitID::NONE,
-      UnitID::NONE,
-      UnitID::NONE,
-      UnitID::NONE,
+      UnitID::CAT,
+      UnitID::CAT,
+      UnitID::CAT,
+      UnitID::CAT,
     };
 
     m_GameScene = std::make_shared<GameScene>(globalPlayerDeck);
