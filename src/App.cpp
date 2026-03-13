@@ -15,7 +15,12 @@ void App::Start() {
         UnitID::LONG_LEG_CAT,
         UnitID::NONE,
         UnitID::NONE,
-        UnitID::NONE
+        UnitID::NONE,
+        UnitID::GAY,
+      UnitID::NONE,
+      UnitID::NONE,
+      UnitID::NONE,
+      UnitID::NONE,
     };
 
     m_GameScene = std::make_shared<GameScene>(globalPlayerDeck);

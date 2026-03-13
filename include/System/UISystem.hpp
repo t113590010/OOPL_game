@@ -34,7 +34,7 @@ private:
     Util::GameObject m_CooldownRenderer;
     Util::GameObject m_MaskRenderer;
     // --- 3. UI 常數 ---
-    const float UI_Y = -310.0f;
+    const float UI_Y = -300.0f;
     const float SLOT_X_START = -250.0f;
     const float SLOT_SPACING = 120.0f;
     const float SLOT_SIZE = 110.0f;

@@ -24,11 +24,23 @@ UISystem::UISystem() {
 
 int UISystem::GetClickedSlot(const glm::vec2& mousePos) const {
     float halfSize = SLOT_SIZE / 2.0f;
-    if (mousePos.y < UI_Y - halfSize || mousePos.y > UI_Y + halfSize) return -1;
 
-    for (int i = 0; i < 5; ++i) {
-        float centerX = SLOT_X_START + (static_cast<float>(i) * SLOT_SPACING);
-        if (mousePos.x >= centerX - halfSize && mousePos.x <= centerX + halfSize) {
+    // 💡 修正：Y 軸往上為正，所以第一排 (topY) 是加上間距
+    const float SLOT_Y_SPACING = SLOT_SIZE-15.0f;
+    float topY = UI_Y + SLOT_Y_SPACING;
+    float bottomY = UI_Y;
+
+    // 擴充為 10 格
+    for (int i = 0; i < 10; ++i) {
+        int col = i % 5; // 求餘數 (0,1,2,3,4)：決定 X 座標
+        int row = i / 5; // 求商數 (0 或 1)：決定 Y 座標 (0是上排，1是下排)
+
+        float currentX = SLOT_X_START + (static_cast<float>(col) * SLOT_SPACING);
+        float currentY = (row == 0) ? topY : bottomY;
+
+        // 檢查游標是否落在這個格子的範圍內
+        if (mousePos.x >= currentX - halfSize && mousePos.x <= currentX + halfSize &&
+            mousePos.y >= currentY - halfSize && mousePos.y <= currentY + halfSize) {
             return i;
         }
     }
@@ -40,15 +52,26 @@ void UISystem::Draw(const std::vector<UnitID>& deck, const float* cooldowns, flo
     const float TEXT_Y_OFFSET = -25.0f;
     const float TEXT_X_OFFSET = 5.0f;
 
-    for (int i = 0; i < 5; ++i) {
-        float x = SLOT_X_START + (static_cast<float>(i) * SLOT_SPACING);
+    // 💡 修正：Y 軸往上為正，所以第一排 (topY) 是加上間距
+    const float SLOT_Y_SPACING = SLOT_SIZE-15.0f;
+    float topY = UI_Y + SLOT_Y_SPACING;
+    float bottomY = UI_Y;
+
+    // 擴充為 10 格
+    for (int i = 0; i < 10; ++i) {
+        int col = i % 5;
+        int row = i / 5;
+
+        float x = SLOT_X_START + (static_cast<float>(col) * SLOT_SPACING);
+        float y = (row == 0) ? topY : bottomY;
 
         // 1. 永遠繪製底座 (Z: 10)
         m_BgRenderer.SetDrawable(m_SlotBg);
-        m_BgRenderer.m_Transform.translation = glm::vec2(x, UI_Y);
+        m_BgRenderer.m_Transform.translation = glm::vec2(x, y);
         m_BgRenderer.m_Transform.scale = glm::vec2(SLOT_SIZE / m_SlotBg->GetSize().x, SLOT_SIZE / m_SlotBg->GetSize().y);
         m_BgRenderer.Draw();
 
+        // 💡 防呆：如果 deck 裡面沒放滿 10 隻貓，就跳過後面的繪製
         if (i < (int)deck.size() && deck[i] != UnitID::NONE) {
             UnitID id = deck[i];
             const auto& stats = UnitData::Get(id);
@@ -59,7 +82,7 @@ void UISystem::Draw(const std::vector<UnitID>& deck, const float* cooldowns, flo
             if (canAfford && isReady) {
                 std::shared_ptr<Util::Image> rankImg = (stats.rank == 3) ? m_Rank3Bg : (stats.rank == 2 ? m_Rank2Bg : m_Rank1Bg);
                 m_RankRenderer.SetDrawable(rankImg);
-                m_RankRenderer.m_Transform.translation = glm::vec2(x, UI_Y);
+                m_RankRenderer.m_Transform.translation = glm::vec2(x, y);
                 m_RankRenderer.m_Transform.scale = glm::vec2(SLOT_SIZE / rankImg->GetSize().x, SLOT_SIZE / rankImg->GetSize().y);
                 m_RankRenderer.Draw();
             }
@@ -71,7 +94,7 @@ void UISystem::Draw(const std::vector<UnitID>& deck, const float* cooldowns, flo
             auto icon = m_IconCache[id];
             if (icon && icon->GetSize().x > 0) {
                 m_IconRenderer.SetDrawable(icon);
-                m_IconRenderer.m_Transform.translation = glm::vec2(x, UI_Y);
+                m_IconRenderer.m_Transform.translation = glm::vec2(x, y);
                 float finalScale = (canAfford && isReady) ? ICON_SIZE : ICON_SIZE * 0.7f;
                 m_IconRenderer.m_Transform.scale = glm::vec2(finalScale / icon->GetSize().x, finalScale / icon->GetSize().y);
                 m_IconRenderer.Draw();
@@ -79,28 +102,26 @@ void UISystem::Draw(const std::vector<UnitID>& deck, const float* cooldowns, flo
 
             // 4. 文字處理 (Z: 50)
             if (!isReady) {
-                // 💡 冷卻中：只顯示秒數，不顯示價格
                 auto cdText = std::make_shared<::Util::Text>(
                     RESOURCE_DIR"/Font/arial.ttf", 30, std::to_string((int)cooldowns[i] + 1), Util::Color(255, 255, 255, 255)
                 );
                 m_TextRenderer.SetDrawable(cdText);
-                m_TextRenderer.m_Transform.translation = glm::vec2(x, UI_Y);
+                m_TextRenderer.m_Transform.translation = glm::vec2(x, y);
                 m_TextRenderer.Draw();
             } else {
-                // 💡 冷卻結束（Ready）：才顯示價格文字
                 auto costColor = canAfford ? Util::Color(0, 0, 0, 255) : Util::Color(255, 0, 0, 255);
                 auto costText = std::make_shared<::Util::Text>(
                     RESOURCE_DIR"/Font/arial.ttf", 18, std::to_string(stats.cost), costColor
                 );
                 m_TextRenderer.SetDrawable(costText);
-                m_TextRenderer.m_Transform.translation = glm::vec2(x + TEXT_X_OFFSET, UI_Y + TEXT_Y_OFFSET);
+                m_TextRenderer.m_Transform.translation = glm::vec2(x + TEXT_X_OFFSET, y + TEXT_Y_OFFSET);
                 m_TextRenderer.Draw();
             }
         }
 
         // 5. 最外層黑邊框 (Z: 40)
         m_FrameRenderer.SetDrawable(m_SlotFrame);
-        m_FrameRenderer.m_Transform.translation = glm::vec2(x, UI_Y);
+        m_FrameRenderer.m_Transform.translation = glm::vec2(x, y);
         m_FrameRenderer.m_Transform.scale = glm::vec2(SLOT_SIZE / m_SlotFrame->GetSize().x, SLOT_SIZE / m_SlotFrame->GetSize().y);
         m_FrameRenderer.Draw();
     }

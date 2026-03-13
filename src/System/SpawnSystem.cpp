@@ -16,7 +16,7 @@ void SpawnSystem::Update(float dt, std::vector<std::shared_ptr<Entity>>& entitie
                          const std::vector<UnitID>& playerDeck) {
 
     // 0. 更新玩家的冷卻碼表
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i <playerDeck.size(); ++i) {
         if (m_CooldownTimers[i] > 0.0f) m_CooldownTimers[i] -= dt;
     }
 
@@ -40,12 +40,13 @@ void SpawnSystem::Update(float dt, std::vector<std::shared_ptr<Entity>>& entitie
     }
 
     // 2. 處理玩家按鍵選兵
-    const Util::Keycode slotKeys[5] = {
+    const Util::Keycode slotKeys[10] = {
         Util::Keycode::NUM_1, Util::Keycode::NUM_2, Util::Keycode::NUM_3,
-        Util::Keycode::NUM_4, Util::Keycode::NUM_5
+        Util::Keycode::NUM_4, Util::Keycode::NUM_5, Util::Keycode::NUM_6, Util::Keycode::NUM_7, Util::Keycode::NUM_8,
+        Util::Keycode::NUM_9, Util::Keycode::NUM_0
     };
 
-    for (size_t i = 0; i < playerDeck.size() && i < 5; ++i) {
+    for (size_t i = 0; i < playerDeck.size(); ++i) {
         if (Util::Input::IsKeyDown(slotKeys[i])) {
             UnitID targetId = playerDeck[i];
 

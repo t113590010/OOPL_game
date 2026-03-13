@@ -26,7 +26,7 @@ public:
     const float* GetCooldownTimers() const { return m_CooldownTimers; }
 
 private:
-    float m_CooldownTimers[5] = {0.0f};          // 玩家的 5 格產兵冷卻
+    float m_CooldownTimers[10] = {0.0f};          // 玩家的 10 格產兵冷卻
     std::vector<EnemySpawner> m_EnemySpawners;   // 💡 敵人的資料驅動產兵陣列
 };
 

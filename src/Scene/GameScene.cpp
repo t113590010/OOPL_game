@@ -35,12 +35,12 @@ GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(play
 
     m_BaseNameText = std::make_shared<WorldText>(
         GameConfig::PLAYER_BASE_X,
-        GameConfig::BASE_Y + 200.0f,
+        GameConfig::BASE_Y + GameConfig::BASE_SIZE_Y+20,
         " "
     );
     m_EnemyBaseText = std::make_shared<WorldText>(
           GameConfig::ENEMY_BASE_X,          // 使用敵方基地的 X 座標
-          GameConfig::BASE_Y + 200.0f,       // 一樣的高度
+          GameConfig::BASE_Y + GameConfig::BASE_SIZE_Y+20,       // 一樣的高度
           " "
       );
 }

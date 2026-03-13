@@ -20,12 +20,13 @@ public:
         float windowHeight = (float)context->GetWindowHeight();
 
         // 假設原圖高度是 2084.0f
-        float perfectScale = windowHeight / 2084.0f;
+        float perfectScale = windowHeight / 1469.0f;
         m_Transform.scale = {perfectScale, perfectScale};
-        m_Transform.translation.y = 0.0f;
+        m_Transform.translation.y =0.0f;
 
-        m_ScaledWidth = 1080.0f * perfectScale;
-
+        float offsetY = windowHeight *0.0f;
+        m_Transform.translation.y = offsetY;
+        m_ScaledWidth = 685.0f * perfectScale;
         // 💡 修正：用絕對值算出總戰鬥寬度，確保 m_TileCount 是正數
         float battleWidth = std::abs(GameConfig::ENEMY_BASE_X - GameConfig::PLAYER_BASE_X) + 4000.0f;
         m_TileCount = (int)(battleWidth / m_ScaledWidth) + 1;

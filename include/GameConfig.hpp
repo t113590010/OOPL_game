@@ -3,7 +3,7 @@
 namespace GameConfig {
     constexpr float ENEMY_BASE_X = -1100.0f;
     constexpr float PLAYER_BASE_X = 1100.0f;
-    constexpr float BASE_Y = -200.0f;
+    constexpr float BASE_Y = -100.0f;
     constexpr int   BASE_HP = 1000;
     constexpr float MONEY_TEXT_X = 0.7f;
     constexpr float MONEY_TEXT_Y = 0.8f;
