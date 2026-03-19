@@ -32,6 +32,7 @@ public:
     bool IsPlayerWin() const {
         return !m_EnemyBase->IsAlive();
     }
+
 private:
 
     void RemoveDeadEntities();      // 刪除死亡單位

@@ -6,5 +6,7 @@ class Enemy : public Entity {
 public:
     Enemy(const Vector2& pos);
     void Update(float dt) override;
+    void InitAnimation(const std::vector<SpriteFrame>& allFrames) override;
+
 };
 #endif

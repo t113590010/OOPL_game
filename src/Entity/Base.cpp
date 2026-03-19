@@ -5,6 +5,10 @@ Base::Base(const Vector2& pos, int hp)
     m_IsMoving = false;
     m_Size = {GameConfig::BASE_SIZE_X,GameConfig::BASE_SIZE_Y};
     m_Renderer.SetZIndex(-1);
+    m_AttackSoundPath = "";
+    m_HitSoundPath = RESOURCE_DIR "/music/basegetatk.mp3";
+    m_AttackCooldown = 999999.0f;
+    m_AttackTimer = 999999.0f;
 }
 
 void Base::Update(float /*dt*/) {

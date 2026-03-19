@@ -72,11 +72,12 @@ void GameScene::Update(float dt) {
     if (!m_PlayerBase->IsAlive()) {
         std::cout << "🚨 [Game Over] 玩家主堡被摧毀，你輸了！\n";
         if (m_BaseNameText) m_BaseNameText->UpdateText(std::to_string(0));
-
+        Util::SFX(RESOURCE_DIR "/music/lose.mp3").Play();
         return; // 遊戲結束，提早 return 停止更新
     }
     else if (!m_EnemyBase->IsAlive()) {
         std::cout << "🏆 [Victory] 敵方主堡被摧毀，你贏了！\n";
+        Util::SFX(RESOURCE_DIR "/music/win.mp3").Play();
         if (m_EnemyBaseText) m_EnemyBaseText->UpdateText(std::to_string(0));
 
         return; // 遊戲結束，提早 return 停止更新
@@ -89,7 +90,7 @@ void GameScene::Update(float dt) {
 void GameScene::RemoveDeadEntities() {
     m_Entities.erase(
         std::remove_if(m_Entities.begin(), m_Entities.end(),
-                       [](const std::shared_ptr<Entity>& e) { return !e->IsAlive(); }),
+                       [](const std::shared_ptr<Entity>& e) { return e->CanBeDeleted();}),
         m_Entities.end());
 }
 

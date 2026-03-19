@@ -4,7 +4,7 @@
 #include "pch.hpp" // IWYU pragma: export
 #include "Scene/GameScene.hpp"
 #include <memory>
-
+#include "Util/BGM.hpp"
 class App {
 public:
     enum class State {
@@ -25,9 +25,11 @@ public:
 private:
     void ValidTask();
 
+
 private:
     State m_CurrentState = State::START;
     std::shared_ptr<GameScene> m_GameScene;
+    std::shared_ptr<Util::BGM> m_BattleBGM;
 };
 
 #endif

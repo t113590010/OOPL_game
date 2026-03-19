@@ -22,10 +22,11 @@ GAY::GAY(const Vector2& pos)
 }
 void GAY::Update(float dt) {
     UpdateCooldown(dt);
+    UpdateAnimation(dt);
     if (UpdateKnockback(dt)) {
         return;
     }
-    if (m_IsMoving) {
+    if (m_IsMoving && m_CurrentState == EntityState::WALK) {
         m_Position.x += m_Speed * dt;
     }
 }

@@ -22,7 +22,9 @@ void BattleSystem::Update(float dt, std::vector<std::shared_ptr<Entity>>& entiti
 
             // 4. 再次呼叫判定：是否在射程內且 Y 軸重疊
             if (attacker->CheckCollision(target)) {
-
+                if (attacker->GetState() != EntityState::ATTACK) {
+                    attacker->SetState(EntityState::ATTACK);
+                }
                 // 執行傷害
                 target->TakeDamage(attacker->GetDamage());
 
@@ -46,8 +48,11 @@ void BattleSystem::Update(float dt, std::vector<std::shared_ptr<Entity>>& entiti
         // ==========================================
         if (hasAttacked) {
             attacker->ResetAttackTimer();
-            // 未來你的音效也可以安全地加在這裡：
-            // AudioManager::Play("punch.wav");
+        } else {
+            // 如果這回合沒打到任何人，且實體不是在播死亡動畫，就應該恢復走路
+            if (attacker->GetState() != EntityState::DEATH && attacker->GetState() != EntityState::KNOCKBACK) {
+                attacker->SetState(EntityState::WALK);
+            }
         }
     }
 }

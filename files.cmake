@@ -5,6 +5,8 @@ set(SRC_FILES
         "Scene/StartScene.cpp"
         "Scene/GameScene.cpp"
         "Entity/Cats/Cat.cpp"
+        "Entity/Cats/AxeCat.cpp"
+
         "Entity/Enemies/Enemy.cpp"
         "Entity/Enemies/GAY.cpp"
 
@@ -29,6 +31,8 @@ set(INCLUDE_FILES
         "Scene/GameScene.hpp"
         "Entity/Entity.hpp"
         "Entity/Cats/Cat.hpp"
+        "Entity/Cats/AxeCat.hpp"
+
         "Entity/Enemies/Enemy.hpp"
         "Entity/Enemies/GAY.hpp"
 

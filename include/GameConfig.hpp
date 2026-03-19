@@ -1,8 +1,10 @@
 #pragma once
 
 namespace GameConfig {
-    constexpr float ENEMY_BASE_X = -1100.0f;
-    constexpr float PLAYER_BASE_X = 1100.0f;
+    constexpr float MAP_SIZE = 800.0f;
+
+    constexpr float ENEMY_BASE_X = - MAP_SIZE;
+    constexpr float PLAYER_BASE_X = MAP_SIZE;
     constexpr float BASE_Y = -100.0f;
     constexpr int   BASE_HP = 1000;
     constexpr float MONEY_TEXT_X = 0.7f;
