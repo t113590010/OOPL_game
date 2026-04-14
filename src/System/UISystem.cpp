@@ -144,6 +144,39 @@ UISystem::UISystem() {
     m_MaskRenderer.SetZIndex(15);
     m_RankRenderer.SetZIndex(20);
     m_IconRenderer.SetZIndex(30);
+    auto context = Core::Context::GetInstance();
+    float halfW = context->GetWindowWidth() / 2.0f;
+    float halfH = context->GetWindowHeight() / 2.0f;
+
+    const float SLOT_Y_SPACING = SLOT_SIZE - 15.0f;
+    float topY = UI_Y + SLOT_Y_SPACING;
+    float bottomY = UI_Y;
+    // ==========================================
+    // 🚀 新增：建立「升級錢包」按鈕 (放在選兵格子的左邊)
+    // ==========================================
+    float walletAbsX = SLOT_X_START - 250.0f; // 往左推 150
+    float walletAbsY = bottomY;               // 跟下排貓咪對齊
+
+    float wRatioX = walletAbsX / halfW;
+    float wRatioY = walletAbsY / halfH;
+    float wTextRatioX = (walletAbsX + 0) / halfW;
+    float wTextRatioY = (walletAbsY - 10) / halfH; // 文字稍微往下偏
+
+    m_WalletBtn = std::make_shared<Button>(
+        wRatioX, wRatioY,
+        110.0f, 110.0f,
+        RESOURCE_DIR"/img/slot_frame.png", // ⚠️ 記得準備一張錢包的圖片！
+        "Lv.UP",
+        20,
+        Util::Color(255, 255, 0, 255), // 黃色字體
+        wTextRatioX, wTextRatioY
+    );
+
+    // 綁定錢包升級事件
+    m_WalletBtn->SetOnClick([this]() {
+        if (m_OnWalletUpgrade) m_OnWalletUpgrade();
+    });
+    // ==========================================
 }
 
 void UISystem::Init(const std::vector<UnitID>& deck) {
@@ -192,7 +225,18 @@ void UISystem::Init(const std::vector<UnitID>& deck) {
     }
 }
 
-void UISystem::Update(const std::vector<UnitID>& deck, const float* cooldowns, float money) {
+void UISystem::Update(const std::vector<UnitID>& deck, const float* cooldowns, float money, int walletUpgradeCost) {
+    // 🚀 更新錢包按鈕狀態
+    if (m_WalletBtn) {
+        m_WalletBtn->Update();
+
+        if (walletUpgradeCost == -1) {
+            m_WalletBtn->UpdateText("MAX");
+        } else {
+            // 可以根據是否買得起，改變字體顏色或加上前綴
+            m_WalletBtn->UpdateText("$" + std::to_string(walletUpgradeCost));
+        }
+    }
     for (size_t i = 0; i < m_SlotButtons.size(); ++i) {
         auto& btn = m_SlotButtons[i];
         if (!btn) continue;
@@ -216,7 +260,9 @@ void UISystem::Draw(const std::vector<UnitID>& deck, const float* cooldowns, flo
     const float SLOT_Y_SPACING = SLOT_SIZE - 15.0f;
     float topY = UI_Y + SLOT_Y_SPACING;
     float bottomY = UI_Y;
-
+    if (m_WalletBtn) {
+        m_WalletBtn->Draw();
+    }
     for (int i = 0; i < 10; ++i) {
         int col = i % 5;
         int row = i / 5;

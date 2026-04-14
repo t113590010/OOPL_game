@@ -34,8 +34,15 @@ namespace GameConfig {
     constexpr float ENEMY_SIZE_Y = 50.0f;
 
     // === 新增：經濟系統設定 ===
-    constexpr int INITIAL_MONEY = 0;       // 開局多少錢
-    constexpr int MAX_MONEY_LEVEL_1 = 2000; // 錢包等級 1 的上限
+    constexpr int INITIAL_MONEY = 0;
+    constexpr int MAX_MONEY_LEVEL_1 = 2000;
+    constexpr int MAX_MONEY_LEVEL = 8;
+    constexpr int MONEY_LEVEL_INCREASE = 1500;
+
+    // 💡 建議補上這兩個，讓經濟系統完全解耦
+    constexpr int WALLET_UPGRADE_INITIAL_COST = 500;  // 第一次升級要多少錢
+    constexpr int WALLET_UPGRADE_COST_INCREASE = 500; // 每次升級變貴多少
+
     constexpr int MONEY_GROWTH_SPEED = 80; // 每秒自動增加多少錢 (工作效率)
 
     // === 新增：兵種價格 ===

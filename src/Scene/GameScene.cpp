@@ -55,21 +55,45 @@ GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(play
         Util::Color(255, 255, 255, 255)
     );
 
-    pauseBtn->SetOnClick([]() {
-        std::cout << "open puase setting \n";
-
-        // 這裡放暫停遊戲或打開設定 UI 的邏輯
-    });
     m_UISystem.Init(m_EquippedDeck);
+    // 🚀 綁定錢包升級邏輯
+    m_UISystem.SetOnWalletUpgrade([this]() {
+        // 🚀 1. 判斷是否小於最大等級
+        if (m_WalletLevel < GameConfig::MAX_MONEY_LEVEL && m_CurrentMoney >= m_WalletUpgradeCost) {
 
+            m_CurrentMoney -= m_WalletUpgradeCost;
+            m_WalletLevel++;
+
+            // 🚀 2. 使用你的 MONEY_LEVEL_INCREASE 來增加上限！
+            m_CurrentMaxMoney += GameConfig::MONEY_LEVEL_INCREASE;
+
+            // 🚀 3. 判斷是否滿級
+            if (m_WalletLevel == GameConfig::MAX_MONEY_LEVEL) {
+                m_WalletUpgradeCost = -1; // 滿級
+            } else {
+                // 🚀 4. 使用你的花費增加倍率
+                m_WalletUpgradeCost += GameConfig::WALLET_UPGRADE_COST_INCREASE;
+            }
+
+            std::cout << "錢包升級！目前等級：" << m_WalletLevel << "，新上限：" << m_CurrentMaxMoney << "\n";
+            Util::SFX(RESOURCE_DIR "/music/upgrade.mp3").Play();
+        } else {
+            Util::SFX(RESOURCE_DIR "/music/fail.mp3").Play();
+        }
+    });
     m_PauseMenu = std::make_shared<PauseMenu>();
     // 綁定暫停選單裡面的按鈕功能
     m_PauseMenu->SetOnResume([this]() {
         m_IsPaused = false; // 恢復遊戲
     });
-    m_PauseMenu->SetOnQuit([]() {
-        std::cout << "come back start scene\n";
-    });
+    m_PauseMenu->SetOnQuit([this]() {
+         std::cout << "come back start scene\n"; // 你原本的 Log 保留
+
+         // 🚀 透過我們剛剛開好的接口，向外廣播「玩家要退出了！」
+         if (m_OnQuitGame) {
+             m_OnQuitGame();
+         }
+     });
 
     // 📍 修改你剛才寫的 pauseBtn：
     pauseBtn->SetOnClick([this]() {
@@ -84,7 +108,9 @@ void GameScene::Update(float dt) {
         return; // <--- 魔法在這裡！底下的產兵、移動、碰撞全部都不會執行！遊戲畫面瞬間凍結！
     }
     m_CurrentMoney += GameConfig::MONEY_GROWTH_SPEED * dt;
-    if (m_CurrentMoney > GameConfig::MAX_MONEY_LEVEL_1) m_CurrentMoney = GameConfig::MAX_MONEY_LEVEL_1;
+    if (m_CurrentMoney > m_CurrentMaxMoney) {
+        m_CurrentMoney = m_CurrentMaxMoney;
+    }
 
     if (Util::Input::IsKeyPressed(Util::Keycode::RIGHT) || Util::Input::IsKeyPressed(Util::Keycode::D)) m_CameraX += m_CameraSpeed * dt;
     if (Util::Input::IsKeyPressed(Util::Keycode::LEFT) || Util::Input::IsKeyPressed(Util::Keycode::A)) m_CameraX -= m_CameraSpeed * dt;
@@ -96,7 +122,7 @@ void GameScene::Update(float dt) {
 
     // 2. 叫生成系統做事
     // 💡 以前幾十行的代碼現在變一行！
-    m_UISystem.Update(m_EquippedDeck, m_SpawnSystem.GetCooldownTimers(), m_CurrentMoney);
+    m_UISystem.Update(m_EquippedDeck, m_SpawnSystem.GetCooldownTimers(), m_CurrentMoney, m_WalletUpgradeCost);
     int clickedSlot = m_UISystem.GetClickedSlot();
 
     m_SpawnSystem.Update(dt, m_Entities, m_CurrentMoney, m_PlayerBase, m_EnemyBase, m_EquippedDeck, clickedSlot);
@@ -127,7 +153,9 @@ void GameScene::Update(float dt) {
         return; // 遊戲結束，提早 return 停止更新
     }
     // 6. UI 更新 (保持不變)
-    if (m_MoneyText) m_MoneyText->UpdateText("MONEY: " + std::to_string((int)m_CurrentMoney) + " / " + std::to_string(GameConfig::MAX_MONEY_LEVEL_1));
+    if (m_MoneyText) {
+        m_MoneyText->UpdateText("MONEY: " + std::to_string((int)m_CurrentMoney) + " / " + std::to_string((int)m_CurrentMaxMoney));
+    }
     if (m_BaseNameText) m_BaseNameText->UpdateText(std::to_string(m_PlayerBase->GetHP()));
     if (m_EnemyBaseText) m_EnemyBaseText->UpdateText(std::to_string(m_EnemyBase->GetHP()));
 }

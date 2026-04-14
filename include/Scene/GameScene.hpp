@@ -34,6 +34,9 @@ public:
     bool IsPlayerWin() const {
         return !m_EnemyBase->IsAlive();
     }
+    void SetOnQuitGame(std::function<void()> callback) {
+        m_OnQuitGame = callback;
+    }
 
 private:
 
@@ -65,6 +68,13 @@ private:
     std::vector<std::shared_ptr<Button>> m_SlotButtons;
     bool m_IsPaused = false;
     std::shared_ptr<PauseMenu> m_PauseMenu;
+    int m_WalletLevel = 1;
+    // 🚀 初始花費直接吃 GameConfig
+    int m_WalletUpgradeCost = GameConfig::WALLET_UPGRADE_INITIAL_COST;
+
+    // 🚀 新增一個變數，記錄「當下的」金錢上限
+    float m_CurrentMaxMoney = GameConfig::MAX_MONEY_LEVEL_1;
+    std::function<void()> m_OnQuitGame;
 };
 
 #endif

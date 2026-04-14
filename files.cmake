@@ -3,6 +3,7 @@
 set(SRC_FILES
         "App.cpp"
         "Scene/StartScene.cpp"
+        "Scene/HomeScene.cpp"
         "Scene/GameScene.cpp"
         "Entity/Cats/Cat.cpp"
         "Entity/Cats/AxeCat.cpp"
@@ -32,7 +33,7 @@ set(INCLUDE_FILES
         "App.hpp"
         "GameConfig.hpp"
 
-        "Scene/Scene.hpp"
+        "Scene/HomeScene.hpp"
         "Scene/StartScene.hpp"
         "Scene/GameScene.hpp"
         "Entity/Entity.hpp"

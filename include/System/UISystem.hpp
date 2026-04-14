@@ -62,8 +62,8 @@ public:
     // 💡 新增：初始化 10 顆邊框按鈕
     void Init(const std::vector<UnitID>& deck);
 
-    // 💡 新增：每幀更新按鈕狀態與文字
-    void Update(const std::vector<UnitID>& deck, const float* cooldowns, float money);
+    // 幫 Update 函數多加一個參數，用來傳遞現在升級錢包要多少錢 (如果是 -1 代表滿級)
+    void Update(const std::vector<UnitID>& deck, const float* cooldowns, float money, int walletUpgradeCost);
 
     // 畫圖維持原樣
     void Draw(const std::vector<UnitID>& deck, const float* cooldowns, float money);
@@ -71,6 +71,9 @@ public:
     // 💡 取得與重置點擊
     int GetClickedSlot() const { return m_ClickedSlot; }
     void ResetClick() { m_ClickedSlot = -1; }
+    // 讓 GameScene 可以把升級錢包的邏輯傳進來
+    void SetOnWalletUpgrade(std::function<void()> callback) { m_OnWalletUpgrade = callback; }
+
 
 private:
     std::shared_ptr<Util::Image> m_SlotBg;
@@ -97,6 +100,8 @@ private:
     const float SLOT_X_START = -250.0f;
     const float SLOT_SPACING = 120.0f;
     const float SLOT_SIZE = 110.0f;
+    std::shared_ptr<Button> m_WalletBtn;
+    std::function<void()> m_OnWalletUpgrade;
 };
 
 #endif
