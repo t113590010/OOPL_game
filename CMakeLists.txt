@@ -34,7 +34,9 @@ list(TRANSFORM INCLUDE_FILES PREPEND ${INCLUDE_DIR}/)
 add_executable(${PROJECT_NAME}
         ${SRC_DIR}/main.cpp
         ${SRC_FILES}
-        ${INCLUDE_FILES}  # 修正：配合 files.cmake 的變數名稱
+        ${INCLUDE_FILES}
+
+        # 修正：配合 files.cmake 的變數名稱
 )
 
 if(MSVC)

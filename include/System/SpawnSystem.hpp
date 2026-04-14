@@ -20,7 +20,8 @@ public:
 
     void Update(float dt, std::vector<std::shared_ptr<Entity>>& entities, float& currentMoney,
                 const std::shared_ptr<Base>& playerBase, const std::shared_ptr<Base>& enemyBase,
-                const std::vector<UnitID>& playerDeck);
+                const std::vector<UnitID>& playerDeck,
+                int clickedSlot = -1);
 
     // 給 UI 系統讀取冷卻條用的
     const float* GetCooldownTimers() const { return m_CooldownTimers; }

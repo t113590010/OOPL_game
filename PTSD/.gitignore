@@ -498,3 +498,8 @@ lib/
 
 # Doxygen generated files
 docs/html/
+
+!src/
+!include/
+!src/**
+!include/**

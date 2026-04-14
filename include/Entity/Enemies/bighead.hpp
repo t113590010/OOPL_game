@@ -1,10 +1,10 @@
-#ifndef AXECAT_HPP
-#define AXECAT_HPP
+#ifndef BIGHEAD_HPP
+#define BIGHEAD_HPP
 #include "../Entity.hpp"
 
-class AxeCat : public Entity {
+class bighead : public Entity {
 public:
-    AxeCat(const Vector2& pos);
+    bighead(const Vector2& pos);
     void Update(float dt) override;
     void InitAnimation(const std::vector<SpriteFrame>& allFrames) override;
 

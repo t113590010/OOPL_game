@@ -1,21 +1,21 @@
-#include "Entity/Enemies/Enemy.hpp"
+#include "Entity/Enemies/p3.hpp"
 #include "Entity/UnitData.hpp"
 
-Enemy::Enemy(const Vector2& pos)
+p3::p3(const Vector2& pos)
     : Entity(
         pos,
-        UnitData::Get(UnitID::BASIC_ENEMY).hp,           // 150
-        UnitData::Get(UnitID::BASIC_ENEMY).speed,        // -40.0f (敵人向左走，速度應為負)
-        UnitData::Get(UnitID::BASIC_ENEMY).damage,       // 15
-        UnitData::Get(UnitID::BASIC_ENEMY).attackRange,  // 60.0f
-        UnitData::Get(UnitID::BASIC_ENEMY).attackCd,     // 1.5f
-        UnitData::Get(UnitID::BASIC_ENEMY).cost,         // 0
-        UnitData::Get(UnitID::BASIC_ENEMY).spawnCd,      // 0.0f
-        UnitData::Get(UnitID::BASIC_ENEMY).rank,         // 1
-        UnitData::Get(UnitID::BASIC_ENEMY).imgPath,      // 圖片路徑
-        UnitData::Get(UnitID::BASIC_ENEMY).kb            // 擊退次數
+        UnitData::Get(UnitID::p3).hp,           // 150
+        UnitData::Get(UnitID::p3).speed,        // -40.0f (敵人向左走，速度應為負)
+        UnitData::Get(UnitID::p3).damage,       // 15
+        UnitData::Get(UnitID::p3).attackRange,  // 60.0f
+        UnitData::Get(UnitID::p3).attackCd,     // 1.5f
+        UnitData::Get(UnitID::p3).cost,         // 0
+        UnitData::Get(UnitID::p3).spawnCd,      // 0.0f
+        UnitData::Get(UnitID::p3).rank,         // 1
+        UnitData::Get(UnitID::p3).imgPath,      // 圖片路徑
+        UnitData::Get(UnitID::p3).kb            // 擊退次數
     ) {
-    SetAoE(UnitData::Get(UnitID::BASIC_ENEMY).isAoE);
+    SetAoE(UnitData::Get(UnitID::p3).isAoE);
 
     m_IsPlayerTeam = false; // 💡 敵人記得設為 false
 
@@ -23,7 +23,7 @@ Enemy::Enemy(const Vector2& pos)
     SetSize(50, 56);
 }
 
-void Enemy::Update(float dt) {
+void p3::Update(float dt) {
     UpdateCooldown(dt);
     UpdateAnimation(dt);
 
@@ -47,6 +47,7 @@ void Enemy::Update(float dt) {
         SetState(EntityState::WALK);
         m_IsMoving = true;
     }
+
     // 敵人移動邏輯： m_Speed 為負值，故向左移動
     if (m_IsMoving && m_CurrentState == EntityState::WALK) {
         m_Position.x += m_Speed * dt;
@@ -56,7 +57,7 @@ void Enemy::Update(float dt) {
 // ==========================================
 // 🚀 基礎敵人 (Dog)：單圖包裝進 AnimFrame 系統
 // ==========================================
-void Enemy::InitAnimation(const std::vector<SpriteFrame>& allFrames) {
+void p3::InitAnimation(const std::vector<SpriteFrame>& allFrames) {
     // 💡 安全檢查：確保有抓到 index 6 (共 7 張以上)
     if (allFrames.size() < 7) return;
 
@@ -65,7 +66,7 @@ void Enemy::InitAnimation(const std::vector<SpriteFrame>& allFrames) {
     // 💡 資料分析：Dog 的裁切皆為 50x56，無需偏移 (0,0)
 
     // 1. 走路：依照素材順序 0, 1, 2
-    for(int i = 0; i <= 2; i++) {
+    for(int i = 0; i <=5; i++) {
         AnimFrame frame;
         // 將單張裁切包裝進零件，Offset 皆為 0
         frame.parts.push_back({allFrames[i], 0.0f, 0.0f});
@@ -73,7 +74,7 @@ void Enemy::InitAnimation(const std::vector<SpriteFrame>& allFrames) {
     }
 
     // 2. 攻擊：依照素材順序 3, 4, 5
-    for(int i = 3; i <= 5; i++) {
+    for(int i =6; i <= 15; i++) {
         AnimFrame frame;
         frame.parts.push_back({allFrames[i], 0.0f, 0.0f});
         attack.push_back(frame);
@@ -81,7 +82,7 @@ void Enemy::InitAnimation(const std::vector<SpriteFrame>& allFrames) {
 
     // 3. 擊退/死亡：使用第 6 張
     AnimFrame frame6;
-    frame6.parts.push_back({allFrames[6], 0.0f, 0.0f});
+    frame6.parts.push_back({allFrames[7], 0.0f, 0.0f});
     kb.push_back(frame6);
 
     // 💡 IDLE 狀態 (敵人通常不需要冷卻 IDLE，但為了架構完整填入站立圖)

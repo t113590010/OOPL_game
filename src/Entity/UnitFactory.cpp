@@ -5,12 +5,18 @@
 
 #include "Entity/Enemies/Enemy.hpp" // 💡 記得補上
 #include "Entity/Enemies/GAY.hpp" // 💡 記得補上
+#include "Entity/Enemies/Snack.hpp" // 💡 記得補上
+#include "Entity/Enemies/p3.hpp" // 💡 記得補上
+#include "Entity/Enemies/bighead.hpp" // 💡 記得補上
+
 
 #include "Entity/UnitData.hpp"     // 💡 核心：引入神級資料庫
 #include <filesystem> // 💡 核心：引入檔案系統，讓 C++ 能檢查硬碟裡的檔案存不存在！
 #include <iostream>
 #include <fstream>
 #include <sstream>
+
+#include "ninja_cat.hpp"
 
 // ==========================================
 // 💡 只要加這一行「前置宣告」，下面的程式碼就完全不用搬家！
@@ -65,6 +71,11 @@ std::shared_ptr<Entity> UnitFactory::CreateUnit(UnitID id, float x, float y, boo
         case UnitID::BASIC_ENEMY:   newUnit = std::make_shared<Enemy>(Vector2{x, y}); break;
         case UnitID::GAY:           newUnit = std::make_shared<GAY>(Vector2{x, y}); break;
         case UnitID::AXE_CAT:       newUnit = std::make_shared<AxeCat>(Vector2{x, y}); break;
+        case UnitID::Snack:       newUnit = std::make_shared<Snack>(Vector2{x, y}); break;
+        case UnitID::p3:       newUnit = std::make_shared<p3>(Vector2{x, y}); break;
+        case UnitID::bighead:       newUnit = std::make_shared<bighead>(Vector2{x, y}); break;
+        case UnitID::ninja_cat:       newUnit = std::make_shared<ninja_cat>(Vector2{x, y}); break;
+
         default: return nullptr;
     }
 

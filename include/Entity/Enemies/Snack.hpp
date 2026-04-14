@@ -1,10 +1,10 @@
-#ifndef AXECAT_HPP
-#define AXECAT_HPP
+#ifndef SNACK_HPP
+#define SNACK_HPP
 #include "../Entity.hpp"
 
-class AxeCat : public Entity {
+class Snack : public Entity {
 public:
-    AxeCat(const Vector2& pos);
+    Snack(const Vector2& pos);
     void Update(float dt) override;
     void InitAnimation(const std::vector<SpriteFrame>& allFrames) override;
 

@@ -8,12 +8,15 @@
 SpawnSystem::SpawnSystem() {
     // 參數：{ 怪物種類, 生成冷卻時間, 初始計時(預設0) }
     m_EnemySpawners.push_back({UnitID::BASIC_ENEMY, 5.0f, 0.0f}); // 每 3 秒生一隻基礎小怪
-    // m_EnemySpawners.push_back({UnitID::GAY,         8.0f, 0.0f}); // 每 8 秒生一隻新敵人
+    m_EnemySpawners.push_back({UnitID::Snack,         8.0f, 0.0f}); // 每 8 秒生一隻新敵人
+    m_EnemySpawners.push_back({UnitID::p3,         6.0f, 0.0f}); // 每 8 秒生一隻新敵人
+    m_EnemySpawners.push_back({UnitID::bighead,         15.0f, 0.0f}); // 每 8 秒生一隻新敵人
 }
 
 void SpawnSystem::Update(float dt, std::vector<std::shared_ptr<Entity>>& entities, float& currentMoney,
                          const std::shared_ptr<Base>& playerBase, const std::shared_ptr<Base>& enemyBase,
-                         const std::vector<UnitID>& playerDeck) {
+                         const std::vector<UnitID>& playerDeck,
+              int clickedSlot) {
 
 // 0. 更新玩家的冷卻碼表
     for (int i = 0; i < playerDeck.size(); ++i) {
@@ -42,7 +45,7 @@ void SpawnSystem::Update(float dt, std::vector<std::shared_ptr<Entity>>& entitie
         if (spawner.currentTimer > spawner.cooldown) {
             // 🚨 方向鐵律：敵人在左邊，往右推進，所以生在基地的「右邊」 (+)
             float spawnX = enemyBase->GetPosition().x + GameConfig::SPAWN_OFFSET_X;
-            float spawnY = GameConfig::BASE_Y + GameConfig::SPAWN_OFFSET_Y;
+            float spawnY = GameConfig::BASE_Y + GameConfig::SPAWN_OFFSET_Y  + (static_cast<float>(rand()) / RAND_MAX * 2.0f - 1.0f) * GameConfig:: RANDOM_SPAWN_OFFSET_Y_MAX;
 
             auto enemy = UnitFactory::CreateUnit(spawner.id, spawnX, spawnY, false);
             if (enemy) {
@@ -62,34 +65,35 @@ void SpawnSystem::Update(float dt, std::vector<std::shared_ptr<Entity>>& entitie
     };
 
     for (size_t i = 0; i < playerDeck.size(); ++i) {
-        if (Util::Input::IsKeyDown(slotKeys[i])) {
-            UnitID targetId = playerDeck[i];
+        UnitID targetId = playerDeck[i];
+        if (targetId == UnitID::NONE) continue;
 
-            if (targetId != UnitID::NONE && m_CooldownTimers[i] <= 0.0f) {
+        // 💡 關鍵判斷：如果是按了對應鍵盤，或者是點擊了對應 ID 的按鈕
+        bool keyTriggered = Util::Input::IsKeyDown(slotKeys[i]);
+        bool buttonTriggered = (clickedSlot == i);
 
-                int cost = UnitFactory::GetUnitCost(targetId);
+        if (keyTriggered || buttonTriggered) {
+            if (m_CooldownTimers[i] <= 0.0f) {
+                int cost = UnitData::Get(targetId).cost; // 或 UnitFactory::GetUnitCost
 
                 if (currentMoney >= cost) {
-                    // 🚨 方向鐵律：玩家在右邊，往左推進，所以生在基地的「左邊」 (-)
-                    float spawnX = playerBase->GetPosition().x - GameConfig::SPAWN_OFFSET_X;
-                    float spawnY = GameConfig::BASE_Y + GameConfig::SPAWN_OFFSET_Y;
+                    // 執行生成 (你原本那段生成邏輯)
+                    float spawnX = playerBase->GetPosition().x + GameConfig::SPAWN_OFFSET_X;
+                    float spawnY = GameConfig::BASE_Y + GameConfig::SPAWN_OFFSET_Y  + (static_cast<float>(rand()) / RAND_MAX * 2.0f - 1.0f) * GameConfig:: RANDOM_SPAWN_OFFSET_Y_MAX;
 
                     auto newUnit = UnitFactory::CreateUnit(targetId, spawnX, spawnY, true);
-
                     if (newUnit) {
                         currentMoney -= cost;
-                        m_CooldownTimers[i] = UnitFactory::GetUnitSpawnCooldown(targetId);
+                        m_CooldownTimers[i] = UnitData::Get(targetId).spawnCd;
                         entities.push_back(newUnit);
                         Util::SFX(RESOURCE_DIR "/music/succes_summon_cat.mp3").Play();
-                        std::cout << "[System] Slot " << (i + 1) << " Spawned! Money: " << (int)currentMoney << "\n";
                     }
                 } else {
-                    std::cout << "[System] Not enough money! Need: " << cost << "\n";
                     Util::SFX(RESOURCE_DIR "/music/fail_summon_cat.mp3").Play();
                 }
-            }else {
-                    Util::SFX(RESOURCE_DIR "/music/fail_summon_cat.mp3").Play();
-
+            } else if (buttonTriggered) {
+                // 只有按鈕點擊才放失敗音效，避免鍵盤誤觸吵死人
+                Util::SFX(RESOURCE_DIR "/music/fail_summon_cat.mp3").Play();
             }
         }
     }

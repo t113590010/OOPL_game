@@ -8,6 +8,7 @@
 #include "Entity/Base.hpp"
 #include "GameConfig.hpp"
 #include "System/UIText.hpp"
+#include "System/Button.hpp"
 #include "Util/Text.hpp"
 #include "System/WorldText.hpp"
 #include "System/Background.hpp"
@@ -16,6 +17,7 @@
 #include "System/CollisionSystem.hpp"
 #include "System/UISystem.hpp"
 #include "System/BattleSystem.hpp"
+#include "PauseMenu.hpp"
 
 class GameScene {
 public:
@@ -59,6 +61,10 @@ private:
     BattleSystem m_BattleSystem;
     std::shared_ptr<UIText> m_WinText;
     std::shared_ptr<UIText> m_LoseText;
+    std::shared_ptr<Button> pauseBtn;
+    std::vector<std::shared_ptr<Button>> m_SlotButtons;
+    bool m_IsPaused = false;
+    std::shared_ptr<PauseMenu> m_PauseMenu;
 };
 
 #endif

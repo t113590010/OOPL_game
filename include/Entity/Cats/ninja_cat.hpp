@@ -1,12 +1,10 @@
-#ifndef AXECAT_HPP
-#define AXECAT_HPP
+#ifndef NINJACAT_HPP
+#define NINJACAT_HPP
 #include "../Entity.hpp"
-
-class AxeCat : public Entity {
+class ninja_cat : public Entity {
 public:
-    AxeCat(const Vector2& pos);
+    ninja_cat(const Vector2& pos);
     void Update(float dt) override;
     void InitAnimation(const std::vector<SpriteFrame>& allFrames) override;
-
 };
 #endif

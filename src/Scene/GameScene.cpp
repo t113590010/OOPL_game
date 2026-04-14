@@ -43,9 +43,46 @@ GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(play
           GameConfig::BASE_Y + GameConfig::BASE_SIZE_Y+20,       // 一樣的高度
           " "
       );
+    // 產生設定按鈕
+    pauseBtn = std::make_shared<Button>(
+        GameConfig::PAUSE_BUTTON_RATIO_X,
+        GameConfig::PAUSE_BUTTON_RATIO_Y,
+        GameConfig::PAUSE_BUTTON_SIZE,
+        GameConfig::PAUSE_BUTTON_SIZE,
+        RESOURCE_DIR"/img/pause.png", // 你的設定圖示
+        "  ", // 設定按鈕通常不用文字
+        12,
+        Util::Color(255, 255, 255, 255)
+    );
+
+    pauseBtn->SetOnClick([]() {
+        std::cout << "open puase setting \n";
+
+        // 這裡放暫停遊戲或打開設定 UI 的邏輯
+    });
+    m_UISystem.Init(m_EquippedDeck);
+
+    m_PauseMenu = std::make_shared<PauseMenu>();
+    // 綁定暫停選單裡面的按鈕功能
+    m_PauseMenu->SetOnResume([this]() {
+        m_IsPaused = false; // 恢復遊戲
+    });
+    m_PauseMenu->SetOnQuit([]() {
+        std::cout << "come back start scene\n";
+    });
+
+    // 📍 修改你剛才寫的 pauseBtn：
+    pauseBtn->SetOnClick([this]() {
+        m_IsPaused = true; // 按下暫停鈕，觸發時間停止！
+    });
 }
 void GameScene::Update(float dt) {
     // 1. 金錢與相機邏輯 (保持不變)
+    if (pauseBtn) pauseBtn->Update();
+    if (m_IsPaused) {
+        if (m_PauseMenu) m_PauseMenu->Update();
+        return; // <--- 魔法在這裡！底下的產兵、移動、碰撞全部都不會執行！遊戲畫面瞬間凍結！
+    }
     m_CurrentMoney += GameConfig::MONEY_GROWTH_SPEED * dt;
     if (m_CurrentMoney > GameConfig::MAX_MONEY_LEVEL_1) m_CurrentMoney = GameConfig::MAX_MONEY_LEVEL_1;
 
@@ -53,11 +90,18 @@ void GameScene::Update(float dt) {
     if (Util::Input::IsKeyPressed(Util::Keycode::LEFT) || Util::Input::IsKeyPressed(Util::Keycode::A)) m_CameraX -= m_CameraSpeed * dt;
     if (m_CameraX < GameConfig::CAMERA_MIN_X) m_CameraX = GameConfig::CAMERA_MIN_X;
     if (m_CameraX > GameConfig::CAMERA_MAX_X) m_CameraX = GameConfig::CAMERA_MAX_X;
+    // 🚀 3. 新增按鈕更新邏輯 (抓取滑鼠座標與左鍵狀態)
+
+
 
     // 2. 叫生成系統做事
     // 💡 以前幾十行的代碼現在變一行！
-    m_SpawnSystem.Update(dt, m_Entities, m_CurrentMoney, m_PlayerBase, m_EnemyBase, m_EquippedDeck);
+    m_UISystem.Update(m_EquippedDeck, m_SpawnSystem.GetCooldownTimers(), m_CurrentMoney);
+    int clickedSlot = m_UISystem.GetClickedSlot();
 
+    m_SpawnSystem.Update(dt, m_Entities, m_CurrentMoney, m_PlayerBase, m_EnemyBase, m_EquippedDeck, clickedSlot);
+
+    m_UISystem.ResetClick();
     // 3. 更新所有 Entity
     for (auto& entity : m_Entities) {
         entity->Update(dt);
@@ -108,11 +152,18 @@ void GameScene::Draw() {
     if (m_MoneyText) {
         m_MoneyText->Draw(); // 👈 只要這短短一行就夠了！
     }
+
     m_UISystem.Draw(m_EquippedDeck, m_SpawnSystem.GetCooldownTimers(), m_CurrentMoney);
     if (!m_PlayerBase->IsAlive()) {
         if (m_LoseText) m_LoseText->Draw(); // 主堡死了，每一幀都狂畫 DEFEAT
     }
     else if (!m_EnemyBase->IsAlive()) {
         if (m_WinText) m_WinText->Draw();   // 敵人死了，每一幀都狂畫 VICTORY
+    }
+    if (pauseBtn) {
+        pauseBtn->Draw();
+    }
+    if (m_IsPaused) {
+        if (m_PauseMenu) m_PauseMenu->Draw();
     }
 }
