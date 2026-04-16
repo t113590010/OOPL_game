@@ -15,16 +15,17 @@ public:
     void Update();
     void Draw();
 
-    // 給外部設定 Callback，例如點了「繼續」要幹嘛、「回主畫面」要幹嘛
-    void SetOnResume(std::function<void()> callback) { m_OnResume = callback; }
+
     void SetOnQuit(std::function<void()> callback) { m_OnQuit = callback; }
+    void SetBgZindex(int zIndex) {
+        m_Background.SetZIndex(zIndex);
+    }
+
 
 private:
     Util::GameObject m_Background; // 暫停時的半透明黑底
-    std::shared_ptr<Button> m_ResumeBtn;
-    std::shared_ptr<Button> m_QuitBtn;
 
-    std::function<void()> m_OnResume;
+    std::shared_ptr<Button> m_QuitBtn;
     std::function<void()> m_OnQuit;
 };
 

@@ -23,7 +23,7 @@ public:
 
     // 💡 2. 新增的「全參數」建構子 (負責所有真正的初始化工作)
     Button(float pos_ratio_x, float pos_ratio_y, float width, float height, const std::string& img_path, const std::string& text_content, int font_size, const Util::Color& text_color, float text_pos_ratio_x, float text_pos_ratio_y)
-        : GameObject(std::make_unique<Util::Image>(img_path), 100) {
+        : GameObject(std::make_unique<Util::Image>(img_path), 30) {
 
         auto context = Core::Context::GetInstance();
         float halfW = context->GetWindowWidth() / 2.0f;
@@ -52,7 +52,7 @@ public:
             text_color
         );
 
-        m_TextGO->SetZIndex(80);
+        m_TextGO->SetZIndex(35);
 
         m_CurrentContent = text_content;
         m_Visible = true;
@@ -96,6 +96,11 @@ public:
     //     m_Visible = true;
     //     m_IsPressed = false;
     // }
+
+    // 🚀 新增一個可以動態換底圖的函數
+    void SetImage(const std::string& img_path) {
+        SetDrawable(std::make_shared<Util::Image>(img_path));
+    }
 
     void UpdateText(const std::string& new_content) {
         if (new_content != m_CurrentContent) {

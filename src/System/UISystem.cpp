@@ -165,7 +165,7 @@ UISystem::UISystem() {
     m_WalletBtn = std::make_shared<Button>(
         wRatioX, wRatioY,
         110.0f, 110.0f,
-        RESOURCE_DIR"/img/slot_frame.png", // ⚠️ 記得準備一張錢包的圖片！
+        RESOURCE_DIR"/img/moneybag_noupg.png", // ⚠️ 記得準備一張錢包的圖片！
         "Lv.UP",
         20,
         Util::Color(255, 255, 0, 255), // 黃色字體
@@ -232,9 +232,17 @@ void UISystem::Update(const std::vector<UnitID>& deck, const float* cooldowns, f
 
         if (walletUpgradeCost == -1) {
             m_WalletBtn->UpdateText("MAX");
+            // 💡 呼叫我們剛寫好的 SetImage 來換圖
+            m_WalletBtn->SetImage(RESOURCE_DIR"/img/moneybag_max.png");
         } else {
-            // 可以根據是否買得起，改變字體顏色或加上前綴
             m_WalletBtn->UpdateText("$" + std::to_string(walletUpgradeCost));
+
+            // 💡 將你的「買得起」換成實際的數值判斷：目前的錢 >= 升級花費
+            if (money >= static_cast<float>(walletUpgradeCost)) {
+                m_WalletBtn->SetImage(RESOURCE_DIR"/img/moneybag_upg.png");
+            } else {
+                m_WalletBtn->SetImage(RESOURCE_DIR"/img/moneybag_noupg.png");
+            }
         }
     }
     for (size_t i = 0; i < m_SlotButtons.size(); ++i) {

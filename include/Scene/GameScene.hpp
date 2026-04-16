@@ -18,7 +18,7 @@
 #include "System/UISystem.hpp"
 #include "System/BattleSystem.hpp"
 #include "PauseMenu.hpp"
-
+#include "SureMenu.hpp"
 class GameScene {
 public:
     GameScene(const std::vector<UnitID>& playerDeck);
@@ -75,6 +75,7 @@ private:
     // 🚀 新增一個變數，記錄「當下的」金錢上限
     float m_CurrentMaxMoney = GameConfig::MAX_MONEY_LEVEL_1;
     std::function<void()> m_OnQuitGame;
+    std::shared_ptr<SureMenu> m_SureMenu;
 };
 
 #endif

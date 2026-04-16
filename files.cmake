@@ -23,6 +23,8 @@ set(SRC_FILES
 
         "System/SpawnSystem.cpp"
         "System/PauseMenu.cpp"
+        "System/SureMenu.cpp"
+
         "System/BattleSystem.cpp"
         "System/CollisionSystem.cpp"
         "System/UISystem.cpp"
@@ -55,6 +57,7 @@ set(INCLUDE_FILES
         "Entity/UnitData.hpp"
         "System/SpawnSystem.hpp"
         "System/PauseMenu.hpp"
+        "System/SureMenu.hpp"
         "System/BattleSystem.hpp"
         "System/Background.hpp"
 

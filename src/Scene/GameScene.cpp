@@ -54,7 +54,7 @@ GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(play
         12,
         Util::Color(255, 255, 255, 255)
     );
-
+    pauseBtn->SetZIndex(80);
     m_UISystem.Init(m_EquippedDeck);
     // 🚀 綁定錢包升級邏輯
     m_UISystem.SetOnWalletUpgrade([this]() {
@@ -83,28 +83,45 @@ GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(play
     });
     m_PauseMenu = std::make_shared<PauseMenu>();
     // 綁定暫停選單裡面的按鈕功能
-    m_PauseMenu->SetOnResume([this]() {
-        m_IsPaused = false; // 恢復遊戲
-    });
+
     m_PauseMenu->SetOnQuit([this]() {
          std::cout << "come back start scene\n"; // 你原本的 Log 保留
+        m_PauseMenu->SetBgZindex(51);
+        m_SureMenu = std::make_shared<SureMenu>();
 
-         // 🚀 透過我們剛剛開好的接口，向外廣播「玩家要退出了！」
-         if (m_OnQuitGame) {
-             m_OnQuitGame();
-         }
+       // 選「是」：關掉選單，並且真的退出遊戲
+       m_SureMenu->SetOnConfirm([this]() {
+
+           m_SureMenu.reset();
+           if (m_OnQuitGame) m_OnQuitGame();
+       });
+
+       // 選「否」：玩家反悔，只要關掉確認選單，維持原本的暫停畫面
+       m_SureMenu->SetOnCancel([this]() {
+           m_SureMenu.reset();
+        m_PauseMenu->SetBgZindex(49);
+
+       });
      });
 
     // 📍 修改你剛才寫的 pauseBtn：
     pauseBtn->SetOnClick([this]() {
-        m_IsPaused = true; // 按下暫停鈕，觸發時間停止！
+
+        m_IsPaused = !m_IsPaused; // 按下暫停鈕，觸發時間停止！
+        m_PauseMenu->SetBgZindex(49);
+        m_SureMenu.reset();
     });
 }
 void GameScene::Update(float dt) {
     // 1. 金錢與相機邏輯 (保持不變)
     if (pauseBtn) pauseBtn->Update();
     if (m_IsPaused) {
-        if (m_PauseMenu) m_PauseMenu->Update();
+        if (m_SureMenu) {
+            m_SureMenu->Update(); // 如果有彈出確認選單，就只讓確認選單動
+        }
+        else if (m_PauseMenu) {
+            m_PauseMenu->Update(); // 沒有確認選單，才輪到暫停選單動
+        }
         return; // <--- 魔法在這裡！底下的產兵、移動、碰撞全部都不會執行！遊戲畫面瞬間凍結！
     }
     m_CurrentMoney += GameConfig::MONEY_GROWTH_SPEED * dt;
@@ -191,7 +208,10 @@ void GameScene::Draw() {
     if (pauseBtn) {
         pauseBtn->Draw();
     }
+
     if (m_IsPaused) {
         if (m_PauseMenu) m_PauseMenu->Draw();
+
+        if (m_SureMenu) m_SureMenu->Draw(); // 確認選單最後畫，絕對壓在最上面！
     }
 }
