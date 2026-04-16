@@ -60,6 +60,7 @@ GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(play
     m_UISystem.SetOnWalletUpgrade([this]() {
         // 🚀 1. 判斷是否小於最大等級
         if (m_WalletLevel < GameConfig::MAX_MONEY_LEVEL && m_CurrentMoney >= m_WalletUpgradeCost) {
+            Util::SFX(RESOURCE_DIR "/music/upgmoney.mp3").Play();
 
             m_CurrentMoney -= m_WalletUpgradeCost;
             m_WalletLevel++;
@@ -76,9 +77,9 @@ GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(play
             }
 
             std::cout << "錢包升級！目前等級：" << m_WalletLevel << "，新上限：" << m_CurrentMaxMoney << "\n";
-            Util::SFX(RESOURCE_DIR "/music/upgrade.mp3").Play();
+
         } else {
-            Util::SFX(RESOURCE_DIR "/music/fail.mp3").Play();
+            Util::SFX(RESOURCE_DIR "/music/fail_summon_cat.mp3").Play();
         }
     });
     m_PauseMenu = std::make_shared<PauseMenu>();
@@ -86,11 +87,14 @@ GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(play
 
     m_PauseMenu->SetOnQuit([this]() {
          std::cout << "come back start scene\n"; // 你原本的 Log 保留
+        Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+
         m_PauseMenu->SetBgZindex(51);
         m_SureMenu = std::make_shared<SureMenu>();
 
        // 選「是」：關掉選單，並且真的退出遊戲
        m_SureMenu->SetOnConfirm([this]() {
+        Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
 
            m_SureMenu.reset();
            if (m_OnQuitGame) m_OnQuitGame();
@@ -98,6 +102,8 @@ GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(play
 
        // 選「否」：玩家反悔，只要關掉確認選單，維持原本的暫停畫面
        m_SureMenu->SetOnCancel([this]() {
+        Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+
            m_SureMenu.reset();
         m_PauseMenu->SetBgZindex(49);
 
@@ -106,6 +112,7 @@ GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(play
 
     // 📍 修改你剛才寫的 pauseBtn：
     pauseBtn->SetOnClick([this]() {
+        Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
 
         m_IsPaused = !m_IsPaused; // 按下暫停鈕，觸發時間停止！
         m_PauseMenu->SetBgZindex(49);

@@ -109,8 +109,25 @@ void App::Start() {
         LOG_ERROR("無法解鎖 MP3 格式: {}", Mix_GetError());
     }
     Mix_AllocateChannels(64);
+    LoadStartScene();
+    // StartHomeScene();
+}
 
-    StartHomeScene();
+void App::LoadStartScene() {
+    m_CurrentState = State::TITLE;
+    m_MenuBGM = std::make_shared<Util::BGM>(RESOURCE_DIR "/music/startbgm.mp3");
+    m_MenuBGM->SetVolume(100);
+    m_MenuBGM->Play(-1);
+    m_StartScene = std::make_shared<StartScene>();
+
+    // 綁定按鈕：當玩家在 StartScene 按下 "START GAME" 時要做什麼？
+    m_StartScene->SetOnStartGame([this]() {
+        Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+
+        // 💡 目前我們先接去 HomeScene (你原本的畫面)
+        // 等我們寫好 LevelSelectScene 後，把這裡改成切換到選關畫面就好！
+        StartHomeScene();
+    });
 }
 
 void App::StartHomeScene() {
@@ -120,12 +137,39 @@ void App::StartHomeScene() {
         m_BattleBGM->FadeOut(1000);
         m_BattleBGM.reset();
     }
-
+    if (m_MenuBGM) {
+        m_MenuBGM->FadeOut(500); // 快速淡出舊的
+    }
+    m_MenuBGM = std::make_shared<Util::BGM>(RESOURCE_DIR "/music/homebgm.mp3");
+    m_MenuBGM->SetVolume(100);
+    m_MenuBGM->Play(-1);
     // 🚨 絕對不能在這裡 reset GameScene！交給 Update 去做！
 
     m_HomeScene = std::make_shared<HomeScene>();
     m_HomeScene->SetOnStartBtnClick([this]() {
+        if (m_MenuBGM) {
+              m_MenuBGM->FadeOut(500); // 快速淡出舊的
+          }
+        Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+
+        Util::SFX(RESOURCE_DIR "/music/StartBattle.mp3").Play();
+        SDL_Delay(4000);
         StartBattleScene();
+    });
+    m_HomeScene->SetOnUpgradeBtnClick([this]() {
+        LOG_DEBUG("點擊了升級按鈕！");
+        // TODO: 之後在這裡呼叫 StartUpgradeScene();
+        // 你可以先播個簡單的按鈕音效
+        Util::SFX(RESOURCE_DIR "/music/what-da-dog-doin.mp3").Play();
+    });
+
+    // ==========================================
+    // 3. 隊伍編成按鈕 (新增)
+    // ==========================================
+    m_HomeScene->SetOnTeamBtnClick([this]() {
+        LOG_DEBUG("點擊了隊伍按鈕！");
+        // TODO: 之後在這裡呼叫 StartTeamScene();
+        Util::SFX(RESOURCE_DIR "/music/what-da-dog-doin.mp3").Play();
     });
 }
 
@@ -139,13 +183,13 @@ void App::StartBattleScene() {
     // 🚨 絕對不能在這裡 reset HomeScene！交給 Update 去做！
 
     std::vector<UnitID> globalPlayerDeck = {
-        UnitID::CAT, UnitID::LONG_LEG_CAT, UnitID::NONE, UnitID::NONE, UnitID::NONE,
-        UnitID::NONE, UnitID::AXE_CAT, UnitID::CAT, UnitID::CAT, UnitID::CAT,
+        UnitID::CAT, UnitID::LONG_LEG_CAT, UnitID::AXE_CAT, UnitID::CAT, UnitID::AXE_CAT,
+        UnitID::NONE, UnitID::NONE, UnitID::NONE, UnitID::NONE, UnitID::NONE,
     };
 
     m_GameScene = std::make_shared<GameScene>(globalPlayerDeck);
     m_GameScene->SetOnQuitGame([this]() {
-        StartHomeScene();
+        m_PendingQuit = true;
     });
 }
 
@@ -154,11 +198,25 @@ void App::Update() {
         m_CurrentState = State::END;
         return;
     }
+    if (m_PendingQuit) {
+        m_PendingQuit = false;
+        StartHomeScene(); // 這裡才真正執行 reset 和 new
+        return;           // 這幀直接結束，下一幀再開始跑 HOME 的邏輯
+    }
 
     float dt = 0.016f;
+    if (m_CurrentState == State::TITLE) {
+        // 如果有舊的場景，把它清掉
+        if (m_HomeScene) m_HomeScene.reset();
+        if (m_GameScene) m_GameScene.reset();
 
-    if (m_CurrentState == State::HOME) {
+        if (m_StartScene) {
+            m_StartScene->Update();
+            m_StartScene->Draw();
+        }
+    }else if (m_CurrentState == State::HOME) {
         // 🚀 回到主迴圈安全的地方了，把前一個戰鬥畫面殺掉
+        if (m_StartScene) m_StartScene.reset();
         if (m_GameScene) {
             m_GameScene.reset();
         }
@@ -173,6 +231,7 @@ void App::Update() {
         if (m_HomeScene) {
             m_HomeScene.reset();
         }
+        if (m_StartScene) m_StartScene.reset();
 
         if (m_GameScene) {
             if (!m_GameScene->IsGameOver()) {
@@ -184,7 +243,9 @@ void App::Update() {
                     m_BattleBGM.reset();
                 }
                 if (Util::Input::IsKeyUp(Util::Keycode::RETURN)) {
-                    StartBattleScene();
+                    Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+
+                    StartHomeScene();
                 }
             }
             m_GameScene->Draw();

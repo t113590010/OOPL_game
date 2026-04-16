@@ -11,7 +11,8 @@ int main(int, char**) {
             case App::State::START:
                 app.Start();
                 break;
-
+            case App::State::TITLE:
+            case App::State::LEVEL_SELECT:
             case App::State::HOME:
             case App::State::BATTLE:
                 app.Update();

@@ -168,7 +168,7 @@ UISystem::UISystem() {
         RESOURCE_DIR"/img/moneybag_noupg.png", // ⚠️ 記得準備一張錢包的圖片！
         "Lv.UP",
         20,
-        Util::Color(255, 255, 0, 255), // 黃色字體
+        Util::Color(0, 0, 0, 255), // 黃色字體
         wTextRatioX, wTextRatioY
     );
 
@@ -213,7 +213,8 @@ void UISystem::Init(const std::vector<UnitID>& deck) {
             RESOURCE_DIR"/img/slot_frame.png",
             std::to_string(stats.cost),
             18,
-            Util::Color(255, 255, 0, 255),// 先用白色字，未來有需要可在 Button 擴充改色功能
+            Util::Color(0, 0, 0, 255), // 黃色字體
+
             textRatioX, textRatioY
         );
 

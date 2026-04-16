@@ -10,7 +10,7 @@ SpawnSystem::SpawnSystem() {
     m_EnemySpawners.push_back({UnitID::BASIC_ENEMY, 5.0f, 0.0f}); // 每 3 秒生一隻基礎小怪
     m_EnemySpawners.push_back({UnitID::Snack,         8.0f, 0.0f}); // 每 8 秒生一隻新敵人
     m_EnemySpawners.push_back({UnitID::p3,         6.0f, 0.0f}); // 每 8 秒生一隻新敵人
-    m_EnemySpawners.push_back({UnitID::bighead,         15.0f, 0.0f}); // 每 8 秒生一隻新敵人
+    m_EnemySpawners.push_back({UnitID::bighead,         60.0f, 0.0f}); // 每 8 秒生一隻新敵人
 }
 
 void SpawnSystem::Update(float dt, std::vector<std::shared_ptr<Entity>>& entities, float& currentMoney,
