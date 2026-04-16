@@ -1,6 +1,6 @@
 #include "HomeScene.hpp"
 
-#include <X11/X.h>
+
 struct SpriteFrame { int x, y, w, h; };
 namespace Cut {
     const float FRAME_X = 255.0f, FRAME_Y = 207.0f, FRAME_W = 260.0f, FRAME_H = 50.0f;
