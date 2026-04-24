@@ -24,14 +24,14 @@ public:
     void Start();
 
     void Update();
-
+    void StartLevelSelectScene();
     void End(); // NOLINT(readability-convert-member-functions-to-static)
 
 private:
     void ValidTask();
     void LoadStartScene();
     void StartHomeScene();
-    void StartBattleScene();
+    void StartBattleScene(int stageIdx);
 
 private:
     State m_CurrentState = State::START;

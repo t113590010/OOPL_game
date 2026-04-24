@@ -93,7 +93,14 @@
 #include "Entity/UnitID.hpp"
 #include "Core/Context.hpp"
 #include <SDL_mixer.h>
-
+namespace {
+    const std::vector<StageData> STAGES = {
+        {1, {{UnitID::BASIC_ENEMY, 5.0f}}},
+        {2, {{UnitID::BASIC_ENEMY, 3.0f}, {UnitID::Snack, 5.0f}}},
+        {3, {{UnitID::BASIC_ENEMY, 2.0f}, {UnitID::Snack, 1.0f}, {UnitID::bighead, 5.0f}}}
+    };
+    int stageIdx = -1;
+}
 void App::Start() {
     LOG_TRACE("Start");
 
@@ -148,13 +155,11 @@ void App::StartHomeScene() {
     m_HomeScene = std::make_shared<HomeScene>();
     m_HomeScene->SetOnStartBtnClick([this]() {
         if (m_MenuBGM) {
-              m_MenuBGM->FadeOut(500); // 快速淡出舊的
-          }
+            m_MenuBGM->FadeOut(500); // 快速淡出舊的
+        }
         Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
-
-        Util::SFX(RESOURCE_DIR "/music/StartBattle.mp3").Play();
-        SDL_Delay(4000);
-        StartBattleScene();
+        stageIdx = -1;
+        m_CurrentState = State::LEVEL_SELECT;
     });
     m_HomeScene->SetOnUpgradeBtnClick([this]() {
         LOG_DEBUG("點擊了升級按鈕！");
@@ -173,21 +178,24 @@ void App::StartHomeScene() {
     });
 }
 
-void App::StartBattleScene() {
+void App::StartBattleScene(int stageIdx)
+{
     m_CurrentState = State::BATTLE;
-
-    m_BattleBGM = std::make_shared<Util::BGM>(RESOURCE_DIR "/music/battle_1.mp3");
-    m_BattleBGM->SetVolume(128);
-    m_BattleBGM->Play(-1);
-
-    // 🚨 絕對不能在這裡 reset HomeScene！交給 Update 去做！
 
     std::vector<UnitID> globalPlayerDeck = {
         UnitID::CAT, UnitID::LONG_LEG_CAT, UnitID::AXE_CAT, UnitID::CAT, UnitID::AXE_CAT,
         UnitID::NONE, UnitID::NONE, UnitID::NONE, UnitID::NONE, UnitID::NONE,
     };
 
-    m_GameScene = std::make_shared<GameScene>(globalPlayerDeck);
+    m_GameScene = std::make_shared<GameScene>(
+        globalPlayerDeck,
+        STAGES[stageIdx]
+    );
+
+    m_BattleBGM = std::make_shared<Util::BGM>(RESOURCE_DIR "/music/battle_1.mp3");
+    m_BattleBGM->SetVolume(128);
+    m_BattleBGM->Play(-1);
+
     m_GameScene->SetOnQuitGame([this]() {
         m_PendingQuit = true;
     });
@@ -197,6 +205,16 @@ void App::Update() {
     if (Util::Input::IsKeyUp(Util::Keycode::ESCAPE) || Util::Input::IfExit()) {
         m_CurrentState = State::END;
         return;
+    }
+    if (m_CurrentState == State::LEVEL_SELECT) { // select level
+        if (Util::Input::IsKeyUp(Util::Keycode::NUM_1)) stageIdx = 0;
+        if (Util::Input::IsKeyUp(Util::Keycode::NUM_2)) stageIdx = 1;
+        if (Util::Input::IsKeyUp(Util::Keycode::NUM_3)) stageIdx = 2;
+        if (stageIdx != -1) {
+            Util::SFX(RESOURCE_DIR "/music/StartBattle.mp3").Play();
+            SDL_Delay(4000);
+            StartBattleScene(stageIdx);
+        }
     }
     if (m_PendingQuit) {
         m_PendingQuit = false;

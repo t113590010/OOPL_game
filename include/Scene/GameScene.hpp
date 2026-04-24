@@ -19,9 +19,10 @@
 #include "System/BattleSystem.hpp"
 #include "PauseMenu.hpp"
 #include "SureMenu.hpp"
+#include "StageConfig.hpp" // 或者你把 StageData 的定義放在這裡
 class GameScene {
 public:
-    GameScene(const std::vector<UnitID>& playerDeck);
+    GameScene(const std::vector<UnitID>& playerDeck, const StageData& stage);
 
     void Update(float dt);          // 每幀更新
 

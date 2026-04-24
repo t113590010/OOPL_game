@@ -5,14 +5,19 @@
 #include <iostream>
 
 // 💡 1. 在建構子裡「註冊」你要生成的敵人 (完全解耦！)
-SpawnSystem::SpawnSystem() {
+/*SpawnSystem::SpawnSystem() {
     // 參數：{ 怪物種類, 生成冷卻時間, 初始計時(預設0) }
     m_EnemySpawners.push_back({UnitID::BASIC_ENEMY, 5.0f, 0.0f}); // 每 3 秒生一隻基礎小怪
     m_EnemySpawners.push_back({UnitID::Snack,         8.0f, 0.0f}); // 每 8 秒生一隻新敵人
     m_EnemySpawners.push_back({UnitID::p3,         6.0f, 0.0f}); // 每 8 秒生一隻新敵人
     m_EnemySpawners.push_back({UnitID::bighead,         60.0f, 0.0f}); // 每 8 秒生一隻新敵人
+}*/
+SpawnSystem::SpawnSystem(const std::vector<EnemyWave>& waves) {
+    for (const auto& wave : waves) {
+        // 將關卡配置轉換為內部的計時器結構
+        m_EnemySpawners.push_back({wave.id, wave.cooldown, 0.0f});
+    }
 }
-
 void SpawnSystem::Update(float dt, std::vector<std::shared_ptr<Entity>>& entities, float& currentMoney,
                          const std::shared_ptr<Base>& playerBase, const std::shared_ptr<Base>& enemyBase,
                          const std::vector<UnitID>& playerDeck,

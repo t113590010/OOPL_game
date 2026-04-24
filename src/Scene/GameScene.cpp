@@ -5,7 +5,10 @@
 #include <iostream>
 #include <algorithm>
 
-GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(playerDeck){
+GameScene::GameScene(const std::vector<UnitID>& playerDeck, const StageData& stage)
+    : m_EquippedDeck(playerDeck),               // 初始化玩家牌組
+      m_SpawnSystem(stage.enemyConfig)          // ✅ 在這裡初始化 SpawnSystem！
+{
     m_CameraX = GameConfig::CAMERA_MAX_X;
     m_CameraX = GameConfig::CAMERA_MAX_X;
     // 玩家基地放在左下角 (X 為負數，Y 為負數)

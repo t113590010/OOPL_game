@@ -1,6 +1,6 @@
 #ifndef SPAWNSYSTEM_HPP
 #define SPAWNSYSTEM_HPP
-
+#include "StageConfig.hpp" // 加上這行
 #include <vector>
 #include <memory>
 #include "Entity/Entity.hpp"
@@ -16,7 +16,7 @@ struct EnemySpawner {
 
 class SpawnSystem {
 public:
-    SpawnSystem(); // 建構子：用來設定有哪些敵人要出
+    SpawnSystem(const std::vector<EnemyWave>& waves);
 
     void Update(float dt, std::vector<std::shared_ptr<Entity>>& entities, float& currentMoney,
                 const std::shared_ptr<Base>& playerBase, const std::shared_ptr<Base>& enemyBase,
