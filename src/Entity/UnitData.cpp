@@ -32,7 +32,15 @@ const std::unordered_map<UnitID, UnitStats> UnitData::s_Stats = {
 },
 
 { UnitID::ninja_cat,
-{ 1000, 40.0f, 100, 100.0f, 5.0f, 500, 10.0f, 3,3,true, RESOURCE_DIR"/img/ninja_cat_3.png", RESOURCE_DIR"/img/ninja_cat_3_icon.png" }
+{ 500, 40.0f, 100, 100.0f, 5.0f, 500, 10.0f, 3,3,true, RESOURCE_DIR"/img/ninja_cat_3.png", RESOURCE_DIR"/img/ninja_cat_3_icon.png" }
+},
+{ UnitID::LongCat,
+{ 1000, 20.0f, 5, 10.0f, 4.0f, 100, 6.0f, 1,3,false, RESOURCE_DIR"/img/LongCat.png", RESOURCE_DIR"/img/LongCatIcon.png" }
 }
+  ,
+{ UnitID::CowCat,
+{ 400, 70.0f, 20, 20.0f, 1.0f, 200, 6.0f, 1,3,false, RESOURCE_DIR"/img/CowCat.png", RESOURCE_DIR"/img/CowCat.png" }
+}
+
 
 };
