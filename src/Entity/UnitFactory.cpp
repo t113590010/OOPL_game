@@ -4,6 +4,9 @@
 #include "Entity/Cats/AxeCat.hpp"
 #include "Entity/Cats/LongCat.hpp"
 #include "Entity/Cats/CowCat.hpp"
+#include "Entity/Cats/FlyCat.hpp"
+#include "Entity/Cats/FishCat.hpp"
+#include "Entity/Cats/DinoCat.hpp"
 
 
 #include "Entity/Enemies/Enemy.hpp" // 💡 記得補上
@@ -81,6 +84,9 @@ std::shared_ptr<Entity> UnitFactory::CreateUnit(UnitID id, float x, float y, boo
         case UnitID::ninja_cat:       newUnit = std::make_shared<ninja_cat>(Vector2{x, y}); break;
         case UnitID::LongCat:       newUnit = std::make_shared<LongCat>(Vector2{x, y}); break;
         case UnitID::CowCat:       newUnit = std::make_shared<CowCat>(Vector2{x, y}); break;
+        case UnitID::FlyCat:       newUnit = std::make_shared<FlyCat>(Vector2{x, y}); break;
+        case UnitID::FishCat:       newUnit = std::make_shared<FishCat>(Vector2{x, y}); break;
+        case UnitID::DinoCat:       newUnit = std::make_shared<DinoCat>(Vector2{x, y}); break;
 
         default: return nullptr;
     }

@@ -10,6 +10,10 @@ set(SRC_FILES
         "Entity/Cats/ninja_cat.cpp"
         "Entity/Cats/LongCat.cpp"
         "Entity/Cats/CowCat.cpp"
+        "Entity/Cats/FlyCat.cpp"
+        "Entity/Cats/FishCat.cpp"
+        "Entity/Cats/DinoCat.cpp"
+
 
 
         "Entity/Enemies/Enemy.cpp"
@@ -47,6 +51,9 @@ set(INCLUDE_FILES
         "Entity/Cats/ninja_cat.hpp"
         "Entity/Cats/LongCat.hpp"
         "Entity/Cats/CowCat.hpp"
+        "Entity/Cats/FlyCat.hpp"
+        "Entity/Cats/FishCat.hpp"
+        "Entity/Cats/DinoCat.hpp"
 
 
         "Entity/Enemies/Enemy.hpp"

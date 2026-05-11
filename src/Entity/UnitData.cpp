@@ -39,8 +39,19 @@ const std::unordered_map<UnitID, UnitStats> UnitData::s_Stats = {
 }
   ,
 { UnitID::CowCat,
-{ 400, 70.0f, 20, 20.0f, 1.0f, 200, 6.0f, 1,3,false, RESOURCE_DIR"/img/CowCat.png", RESOURCE_DIR"/img/CowCat.png" }
+{ 400, 70.0f, 20, 20.0f, 1.0f, 200, 6.0f, 1,3,false, RESOURCE_DIR"/img/CowCat.png", RESOURCE_DIR"/img/CowCatIcon.png" }
 }
-
+  ,
+  { UnitID::FlyCat,
+  { 300, 40.0f, 40, 20.0f, 2.0f, 200, 6.0f, 1,3,false, RESOURCE_DIR"/img/FlyCat.png", RESOURCE_DIR"/img/FlyCatIcon.png" }
+  }
+  ,
+{ UnitID::FishCat,
+{ 800, 30.0f, 200, 40.0f, 4.0f, 200, 6.0f, 1,3,false, RESOURCE_DIR"/img/FishCat.png", RESOURCE_DIR"/img/FishCatIcon.png" }
+}
+  ,
+{ UnitID::DinoCat,
+{ 600, 130.0f, 150, 40.0f, 3.0f, 200, 6.0f, 1,3,false, RESOURCE_DIR"/img/DinoCat.png", RESOURCE_DIR"/img/DinoCatIcon.png" }
+}
 
 };

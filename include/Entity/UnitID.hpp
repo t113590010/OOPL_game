@@ -9,6 +9,9 @@ enum class UnitID {
     ninja_cat = 4,
     LongCat=5,
     CowCat=6,
+    FlyCat=7,
+    FishCat=8,
+    DinoCat=9,
 
     // 敵人也可以編號，方便以後統一管理
     BASIC_ENEMY = 101 ,

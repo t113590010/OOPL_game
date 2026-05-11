@@ -1,6 +1,6 @@
-#include "Entity/Cats/CowCat.hpp"
+#include "Entity/Cats/FlyCat.hpp"
 
-CowCat::CowCat(const Vector2& pos)
+FlyCat::FlyCat(const Vector2& pos)
     : Entity(
         pos,
         UnitData::Get(MY_ID).hp,           // 血量
@@ -17,7 +17,7 @@ CowCat::CowCat(const Vector2& pos)
     m_IsPlayerTeam = true;
     SetAoE(UnitData::Get(MY_ID).isAoE);
 }
-void CowCat::Update(float dt) {
+void FlyCat::Update(float dt) {
     UpdateCooldown(dt);
 
     // 底層會負責在 ATTACK 播完最後一幀時，自動將狀態切換回 WALK
@@ -57,14 +57,14 @@ void CowCat::Update(float dt) {
 // ==========================================
 // 💡 基本貓：單圖包裝進 AnimFrame 系統
 // ==========================================
-void CowCat::InitAnimation(const std::vector<SpriteFrame>& allFrames) {
+void FlyCat::InitAnimation(const std::vector<SpriteFrame>& allFrames) {
     // 確保有足夠的圖 (0~5，共 6 張)
     if (allFrames.size() < 6) return;
 
     std::vector<AnimFrame> walk, attack,idle;
 
     int walkcount = 3; // Index 0, 1, 2
-    int atkcount =8;  // Index 3, 4, 5
+    int atkcount =9;  // Index 3, 4, 5
 
     // 0~2 是走路 (3 張)
     for(int i = 0; i <= walkcount; i++) {
@@ -75,17 +75,17 @@ void CowCat::InitAnimation(const std::vector<SpriteFrame>& allFrames) {
     }
     // 2. IDLE (冷卻時用第 0 幀站立)
     AnimFrame idleFrame;
-    idleFrame.parts.push_back({allFrames[4], 0.0f, 0.0f});
+    idleFrame.parts.push_back({allFrames[0], 0.0f, 0.0f});
     idle.push_back(idleFrame);
     // 3~5 是攻擊 (3 張) -> 💡 記得從 walkcount + 1 開始！
-    for(int i = walkcount + 2; i <= atkcount; i++) {
+    for(int i = walkcount + 1; i <= atkcount; i++) {
         AnimFrame frame;
         frame.parts.push_back({allFrames[i], 0.0f, 0.0f});
         attack.push_back(frame);
     }
-    // AnimFrame frame;
-    // frame.parts.push_back({allFrames[4], 0.0f, 0.0f});
-    // attack.push_back(frame);
+    AnimFrame frame;
+    frame.parts.push_back({allFrames[4], 0.0f, 0.0f});
+    attack.push_back(frame);
 
     // 填入實體
     SetWalkFrames(walk);
