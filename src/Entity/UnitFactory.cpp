@@ -8,6 +8,7 @@
 #include "Entity/Cats/FishCat.hpp"
 #include "Entity/Cats/DinoCat.hpp"
 #include "Entity/Cats/GaintCat.hpp"
+#include "Entity/Cats/DogDoin.hpp"
 
 
 #include "Entity/Enemies/Enemy.hpp" // 💡 記得補上
@@ -89,6 +90,7 @@ std::shared_ptr<Entity> UnitFactory::CreateUnit(UnitID id, float x, float y, boo
         case UnitID::FishCat:       newUnit = std::make_shared<FishCat>(Vector2{x, y}); break;
         case UnitID::DinoCat:       newUnit = std::make_shared<DinoCat>(Vector2{x, y}); break;
         case UnitID::GaintCat:       newUnit = std::make_shared<GaintCat>(Vector2{x, y}); break;
+        case UnitID::DogDoin:       newUnit = std::make_shared<DogDoin>(Vector2{x, y}); break;
 
         default: return nullptr;
     }

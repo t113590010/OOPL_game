@@ -187,7 +187,7 @@ void App::StartBattleScene() {
 
     std::vector<UnitID> globalPlayerDeck = {
         UnitID::CAT, UnitID::LONG_LEG_CAT, UnitID::AXE_CAT, UnitID::CowCat, UnitID::LongCat,
-        UnitID::FlyCat, UnitID::FishCat, UnitID::DinoCat, UnitID::GaintCat, UnitID::NONE,
+        UnitID::FlyCat, UnitID::FishCat, UnitID::DinoCat, UnitID::GaintCat, UnitID::DogDoin,
     };
 
     m_GameScene = std::make_shared<GameScene>(globalPlayerDeck);

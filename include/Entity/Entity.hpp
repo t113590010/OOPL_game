@@ -226,6 +226,7 @@ public:
     Vector2 GetSize() const { return m_Size; }
     void SetSize(const Vector2& size) { m_Size = size; }
     void SetSize(float w, float h) { m_Size.x = w; m_Size.y = h; }
+    void SetScale(float scale) { m_Scale = scale; }
     bool CanBeDeleted() const { return m_HP <= 0 && m_KnockbackTimer <= 0.0f; }
 
     // 💡 向下相容邏輯：如果子類別沒特別寫，就當作普通單圖貓，自動轉成無偏移的 AnimFrame
@@ -271,8 +272,8 @@ public:
 
                         // 抵銷巨大化，還原真實像素比例
                         m_Renderer.m_Transform.scale = {
-                            (float)part.rect.w / sheetSize.x,
-                            (float)part.rect.h / sheetSize.y
+                            ((float)part.rect.w / sheetSize.x) * m_Scale,
+                            ((float)part.rect.h / sheetSize.y) * m_Scale
                         };
 
                         m_Renderer.DrawRect(part.rect.x, part.rect.y, part.rect.w, part.rect.h);
@@ -340,7 +341,7 @@ protected:
     std::vector<AnimFrame> m_AttackFrames;
     std::vector<AnimFrame> m_KnockbackFrames;
     std::vector<AnimFrame> m_DeathFrames;
-
+    float m_Scale = 1.0f;
 private:
     const std::vector<AnimFrame>& GetCurrentFrames() const {
         switch (m_CurrentState) {

@@ -13,7 +13,7 @@ enum class UnitID {
     FishCat=8,
     DinoCat=9,
     GaintCat=10,
-
+    DogDoin = 11,
 
     // 敵人也可以編號，方便以後統一管理
     BASIC_ENEMY = 101 ,
