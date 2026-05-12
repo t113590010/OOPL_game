@@ -53,5 +53,9 @@ const std::unordered_map<UnitID, UnitStats> UnitData::s_Stats = {
 { UnitID::DinoCat,
 { 600, 130.0f, 150, 40.0f, 3.0f, 200, 6.0f, 1,3,false, RESOURCE_DIR"/img/DinoCat.png", RESOURCE_DIR"/img/DinoCatIcon.png" }
 }
+  ,
+{ UnitID::GaintCat,
+{ 1000, 130.0f, 300, 40.0f, 4.0f, 200, 6.0f, 1,3,true, RESOURCE_DIR"/img/GaintCat.png", RESOURCE_DIR"/img/GaintCatIcon.png" }
+}
 
 };

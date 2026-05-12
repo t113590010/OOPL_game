@@ -81,7 +81,7 @@ void DinoCat::InitAnimation(const std::vector<SpriteFrame>& allFrames) {
     for(int i = walkcount + 1; i <= atkcount; i++) {
         AnimFrame frame;
         if (i==7 or i == 8 or i==9) {
-        frame.parts.push_back({allFrames[i], -30.0f, 0.0f});
+        frame.parts.push_back({allFrames[i], -50.0f, 0.0f});
 
         }else {
         frame.parts.push_back({allFrames[i], 0.0f, 0.0f});

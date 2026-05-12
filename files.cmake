@@ -13,6 +13,7 @@ set(SRC_FILES
         "Entity/Cats/FlyCat.cpp"
         "Entity/Cats/FishCat.cpp"
         "Entity/Cats/DinoCat.cpp"
+        "Entity/Cats/GaintCat.cpp"
 
 
 
@@ -54,6 +55,7 @@ set(INCLUDE_FILES
         "Entity/Cats/FlyCat.hpp"
         "Entity/Cats/FishCat.hpp"
         "Entity/Cats/DinoCat.hpp"
+        "Entity/Cats/GaintCat.hpp"
 
 
         "Entity/Enemies/Enemy.hpp"
