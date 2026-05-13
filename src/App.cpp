@@ -186,7 +186,7 @@ void App::StartBattleScene() {
     // 🚨 絕對不能在這裡 reset HomeScene！交給 Update 去做！
 
     std::vector<UnitID> globalPlayerDeck = {
-        UnitID::CAT, UnitID::LONG_LEG_CAT, UnitID::AXE_CAT, UnitID::CowCat, UnitID::LongCat,
+        UnitID::Peashooter, UnitID::LONG_LEG_CAT, UnitID::AXE_CAT, UnitID::CowCat, UnitID::LongCat,
         UnitID::FlyCat, UnitID::FishCat, UnitID::DinoCat, UnitID::GaintCat, UnitID::DogDoin,
     };
 

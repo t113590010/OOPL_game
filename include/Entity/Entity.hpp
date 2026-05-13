@@ -228,7 +228,8 @@ public:
     void SetSize(float w, float h) { m_Size.x = w; m_Size.y = h; }
     void SetScale(float scale) { m_Scale = scale; }
     bool CanBeDeleted() const { return m_HP <= 0 && m_KnockbackTimer <= 0.0f; }
-
+    bool IsProjectileUnit() const { return m_IsProjectileUnit; }
+    void SetProjectileUnit(bool isProj) { m_IsProjectileUnit = isProj; }
     // 💡 向下相容邏輯：如果子類別沒特別寫，就當作普通單圖貓，自動轉成無偏移的 AnimFrame
     virtual void InitAnimation(const std::vector<SpriteFrame>& allFrames) {
         if (allFrames.size() >= 3) {
@@ -342,6 +343,7 @@ protected:
     std::vector<AnimFrame> m_KnockbackFrames;
     std::vector<AnimFrame> m_DeathFrames;
     float m_Scale = 1.0f;
+    bool m_IsProjectileUnit = false;
 private:
     const std::vector<AnimFrame>& GetCurrentFrames() const {
         switch (m_CurrentState) {
