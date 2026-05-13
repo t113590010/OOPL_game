@@ -1,12 +1,38 @@
 #include "System/BattleSystem.hpp"
 #include "Entity/Cats/Peashooter.hpp"
-
+#include "Entity/Base.hpp"
 #include <iostream>
 
 void BattleSystem::Update(float dt, std::vector<std::shared_ptr<Entity>>& entities) {
     for (auto& attacker : entities) {
         if (!attacker->IsAlive()) continue;
+        // ==========================================
+        // 🟢 特殊處理：貓咪砲手動觸發全畫面傷害！
+        // ==========================================
 
+        auto base = std::dynamic_pointer_cast<Base>(attacker);
+        if (base) {
+            if (base->IsFiring()) {
+                for (auto& target : entities) {
+                    if (target->IsPlayerTeam() != base->IsPlayerTeam() && target->IsAlive()) {
+
+                        // 🚀 詢問基地：這個敵人的座標，現在有沒有「正在噴發的光柱」？
+                        if (base->IsInActiveExplosion(target->GetPosition().x)) {
+
+                            // 檢查黑名單，確定這波還沒燒過他
+                            if (!base->HasHit(target)) {
+                                base->AddHitTarget(target); // 加進名單，保證只痛一次
+                                target->TakeDamage(base->GetCannonDamage()); // 扣血
+
+                                std::cout << "🔥🔥🔥 WAVE HIT! 🔥🔥🔥 Target HP: " << target->GetHP() << "\n";
+
+                                target->ForceKnockback();
+                            }
+                        }
+                    }
+                }
+            }
+        }
         // 1. 系統負責更新實體的冷卻時間
         attacker->UpdateCooldown(dt);
 
@@ -49,7 +75,7 @@ void BattleSystem::Update(float dt, std::vector<std::shared_ptr<Entity>>& entiti
                             // 💥 撞到了！造成傷害！
                             target->TakeDamage(attacker->GetDamage());
                             pea.active = false; // 豌豆碎裂銷毀
-
+                            Util::SFX(RESOURCE_DIR "/music/PeaGetHit.mp3").Play();
                             std::cout << "[Pea] Hit! Target HP: " << target->GetHP() << "\n";
                             break; // 一顆豌豆只能打一隻怪，打到就結束這顆豌豆的檢查
                             }

@@ -167,7 +167,11 @@ public:
             }
         }
     }
-
+    void ForceKnockback() {
+        m_KnockbackTimer = m_KnockbackDuration; // 灌入燃料
+        m_AttackTimer = m_AttackCooldown;       // 打斷攻擊
+        SetState(EntityState::KNOCKBACK);       // 切換狀態
+    }
     bool UpdateKnockback(float dt) {
         if (m_KnockbackTimer > 0.0f) {
             m_KnockbackTimer -= dt;

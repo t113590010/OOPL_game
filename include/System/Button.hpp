@@ -98,10 +98,28 @@ public:
     // }
 
     // 🚀 新增一個可以動態換底圖的函數
+    // void SetImage(const std::string& img_path) {
+    //     SetDrawable(std::make_shared<Util::Image>(img_path));
+    // }
     void SetImage(const std::string& img_path) {
-        SetDrawable(std::make_shared<Util::Image>(img_path));
-    }
 
+        auto img = std::make_shared<Util::Image>(img_path);
+
+        SetDrawable(img);
+
+        glm::vec2 originalSize = img->GetSize();
+
+        // 🚀 防止圖片還沒載入完成
+        if (originalSize.x <= 0 || originalSize.y <= 0)
+            return;
+
+        // 🚀 正確縮放
+        float scaleX = m_Width / originalSize.x;
+        float scaleY = m_Height / originalSize.y;
+
+        // 🚀 不再強制等比
+        m_Transform.scale = { scaleX, scaleY };
+    }
     void UpdateText(const std::string& new_content) {
         if (new_content != m_CurrentContent) {
             m_CurrentContent = new_content;
@@ -115,46 +133,121 @@ public:
         m_OnClick = callback;
     }
 
+    // void Update() {
+    //     if (!m_Visible) return;
+    //
+    //     // UIText 在建構時已經算好螢幕絕對位置，且 Button 不會亂跑，所以不用 UpdatePosition 了
+    //
+    //     // 🚀 直接在內部抓取滑鼠座標與左鍵狀態
+    //     glm::vec2 mouse_pos = Util::Input::GetCursorPosition();
+    //     bool is_mouse_down = Util::Input::IsKeyDown(Util::Keycode::MOUSE_LB);
+    //
+    //     // 以下碰撞判定邏輯完全維持你原本的寫法
+    //     float halfWidth = m_Width / 2.0f;
+    //     float halfHeight = m_Height / 2.0f;
+    //
+    //     float left = m_Transform.translation.x - halfWidth;
+    //     float right = m_Transform.translation.x + halfWidth;
+    //     float top = m_Transform.translation.y + halfHeight;
+    //     float bottom = m_Transform.translation.y - halfHeight;
+    //
+    //     bool isHovered = (mouse_pos.x >= left && mouse_pos.x <= right &&
+    //                       mouse_pos.y >= bottom && mouse_pos.y <= top);
+    //
+    //     if (is_mouse_down) {
+    //         if (isHovered && !m_IsPressed) {
+    //             if (m_OnClick) m_OnClick();
+    //             m_IsPressed = true;
+    //         }
+    //     } else {
+    //         m_IsPressed = false;
+    //     }
+    // }
+
     void Update() {
         if (!m_Visible) return;
 
-        // UIText 在建構時已經算好螢幕絕對位置，且 Button 不會亂跑，所以不用 UpdatePosition 了
-
-        // 🚀 直接在內部抓取滑鼠座標與左鍵狀態
         glm::vec2 mouse_pos = Util::Input::GetCursorPosition();
         bool is_mouse_down = Util::Input::IsKeyDown(Util::Keycode::MOUSE_LB);
 
-        // 以下碰撞判定邏輯完全維持你原本的寫法
-        float halfWidth = m_Width / 2.0f;
-        float halfHeight = m_Height / 2.0f;
+        // 🚀 取得目前圖片
+        auto img = std::dynamic_pointer_cast<Util::Image>(m_Drawable);
+
+        // 🚀 真正顯示出來的尺寸
+        float drawWidth = m_Width;
+        float drawHeight = m_Height;
+
+        if (img) {
+            drawWidth = img->GetSize().x * m_Transform.scale.x;
+            drawHeight = img->GetSize().y * m_Transform.scale.y;
+        }
+
+        float halfWidth = drawWidth / 2.0f;
+        float halfHeight = drawHeight / 2.0f;
 
         float left = m_Transform.translation.x - halfWidth;
         float right = m_Transform.translation.x + halfWidth;
         float top = m_Transform.translation.y + halfHeight;
         float bottom = m_Transform.translation.y - halfHeight;
 
-        bool isHovered = (mouse_pos.x >= left && mouse_pos.x <= right &&
-                          mouse_pos.y >= bottom && mouse_pos.y <= top);
+        bool isHovered =
+            (mouse_pos.x >= left && mouse_pos.x <= right &&
+             mouse_pos.y >= bottom && mouse_pos.y <= top);
 
         if (is_mouse_down) {
             if (isHovered && !m_IsPressed) {
-                if (m_OnClick) m_OnClick();
+                if (m_OnClick) {
+                    m_OnClick();
+                }
+
                 m_IsPressed = true;
             }
-        } else {
+        }
+        else {
             m_IsPressed = false;
         }
     }
-
     void Draw() {
         if (!m_Visible) return;
-
-        GameObject::Draw(); // 畫按鈕底圖
+        if (m_HasClipRect) {
+            // 因為 Button 繼承自 GameObject，可以直接呼叫引擎底層的 DrawRect
+            DrawRect(m_ClipX, m_ClipY, m_ClipW, m_ClipH);
+        } else {
+            // 沒設定的話，就正常畫出整張圖
+            GameObject::Draw();
+        }
         if (m_TextGO) {
             m_TextGO->Draw(); // 🚀 畫出完美的 UIText
         }
-    }
 
+    }
+    void SetScale(float x, float y) {
+        m_Transform.scale = { x, y };
+    }
+    void SetClipRect(int x, int y, int w, int h) {
+
+        m_HasClipRect = true;
+
+        m_ClipX = x;
+        m_ClipY = y;
+        m_ClipW = w;
+        m_ClipH = h;
+
+        // 🚀 clip 區域的原始尺寸
+        float clipWidth = static_cast<float>(w);
+        float clipHeight = static_cast<float>(h);
+
+        // 🚀 防呆
+        if (clipWidth <= 0 || clipHeight <= 0)
+            return;
+
+        // 🚀 分別計算 X/Y 縮放
+        float scaleX = m_Width / clipWidth;
+        float scaleY = m_Height / clipHeight;
+
+        // 🚀 不強制等比
+        m_Transform.scale = { scaleX, scaleY };
+    }
 private:
     std::shared_ptr<UIText> m_TextGO; // 🚀 型別換成你的 UIText
     std::string m_CurrentContent;
@@ -163,6 +256,11 @@ private:
 
     float m_Width;
     float m_Height;
+    bool m_HasClipRect = false;
+    int m_ClipX = 0;
+    int m_ClipY = 0;
+    int m_ClipW = 0;
+    int m_ClipH = 0;
 };
 
 #endif

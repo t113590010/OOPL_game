@@ -6,6 +6,7 @@
 #include "Entity/UnitID.hpp"
 #include "Entity.hpp"
 
+std::vector<SpriteFrame> ParseImgCut(const std::string& filepath);
 
 
 class UnitFactory {
@@ -18,7 +19,6 @@ public:
     static float GetUnitSpawnCooldown(UnitID id);
     static int GetUnitRank(UnitID id);
     static std::string GetUnitIconPath(UnitID id);
-
     // 不需要 private 的 s_Configs 了，因為 UnitData 就是我們的 Config
 };
 

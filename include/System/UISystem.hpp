@@ -63,7 +63,7 @@ public:
     void Init(const std::vector<UnitID>& deck);
 
     // 幫 Update 函數多加一個參數，用來傳遞現在升級錢包要多少錢 (如果是 -1 代表滿級)
-    void Update(const std::vector<UnitID>& deck, const float* cooldowns, float money, int walletUpgradeCost);
+    void Update(const std::vector<UnitID>& deck, const float* cooldowns, float money, int walletUpgradeCost, float cannonProgress, bool isCannonReady);
 
     // 畫圖維持原樣
     void Draw(const std::vector<UnitID>& deck, const float* cooldowns, float money);
@@ -73,7 +73,7 @@ public:
     void ResetClick() { m_ClickedSlot = -1; }
     // 讓 GameScene 可以把升級錢包的邏輯傳進來
     void SetOnWalletUpgrade(std::function<void()> callback) { m_OnWalletUpgrade = callback; }
-
+    void SetOnFireCannon(std::function<void()> callback) { m_OnFireCannon = callback; }
 
 private:
     std::shared_ptr<Util::Image> m_SlotBg;
@@ -102,6 +102,8 @@ private:
     const float SLOT_SIZE = 110.0f;
     std::shared_ptr<Button> m_WalletBtn;
     std::function<void()> m_OnWalletUpgrade;
+    std::shared_ptr<Button> m_CannonBtn;
+    std::function<void()> m_OnFireCannon;
 };
 
 #endif

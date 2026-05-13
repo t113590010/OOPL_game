@@ -4,6 +4,7 @@
 #include "GameConfig.hpp"
 #include <iostream>
 #include <algorithm>
+#include "Entity/UnitFactory.hpp"
 
 GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(playerDeck){
     m_CameraX = GameConfig::CAMERA_MAX_X;
@@ -12,7 +13,14 @@ GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(play
     m_PlayerBase = std::make_shared<Base>(Vector2{GameConfig::PLAYER_BASE_X, GameConfig::BASE_Y}, GameConfig::BASE_HP);
     m_PlayerBase->SetImage(RESOURCE_DIR "/img/catBase.png");
     m_PlayerBase->SetSize(GameConfig::BASE_SIZE_X,GameConfig::BASE_SIZE_Y);
+    std::string boomImgcutPath = RESOURCE_DIR "/imgcut/Boom.imgcut";
 
+    auto boomFrames = ParseImgCut(boomImgcutPath);
+    if (!boomFrames.empty()) {
+        m_PlayerBase->InitBoomAnimation(boomFrames);
+    } else {
+        std::cout << "cant find imgcut \n";
+    }
     // 敵人基地放在右下角 (X 為正數，Y 為負數)
     m_EnemyBase = std::make_shared<Base>(Vector2{GameConfig::ENEMY_BASE_X, GameConfig::BASE_Y}, GameConfig::BASE_HP);
     m_EnemyBase->SetImage(RESOURCE_DIR "/img/enemyBase.png");
@@ -56,6 +64,14 @@ GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(play
     );
     pauseBtn->SetZIndex(80);
     m_UISystem.Init(m_EquippedDeck);
+    m_UISystem.SetOnFireCannon([this]() {
+        if (m_PlayerBase->IsCannonReady()) {
+            m_PlayerBase->FireCannon();
+        } else {
+            // (選用) 如果玩家在充能沒滿時狂按，可以播個失敗音效
+            Util::SFX(RESOURCE_DIR "/music/fail_summon_cat.mp3").Play();
+        }
+    });
     // 🚀 綁定錢包升級邏輯
     m_UISystem.SetOnWalletUpgrade([this]() {
         // 🚀 1. 判斷是否小於最大等級
@@ -146,7 +162,7 @@ void GameScene::Update(float dt) {
 
     // 2. 叫生成系統做事
     // 💡 以前幾十行的代碼現在變一行！
-    m_UISystem.Update(m_EquippedDeck, m_SpawnSystem.GetCooldownTimers(), m_CurrentMoney, m_WalletUpgradeCost);
+    m_UISystem.Update(m_EquippedDeck, m_SpawnSystem.GetCooldownTimers(), m_CurrentMoney, m_WalletUpgradeCost,m_PlayerBase->GetCannonProgress(),m_PlayerBase->IsCannonReady());
     int clickedSlot = m_UISystem.GetClickedSlot();
 
     m_SpawnSystem.Update(dt, m_Entities, m_CurrentMoney, m_PlayerBase, m_EnemyBase, m_EquippedDeck, clickedSlot);

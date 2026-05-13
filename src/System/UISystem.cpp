@@ -164,7 +164,7 @@ UISystem::UISystem() {
 
     m_WalletBtn = std::make_shared<Button>(
         wRatioX, wRatioY,
-        110.0f, 110.0f,
+        160.0f, 130.0f,
         RESOURCE_DIR"/img/moneybag_noupg.png", // ⚠️ 記得準備一張錢包的圖片！
         "Lv.UP",
         20,
@@ -177,6 +177,29 @@ UISystem::UISystem() {
         if (m_OnWalletUpgrade) m_OnWalletUpgrade();
     });
     // ==========================================
+    float cannonAbsX = SLOT_X_START + (4 * SLOT_SPACING) + 200.0f;
+    float cannonAbsY = bottomY;
+
+    float cRatioX = cannonAbsX / halfW;
+    float cRatioY = cannonAbsY / halfH;
+    float cTextRatioX = (cannonAbsX + 0) / halfW;
+    float cTextRatioY = (cannonAbsY - 10) / halfH;
+
+    m_CannonBtn = std::make_shared<Button>(
+        cRatioX, cRatioY,
+        60.0f, 30.0f, // 貓咪砲按鈕可以稍微寬一點
+        RESOURCE_DIR"/img/img002_tw.png", // ⚠️ 記得準備充能中的圖 片
+        "0%",
+        25, // 字體大一點
+        Util::Color(255, 0, 0, 255), // 紅色字體
+        cTextRatioX, cTextRatioY
+    );
+
+    m_CannonBtn->SetClipRect(680, 230, 340, 230);
+    // 綁定開砲事件
+    m_CannonBtn->SetOnClick([this]() {
+        if (m_OnFireCannon) m_OnFireCannon();
+    });
 }
 
 void UISystem::Init(const std::vector<UnitID>& deck) {
@@ -226,7 +249,7 @@ void UISystem::Init(const std::vector<UnitID>& deck) {
     }
 }
 
-void UISystem::Update(const std::vector<UnitID>& deck, const float* cooldowns, float money, int walletUpgradeCost) {
+void UISystem::Update(const std::vector<UnitID>& deck, const float* cooldowns, float money, int walletUpgradeCost, float cannonProgress, bool isCannonReady) {
     // 🚀 更新錢包按鈕狀態
     if (m_WalletBtn) {
         m_WalletBtn->Update();
@@ -246,6 +269,22 @@ void UISystem::Update(const std::vector<UnitID>& deck, const float* cooldowns, f
             }
         }
     }
+
+    // 🚀 更新貓咪砲按鈕狀態
+    if (m_CannonBtn) {
+        m_CannonBtn->Update();
+
+        if (isCannonReady) {
+            m_CannonBtn->UpdateText("FIRE!");
+           m_CannonBtn->SetClipRect(196, 123, 195, 255-123); // ⚠️ 充能完畢的圖片
+        } else {
+            // 把小數點進度換算成整數百分比 (0 ~ 99)
+            int percent = static_cast<int>(cannonProgress * 100.0f);
+            m_CannonBtn->UpdateText(std::to_string(percent) + "%");
+            m_CannonBtn->SetClipRect(392, 123, 195, 255-123);
+        }
+    }
+
     for (size_t i = 0; i < m_SlotButtons.size(); ++i) {
         auto& btn = m_SlotButtons[i];
         if (!btn) continue;
@@ -271,6 +310,12 @@ void UISystem::Draw(const std::vector<UnitID>& deck, const float* cooldowns, flo
     float bottomY = UI_Y;
     if (m_WalletBtn) {
         m_WalletBtn->Draw();
+    }
+
+
+    // 🚀 畫出貓咪砲按鈕
+    if (m_CannonBtn) {
+        m_CannonBtn->Draw();
     }
     for (int i = 0; i < 10; ++i) {
         int col = i % 5;
