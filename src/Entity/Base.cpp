@@ -101,7 +101,7 @@ void Base::Draw(float cameraX) {
                 RESOURCE_DIR "/img/img002_tw.png"
             );
 
-        static Util::GameObject readyRenderer(readyImg, 55);
+        static Util::GameObject readyRenderer(readyImg, 5);
 
         // 🚀 分隔圖區域
         int cutX = 439;
