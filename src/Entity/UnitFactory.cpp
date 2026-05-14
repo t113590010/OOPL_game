@@ -10,6 +10,7 @@
 #include "Entity/Cats/GaintCat.hpp"
 #include "Entity/Cats/DogDoin.hpp"
 #include "Entity/Cats/Peashooter.hpp"
+#include "Entity/Cats/Queen.hpp"
 
 #include "Entity/Enemies/Enemy.hpp" // 💡 記得補上
 #include "Entity/Enemies/GAY.hpp" // 💡 記得補上
@@ -92,6 +93,7 @@ std::shared_ptr<Entity> UnitFactory::CreateUnit(UnitID id, float x, float y, boo
         case UnitID::GaintCat:       newUnit = std::make_shared<GaintCat>(Vector2{x, y}); break;
         case UnitID::DogDoin:       newUnit = std::make_shared<DogDoin>(Vector2{x, y}); break;
         case UnitID::Peashooter:       newUnit = std::make_shared<Peashooter>(Vector2{x, y}); break;
+        case UnitID::Queen:       newUnit = std::make_shared<Queen>(Vector2{x, y}); break;
 
         default: return nullptr;
     }

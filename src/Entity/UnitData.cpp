@@ -65,5 +65,9 @@ const std::unordered_map<UnitID, UnitStats> UnitData::s_Stats = {
 { UnitID::Peashooter,
 { 300, 130.0f, 50, 400.0f, 2.0f, 200, 6.0f, 1,3,false, RESOURCE_DIR"/img/Peashooter.png", RESOURCE_DIR"/img/PeashooterIdel.png" }
 }
+  ,
+{ UnitID::Queen,
+{ 500, 30.0f, 300, 50.0f, 4.0f, 200, 6.0f, 1,3,false, RESOURCE_DIR"/img/Queen.png", RESOURCE_DIR"/img/QueenIcon.png" }
+}
 
 };

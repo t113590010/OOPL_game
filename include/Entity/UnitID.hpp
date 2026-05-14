@@ -15,6 +15,7 @@ enum class UnitID {
     GaintCat=10,
     DogDoin = 11,
     Peashooter=12,
+    Queen = 13,
 
     // 敵人也可以編號，方便以後統一管理
     BASIC_ENEMY = 101 ,
