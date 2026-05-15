@@ -197,7 +197,7 @@ void Base::Draw(float cameraX) {
 
             if (localAge >= 0.0f) {
                 int frameIdx = static_cast<int>(localAge * m_BoomFPS);
-                if (frameIdx == 0 && distIndex % 2 == 0) {
+                if (frameIdx == 0 && distIndex % 1 == 0) {
                     Util::SFX(
                         RESOURCE_DIR "/music/laserboom.mp3"
                     ).Play();

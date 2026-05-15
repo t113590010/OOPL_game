@@ -115,9 +115,9 @@ void App::Start() {
 
 void App::LoadStartScene() {
     m_CurrentState = State::TITLE;
-    // m_MenuBGM = std::make_shared<Util::BGM>(RESOURCE_DIR "/music/startbgm.mp3");
+    m_MenuBGM = std::make_shared<Util::BGM>(RESOURCE_DIR "/music/startbgm.mp3");
 
-    m_MenuBGM = std::make_shared<Util::BGM>(RESOURCE_DIR "/music/【貓咪大戰爭】6週年電視廣告 - 貓咪大戰爭中文版官方YouTube (youtube).mp3");
+    // m_MenuBGM = std::make_shared<Util::BGM>(RESOURCE_DIR "/music/【貓咪大戰爭】6週年電視廣告 - 貓咪大戰爭中文版官方YouTube (youtube).mp3");
 
     m_MenuBGM->SetVolume(100);
     m_MenuBGM->Play(-1);
