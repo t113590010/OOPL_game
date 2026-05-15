@@ -7,7 +7,7 @@ cmake_policy(SET CMP0135 NEW)
 
 include(FetchContent)
 set(FETCHCONTENT_QUIET FALSE)
-
+if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/PTSD/.git)
 FetchContent_Declare(
         ptsd
 
@@ -19,8 +19,9 @@ FetchContent_Declare(
 
         SOURCE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/PTSD
 )
-
 FetchContent_MakeAvailable(ptsd)
+endif ()
+
 
 include(files.cmake)
 set(SRC_DIR ${CMAKE_SOURCE_DIR}/src)
