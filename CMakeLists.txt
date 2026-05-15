@@ -16,8 +16,7 @@ FetchContent_Declare(
         # Or alternatively if you want to use a specific git commit instead of a release:
         # GIT_REPOSITORY  https://github.com/ntut-open-source-club/practical-tools-for-simple-design.git
         # GIT_TAG         <git_tag>
-
-        SOURCE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/PTSD
+        
 )
 FetchContent_MakeAvailable(ptsd)
 endif ()
