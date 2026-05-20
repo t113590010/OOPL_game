@@ -7,20 +7,35 @@ cmake_policy(SET CMP0135 NEW)
 
 include(FetchContent)
 set(FETCHCONTENT_QUIET FALSE)
-if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/PTSD/.git)
-FetchContent_Declare(
-        ptsd
+#if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/PTSD/.git)
+#FetchContent_Declare(
+#        ptsd
+#
+#        URL         https://github.com/ntut-open-source-club/practical-tools-for-simple-design/archive/refs/tags/v0.2.zip
+#
+#        # Or alternatively if you want to use a specific git commit instead of a release:
+#        # GIT_REPOSITORY  https://github.com/ntut-open-source-club/practical-tools-for-simple-design.git
+#        # GIT_TAG         <git_tag>
+#        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/PTSD
+#)
+#FetchContent_MakeAvailable(ptsd)
+#endif ()
 
-        URL         https://github.com/ntut-open-source-club/practical-tools-for-simple-design/archive/refs/tags/v0.2.zip
-
-        # Or alternatively if you want to use a specific git commit instead of a release:
-        # GIT_REPOSITORY  https://github.com/ntut-open-source-club/practical-tools-for-simple-design.git
-        # GIT_TAG         <git_tag>
-        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/PTSD
-)
-FetchContent_MakeAvailable(ptsd)
-endif ()
-
+# 💡 改用檢查有沒有 CMakeLists.txt，因為下載 zip 不會有 .git
+if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/PTSD/CMakeLists.txt)
+    message(STATUS "未發現本地 PTSD，正在從 GitHub 下載原版...")
+    FetchContent_Declare(
+            ptsd
+            URL         https://github.com/ntut-open-source-club/practical-tools-for-simple-design/archive/refs/tags/v0.2.zip
+            SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/PTSD
+    )
+    # 沒下載過時，讓 FetchContent 去下載並自動處理 add_subdirectory
+    FetchContent_MakeAvailable(ptsd)
+else()
+    message(STATUS "發現本地 PTSD，直接編譯你修改的版本！")
+    # 💡 關鍵就在這裡！既然跳過了 FetchContent，就必須手動手動叫 CMake 去編譯它
+    add_subdirectory(PTSD)
+endif()
 
 include(files.cmake)
 set(SRC_DIR ${CMAKE_SOURCE_DIR}/src)
