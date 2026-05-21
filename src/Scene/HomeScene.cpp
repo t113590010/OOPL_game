@@ -6,6 +6,13 @@ namespace Cut {
     const float FRAME_X = 255.0f, FRAME_Y = 207.0f, FRAME_W = 260.0f, FRAME_H = 50.0f;
     const float TEAM_X = 54.0f, TEAM_Y = 93.0f, TEAM_W = 163.0f, TEAM_H = 50.0f;
     const float UPGRADE_X = 85.0f, UPGRADE_Y = 208.0f, UPGRADE_W = 85.0f, UPGRADE_H = 43.0f;
+
+    // 👇 冰箱 (img010)
+    const float STORAGE_X = 0.0f, STORAGE_Y = 0.0f, STORAGE_W = 72.0f, STORAGE_H = 82.0f;
+
+    // 👇 扭蛋 (img007)
+    const float RARE_GACHA_X = 116.0f, RARE_GACHA_Y = 262.0f, RARE_GACHA_W = 99.0f, RARE_GACHA_H = 85.0f;
+    const float NORMAL_GACHA_X = 215.0f, NORMAL_GACHA_Y = 262.0f, NORMAL_GACHA_W = 99.0f, NORMAL_GACHA_H = 85.0f;
 }
 HomeScene::HomeScene() {
     auto bgImage = std::make_shared<Util::Image>(RESOURCE_DIR"/img/homeBackground.png");
@@ -51,6 +58,21 @@ HomeScene::HomeScene() {
     m_TeamBtn = std::make_shared<Button>(offset_x, offset_y + difY * 2, width, height, atlasPath, " ", 30, Util::Color(255, 255, 255, 255));
     m_TeamBtn->SetZIndex(20);
     m_TeamBtn->SetOnClick([this]() { if (m_OnTeamBtnClick) m_OnTeamBtnClick(); });
+
+    // 🧊 冰箱按鈕
+    m_StorageBtn = std::make_shared<Button>(0.6, -0.65 , width, height, atlasPath, " ", 30, Util::Color(255, 255, 255, 255));
+    m_StorageBtn->SetZIndex(20);
+    m_StorageBtn->SetOnClick([this]() { if (m_OnStorageBtnClick) m_OnStorageBtnClick(); });
+
+    // 🎰 稀有轉蛋按鈕
+    m_RareGachaBtn = std::make_shared<Button>(0.7, -0.65, width, height, atlasPath, " ", 30, Util::Color(255, 255, 255, 255));
+    m_RareGachaBtn->SetZIndex(20);
+    m_RareGachaBtn->SetOnClick([this]() { if (m_OnRareGachaBtnClick) m_OnRareGachaBtnClick(); });
+
+    // 🎰 貓咪轉蛋按鈕
+    m_NormalGachaBtn = std::make_shared<Button>(0.82, -0.65 , width, height, atlasPath, " ", 30, Util::Color(255, 255, 255, 255));
+    m_NormalGachaBtn->SetZIndex(20);
+    m_NormalGachaBtn->SetOnClick([this]() { if (m_OnNormalGachaBtnClick) m_OnNormalGachaBtnClick(); });
 }
 
 void HomeScene::SetOnStartBtnClick(std::function<void()> callback) {
@@ -58,12 +80,18 @@ void HomeScene::SetOnStartBtnClick(std::function<void()> callback) {
 }
 void HomeScene::SetOnUpgradeBtnClick(std::function<void()> callback) { m_OnUpgradeBtnClick = callback; }
 void HomeScene::SetOnTeamBtnClick(std::function<void()> callback) { m_OnTeamBtnClick = callback; }
+void HomeScene::SetOnStorageBtnClick(std::function<void()> callback) { m_OnStorageBtnClick = callback; }
+void HomeScene::SetOnRareGachaBtnClick(std::function<void()> callback) { m_OnRareGachaBtnClick = callback; }
+void HomeScene::SetOnNormalGachaBtnClick(std::function<void()> callback) { m_OnNormalGachaBtnClick = callback; }
 void HomeScene::Update() {
     if (m_StartBtn) {
         m_StartBtn->Update();
     }
     if (m_UpgradeBtn) m_UpgradeBtn->Update();
     if (m_TeamBtn) m_TeamBtn->Update();
+    if (m_StorageBtn) m_StorageBtn->Update();
+    if (m_RareGachaBtn) m_RareGachaBtn->Update();
+    if (m_NormalGachaBtn) m_NormalGachaBtn->Update();
 }
 
 void HomeScene::Draw() {
@@ -72,8 +100,9 @@ void HomeScene::Draw() {
     if (m_StartBtn) m_StartBtn->Draw();
     // 💡 取得合圖大小做比例抵銷 (照你的 Entity 邏輯)
     static auto uiAtlas = std::make_shared<Util::Image>(RESOURCE_DIR"/img/img010_tw.png");
+    static auto gachaAtlas = std::make_shared<Util::Image>(RESOURCE_DIR"/img/img007_tw.png");
     glm::vec2 sheetSize = uiAtlas->GetSize();
-
+    glm::vec2 gachaSheetSize = gachaAtlas->GetSize();
     // ==========================================
     // 🚀 不准呼叫 m_UpgradeBtn->Draw()！
     // 我們改用你的 DrawRect 直接切圖畫底框和文字
@@ -115,5 +144,52 @@ void HomeScene::Draw() {
         };
         m_TeamBtn->SetZIndex(22);
         m_TeamBtn->DrawRect(Cut::TEAM_X, Cut::TEAM_Y, Cut::TEAM_W, Cut::TEAM_H);
+    }
+
+
+    // 🧊 畫冰箱 (完全使用 img010)
+    if (m_StorageBtn) {
+        //底層
+        // 👉 1. 記錄原本座標
+        glm::vec2 pos = m_StorageBtn->m_Transform.translation;
+
+        // 👉 2. 直接改這裡！調整底框的 XY 偏移量 (例如 X往左10，Y往下5)
+        m_StorageBtn->m_Transform.translation += glm::vec2(+70.0f, -0.0f);
+
+        m_StorageBtn->m_Transform.scale = { ((float)Cut::FRAME_W / sheetSize.x) * 0.9f, ((float)Cut::FRAME_H / sheetSize.y) * baseScale };
+        m_StorageBtn->SetZIndex(21);
+        m_StorageBtn->DrawRect(Cut::FRAME_X, Cut::FRAME_Y, Cut::FRAME_W, Cut::FRAME_H);
+
+        // 👉 3. 畫完底框馬上歸位！(不然你上面疊的字跟滑鼠點擊判定會歪掉)
+        m_StorageBtn->m_Transform.translation = pos;
+        //冰箱
+        m_StorageBtn->m_Transform.scale = { ((float)Cut::STORAGE_W / sheetSize.x) * 0.8f, ((float)Cut::STORAGE_H / sheetSize.y) * 0.8f };
+        m_StorageBtn->SetZIndex(22);
+        m_StorageBtn->DrawRect(Cut::STORAGE_X, Cut::STORAGE_Y, Cut::STORAGE_W, Cut::STORAGE_H);
+    }
+
+    // 🎰 畫稀有轉蛋 (文字 img007)
+    if (m_RareGachaBtn) {
+        m_RareGachaBtn->SetImage(RESOURCE_DIR"/img/img007_tw.png");
+
+        // 注意這裡不需要 textBoost 了，直接用 baseScale 控制貓頭大小
+        m_RareGachaBtn->m_Transform.scale = {
+            ((float)Cut::RARE_GACHA_W / gachaSheetSize.x) * 0.75,
+            ((float)Cut::RARE_GACHA_H / gachaSheetSize.y) * 0.75
+        };
+        m_RareGachaBtn->SetZIndex(22); // 沒有底層了，直接放 21
+        m_RareGachaBtn->DrawRect(Cut::RARE_GACHA_X, Cut::RARE_GACHA_Y, Cut::RARE_GACHA_W, Cut::RARE_GACHA_H);
+
+        m_RareGachaBtn->SetImage(RESOURCE_DIR"/img/img010_tw.png");
+    }
+
+    // 🎰 畫貓咪轉蛋 (底框 img010，文字 img007)
+    if (m_NormalGachaBtn) {
+
+        m_NormalGachaBtn->SetImage(RESOURCE_DIR"/img/img007_tw.png");
+        m_NormalGachaBtn->m_Transform.scale = { ((float)Cut::NORMAL_GACHA_W / gachaSheetSize.x) * 0.75 , ((float)Cut::NORMAL_GACHA_H / gachaSheetSize.y) * 0.75  };
+        m_NormalGachaBtn->SetZIndex(22);
+        m_NormalGachaBtn->DrawRect(Cut::NORMAL_GACHA_X, Cut::NORMAL_GACHA_Y, Cut::NORMAL_GACHA_W, Cut::NORMAL_GACHA_H);
+        m_NormalGachaBtn->SetImage(RESOURCE_DIR"/img/img010_tw.png"); // 畫完切回來
     }
 }

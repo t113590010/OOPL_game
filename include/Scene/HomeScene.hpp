@@ -16,16 +16,24 @@ public:
     void SetOnTeamBtnClick(std::function<void()> callback);    // 隊伍 (預留)
     void Update() ;
     void Draw() ;
-
+    void SetOnStorageBtnClick(std::function<void()> callback);
+    void SetOnRareGachaBtnClick(std::function<void()> callback);
+    void SetOnNormalGachaBtnClick(std::function<void()> callback);
 private:
     Util::GameObject m_Background; // 大廳背景
     std::shared_ptr<Button> m_StartBtn;
     std::shared_ptr<Button> m_UpgradeBtn; // 升級按鈕
     std::shared_ptr<Button> m_TeamBtn;    // 隊伍編成按鈕
+    std::shared_ptr<Button> m_StorageBtn;     // 冰箱(儲藏庫)
+    std::shared_ptr<Button> m_RareGachaBtn;   // 稀有轉蛋
+    std::shared_ptr<Button> m_NormalGachaBtn; // 貓咪轉蛋
 
     std::function<void()> m_OnStart;
     std::function<void()> m_OnUpgradeBtnClick;
     std::function<void()> m_OnTeamBtnClick;
+    std::function<void()> m_OnStorageBtnClick;
+    std::function<void()> m_OnRareGachaBtnClick;
+    std::function<void()> m_OnNormalGachaBtnClick;
 };
 
 #endif
