@@ -49,6 +49,7 @@ HomeScene::HomeScene() {
     });
 
     const std::string atlasPath = RESOURCE_DIR"/img/img010_tw.png";
+
     // ⬆️ 升級按鈕
     m_UpgradeBtn = std::make_shared<Button>(offset_x, offset_y + difY, width, height, atlasPath, " ", 30, Util::Color(255, 255, 255, 255));
     m_UpgradeBtn->SetZIndex(20);

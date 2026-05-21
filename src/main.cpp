@@ -15,6 +15,9 @@ int main(int, char**) {
             case App::State::LEVEL_SELECT:
             case App::State::HOME:
             case App::State::BATTLE:
+            case App::State::STORAGE:       // 👈 補上冰箱
+            case App::State::RARE_GACHA:    // 👈 補上稀有轉蛋
+            case App::State::NORMAL_GACHA:  // 👈 補上一般轉蛋
                 app.Update();
                 break;
 
