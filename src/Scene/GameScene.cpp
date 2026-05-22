@@ -5,8 +5,14 @@
 #include <iostream>
 #include <algorithm>
 #include "Entity/UnitFactory.hpp"
-
-GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(playerDeck){
+GameScene::GameScene(
+    const std::vector<UnitID>& playerDeck,
+    const StageData& stage
+)
+    :
+      m_Stage(stage),
+      m_EquippedDeck(playerDeck),
+      m_SpawnSystem(stage.waves){
     m_CameraX = GameConfig::CAMERA_MAX_X;
     m_CameraX = GameConfig::CAMERA_MAX_X;
     // 玩家基地放在左下角 (X 為負數，Y 為負數)
@@ -22,7 +28,7 @@ GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(play
         std::cout << "cant find imgcut \n";
     }
     // 敵人基地放在右下角 (X 為正數，Y 為負數)
-    m_EnemyBase = std::make_shared<Base>(Vector2{GameConfig::ENEMY_BASE_X, GameConfig::BASE_Y}, GameConfig::BASE_HP);
+    m_EnemyBase = std::make_shared<Base>(Vector2{GameConfig::ENEMY_BASE_X, GameConfig::BASE_Y}, stage.enemyBaseHP);
     m_EnemyBase->SetImage(RESOURCE_DIR "/img/enemyBase.png");
     m_EnemyBase->SetTeam(false);
     m_EnemyBase->SetSize(GameConfig::BASE_SIZE_X,GameConfig::BASE_SIZE_Y);
@@ -136,6 +142,7 @@ GameScene::GameScene(const std::vector<UnitID>& playerDeck): m_EquippedDeck(play
     });
 }
 void GameScene::Update(float dt) {
+    m_StageTimer += dt;
     // 1. 金錢與相機邏輯 (保持不變)
     if (pauseBtn) pauseBtn->Update();
     if (m_IsPaused) {
@@ -165,8 +172,17 @@ void GameScene::Update(float dt) {
     m_UISystem.Update(m_EquippedDeck, m_SpawnSystem.GetCooldownTimers(), m_CurrentMoney, m_WalletUpgradeCost,m_PlayerBase->GetCannonProgress(),m_PlayerBase->IsCannonReady());
     int clickedSlot = m_UISystem.GetClickedSlot();
 
-    m_SpawnSystem.Update(dt, m_Entities, m_CurrentMoney, m_PlayerBase, m_EnemyBase, m_EquippedDeck, clickedSlot);
-
+    m_SpawnSystem.Update(
+        dt,
+        m_StageTimer,
+        m_Stage,
+        m_Entities,
+        m_CurrentMoney,
+        m_PlayerBase,
+        m_EnemyBase,
+        m_EquippedDeck,
+        clickedSlot
+    );
     m_UISystem.ResetClick();
     // 3. 更新所有 Entity
     for (auto& entity : m_Entities) {

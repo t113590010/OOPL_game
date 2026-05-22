@@ -28,6 +28,7 @@ set(SRC_FILES
         "Entity/Enemies/Snack.cpp"
         "Entity/Enemies/p3.cpp"
         "Entity/Enemies/bighead.cpp"
+        "Entity/Enemies/redPig.cpp"
 
 
         "Entity/Cats/LongLegCat.cpp"
@@ -75,6 +76,7 @@ set(INCLUDE_FILES
         "Entity/Enemies/Snack.hpp"
         "Entity/Enemies/p3.hpp"
         "Entity/Enemies/bighead.hpp"
+        "Entity/Enemies/redPig.hpp"
 
 
         "Entity/Cats/LongLegCat.hpp"
