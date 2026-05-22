@@ -354,7 +354,7 @@ const std::vector<StageData> STAGES = {
 
         // 狗仔
             {
-                UnitID::BASIC_ENEMY,
+                UnitID::redPig,
 
                 WaveTriggerType::TIME,
 
@@ -367,6 +367,7 @@ const std::vector<StageData> STAGES = {
                 F(180),
                 F(300)
             },
+
 
             // 扭扭蛇
             {

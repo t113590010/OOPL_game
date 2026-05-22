@@ -17,6 +17,7 @@
 #include "Entity/Enemies/Snack.hpp" // 💡 記得補上
 #include "Entity/Enemies/p3.hpp" // 💡 記得補上
 #include "Entity/Enemies/bighead.hpp" // 💡 記得補上
+#include "Entity/Enemies/redPig.hpp" // 💡 記得補上
 
 
 #include "Entity/UnitData.hpp"     // 💡 核心：引入神級資料庫
@@ -94,6 +95,7 @@ std::shared_ptr<Entity> UnitFactory::CreateUnit(UnitID id, float x, float y, boo
         case UnitID::DogDoin:       newUnit = std::make_shared<DogDoin>(Vector2{x, y}); break;
         case UnitID::Peashooter:       newUnit = std::make_shared<Peashooter>(Vector2{x, y}); break;
         case UnitID::Queen:       newUnit = std::make_shared<Queen>(Vector2{x, y}); break;
+        case UnitID::redPig:       newUnit = std::make_shared<redPig>(Vector2{x, y}); break;
 
         default: return nullptr;
     }

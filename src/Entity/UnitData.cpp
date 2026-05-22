@@ -30,7 +30,9 @@ const std::unordered_map<UnitID, UnitStats> UnitData::s_Stats = {
 { UnitID::bighead,
 { 2000, 20.0f, 200, 30.0f, 10.0f, 0, 0.0f, 1,3,true, RESOURCE_DIR"/img/big_head.png", "" }
 },
-
+{ UnitID::redPig,
+{ 1000, 40.0f, 200, 30.0f, 10.0f, 0, 0.0f, 1,3,true, RESOURCE_DIR"/img/redPig.png", "" }
+},
 { UnitID::ninja_cat,
 { 500, 40.0f, 100, 100.0f, 5.0f, 500, 10.0f, 3,3,true, RESOURCE_DIR"/img/ninja_cat_3.png", RESOURCE_DIR"/img/ninja_cat_3_icon.png" }
 },

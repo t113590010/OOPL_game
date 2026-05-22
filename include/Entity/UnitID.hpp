@@ -23,6 +23,7 @@ enum class UnitID {
     Snack = 103,
     p3 = 104,
     bighead = 105,
+    redPig = 106,
 };
 
 #endif
