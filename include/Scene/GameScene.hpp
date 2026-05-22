@@ -19,10 +19,13 @@
 #include "System/BattleSystem.hpp"
 #include "PauseMenu.hpp"
 #include "SureMenu.hpp"
+#include "StageConfig.hpp"
 class GameScene {
 public:
-    GameScene(const std::vector<UnitID>& playerDeck);
-
+    GameScene(
+        const std::vector<UnitID>& playerDeck,
+        const StageData& stage
+    );
     void Update(float dt);          // 每幀更新
 
     void Draw();
@@ -41,7 +44,9 @@ public:
 private:
 
     void RemoveDeadEntities();      // 刪除死亡單位
+    StageData m_Stage;
 
+    float m_StageTimer = 0.0f;
     std::vector<std::shared_ptr<Entity>> m_Entities;
     std::shared_ptr<Base> m_PlayerBase;
     std::shared_ptr<Base> m_EnemyBase;

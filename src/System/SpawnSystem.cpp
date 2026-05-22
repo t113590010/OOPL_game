@@ -4,82 +4,160 @@
 #include "GameConfig.hpp"
 #include <iostream>
 
-// 💡 1. 在建構子裡「註冊」你要生成的敵人 (完全解耦！)
-SpawnSystem::SpawnSystem() {
-    // 參數：{ 怪物種類, 生成冷卻時間, 初始計時(預設0) }
-    m_EnemySpawners.push_back({UnitID::BASIC_ENEMY, 5.0f, 0.0f}); // 每 3 秒生一隻基礎小怪
-    m_EnemySpawners.push_back({UnitID::Snack,         8.0f, 0.0f}); // 每 8 秒生一隻新敵人
-    m_EnemySpawners.push_back({UnitID::p3,         6.0f, 0.0f}); // 每 8 秒生一隻新敵人
-    m_EnemySpawners.push_back({UnitID::bighead,         10.0f, 0.0f}); // 每 8 秒生一隻新敵人
+SpawnSystem::SpawnSystem(const std::vector<EnemyWave>& waves)
+    : m_EnemyWaves(waves) {
 }
 
-void SpawnSystem::Update(float dt, std::vector<std::shared_ptr<Entity>>& entities, float& currentMoney,
-                         const std::shared_ptr<Base>& playerBase, const std::shared_ptr<Base>& enemyBase,
-                         const std::vector<UnitID>& playerDeck,
-              int clickedSlot) {
-
-// 0. 更新玩家的冷卻碼表
-    for (int i = 0; i < playerDeck.size(); ++i) {
+void SpawnSystem::Update(
+    float dt,
+    float stageTimer,
+    const StageData& stage,
+    std::vector<std::shared_ptr<Entity>>& entities,
+    float& currentMoney,
+    const std::shared_ptr<Base>& playerBase,
+    const std::shared_ptr<Base>& enemyBase,
+    const std::vector<UnitID>& playerDeck,
+    int clickedSlot
+) {
+    // 0. 更新玩家冷卻
+    for (size_t i = 0; i < playerDeck.size() && i < 10; ++i) {
         if (m_CooldownTimers[i] > 0.0f) {
-            float lastTime = m_CooldownTimers[i]; // 紀錄減去前的時間
             m_CooldownTimers[i] -= dt;
 
-            // ==========================================
-            // 🔔 偵測冷卻結束的瞬間
-            // 如果原本 > 0，減完之後 <= 0，代表這幀剛好冷卻完！
-            // ==========================================
             if (m_CooldownTimers[i] <= 0.0f) {
-                m_CooldownTimers[i] = 0.0f; // 歸零防呆
-
-                // 播放冷卻完成的音效 (例如那種「叮」一聲)
+                m_CooldownTimers[i] = 0.0f;
                 Util::SFX(RESOURCE_DIR "/music/cd_done.mp3").Play();
-
                 std::cout << "[System] Slot " << (i + 1) << " Ready!\n";
             }
         }
     }
-    // 1. 處理敵人生成 (💡 陣列資料驅動版)
-    for (auto& spawner : m_EnemySpawners) {
-        spawner.currentTimer += dt;
+    // 1. 敵人 Wave 出怪系統
+    enemyCount = 0;
 
-        if (spawner.currentTimer > spawner.cooldown) {
-            // 🚨 方向鐵律：敵人在左邊，往右推進，所以生在基地的「右邊」 (+)
-            float spawnX = enemyBase->GetPosition().x + GameConfig::SPAWN_OFFSET_X;
-            float spawnY = GameConfig::BASE_Y + GameConfig::SPAWN_OFFSET_Y  + (static_cast<float>(rand()) / RAND_MAX * 2.0f - 1.0f) * GameConfig:: RANDOM_SPAWN_OFFSET_Y_MAX;
+    for (const auto& entity : entities) {
 
-            auto enemy = UnitFactory::CreateUnit(spawner.id, spawnX, spawnY, false);
-            if (enemy) {
-                entities.push_back(enemy);
-            }
+        if (!entity) continue;
 
-            // 重置這隻專屬怪物的計時器
-            spawner.currentTimer = 0.0f;
+        // 不算敵方基地
+        if (entity == enemyBase) continue;
+
+        // 只算敵人
+        if (!entity->IsPlayerTeam()) {
+            enemyCount++;
         }
     }
+    for (auto& wave : m_EnemyWaves) {
 
-    // 2. 處理玩家按鍵選兵
+        if (!wave.activated) {
+            switch (wave.triggerType) {
+                case WaveTriggerType::TIME:
+                    if (stageTimer >= wave.triggerValue) {
+                        wave.activated = true;
+                        wave.timer = 0.0f;
+
+                        float random01 =
+                            static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+                        wave.nextSpawnDelay =
+                            wave.repeatMin +
+                            (wave.repeatMax - wave.repeatMin) * random01;
+                    }
+                    break;
+
+                case WaveTriggerType::ENEMY_HP:
+                    if (enemyBase &&
+                        static_cast<float>(enemyBase->GetHP()) / stage.enemyBaseHP <= wave.triggerValue) {
+                        wave.activated = true;
+                        wave.timer = 0.0f;
+                        }
+                    break;
+            }
+        }
+
+        if (!wave.activated || wave.completed) continue;
+
+        wave.timer += dt;
+
+        float targetTime = (wave.spawnedCount == 0)
+            ? wave.firstDelay
+            : wave.nextSpawnDelay;
+
+        if (wave.timer >= targetTime) {
+            if (wave.timer >= targetTime) {
+
+                // =========================
+                // 敵人數量上限
+                // =========================
+
+                if (enemyCount >= stage.maxEnemyCount) {
+                    continue;
+                }
+                float spawnX = enemyBase->GetPosition().x + GameConfig::SPAWN_OFFSET_X;
+                float spawnY = GameConfig::BASE_Y + GameConfig::SPAWN_OFFSET_Y
+                             + (static_cast<float>(rand()) / RAND_MAX * 2.0f - 1.0f)
+                             * GameConfig::RANDOM_SPAWN_OFFSET_Y_MAX;
+
+                auto enemy = UnitFactory::CreateUnit(wave.id, spawnX, spawnY, false);
+                if (enemy) {
+                    entities.push_back(enemy);
+                }
+
+                wave.spawnedCount++;
+                wave.timer = 0.0f;
+
+                // ========================
+                // 重新決定下一次 cooldown
+                // ========================
+
+                if (wave.repeatMax <= wave.repeatMin) {
+                    wave.nextSpawnDelay = wave.repeatMin;
+                }
+                else {
+                    if (wave.repeatMax <= wave.repeatMin) {
+                        wave.nextSpawnDelay = wave.repeatMin;
+                    }
+                    else {
+
+                        float random01 =
+                            static_cast<float>(rand()) /
+                            static_cast<float>(RAND_MAX);
+
+                        wave.nextSpawnDelay =
+                            wave.repeatMin +
+                            (wave.repeatMax - wave.repeatMin) * random01;
+                    }
+                }
+
+                if (wave.totalCount != -1 &&
+                    wave.spawnedCount >= wave.totalCount) {
+                    wave.completed = true;
+                    }
+            }
+        }
+    }
     const Util::Keycode slotKeys[10] = {
         Util::Keycode::NUM_1, Util::Keycode::NUM_2, Util::Keycode::NUM_3,
-        Util::Keycode::NUM_4, Util::Keycode::NUM_5, Util::Keycode::NUM_6, Util::Keycode::NUM_7, Util::Keycode::NUM_8,
+        Util::Keycode::NUM_4, Util::Keycode::NUM_5, Util::Keycode::NUM_6,
+        Util::Keycode::NUM_7, Util::Keycode::NUM_8,
         Util::Keycode::NUM_9, Util::Keycode::NUM_0
     };
 
-    for (size_t i = 0; i < playerDeck.size(); ++i) {
+    for (size_t i = 0; i < playerDeck.size() && i < 10; ++i) {
         UnitID targetId = playerDeck[i];
         if (targetId == UnitID::NONE) continue;
 
-        // 💡 關鍵判斷：如果是按了對應鍵盤，或者是點擊了對應 ID 的按鈕
         bool keyTriggered = Util::Input::IsKeyDown(slotKeys[i]);
-        bool buttonTriggered = (clickedSlot == i);
+        bool buttonTriggered = (clickedSlot == static_cast<int>(i));
 
         if (keyTriggered || buttonTriggered) {
             if (m_CooldownTimers[i] <= 0.0f) {
-                int cost = UnitData::Get(targetId).cost; // 或 UnitFactory::GetUnitCost
+                int cost = UnitData::Get(targetId).cost;
 
                 if (currentMoney >= cost) {
-                    // 執行生成 (你原本那段生成邏輯)
                     float spawnX = playerBase->GetPosition().x + GameConfig::SPAWN_OFFSET_X;
-                    float spawnY = GameConfig::BASE_Y + GameConfig::SPAWN_OFFSET_Y  + (static_cast<float>(rand()) / RAND_MAX * 2.0f - 1.0f) * GameConfig:: RANDOM_SPAWN_OFFSET_Y_MAX;
+                    float spawnY = GameConfig::BASE_Y + GameConfig::SPAWN_OFFSET_Y
+                                 + (static_cast<float>(rand()) / RAND_MAX * 2.0f - 1.0f)
+                                 * GameConfig::RANDOM_SPAWN_OFFSET_Y_MAX;
 
                     auto newUnit = UnitFactory::CreateUnit(targetId, spawnX, spawnY, true);
                     if (newUnit) {
@@ -92,7 +170,6 @@ void SpawnSystem::Update(float dt, std::vector<std::shared_ptr<Entity>>& entitie
                     Util::SFX(RESOURCE_DIR "/music/fail_summon_cat.mp3").Play();
                 }
             } else if (buttonTriggered) {
-                // 只有按鈕點擊才放失敗音效，避免鍵盤誤觸吵死人
                 Util::SFX(RESOURCE_DIR "/music/fail_summon_cat.mp3").Play();
             }
         }
