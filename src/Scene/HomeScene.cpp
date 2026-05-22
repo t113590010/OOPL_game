@@ -49,6 +49,7 @@ HomeScene::HomeScene() {
     });
 
     const std::string atlasPath = RESOURCE_DIR"/img/img010_tw.png";
+    const std::string gachaPath = RESOURCE_DIR"/img/img007_tw.png";
     // ⬆️ 升級按鈕
     m_UpgradeBtn = std::make_shared<Button>(offset_x, offset_y + difY, width, height, atlasPath, " ", 30, Util::Color(255, 255, 255, 255));
     m_UpgradeBtn->SetZIndex(20);
@@ -59,18 +60,18 @@ HomeScene::HomeScene() {
     m_TeamBtn->SetZIndex(20);
     m_TeamBtn->SetOnClick([this]() { if (m_OnTeamBtnClick) m_OnTeamBtnClick(); });
 
-    // 🧊 冰箱按鈕
+    // 🧊 冰箱按鈕 (維持 atlasPath)
     m_StorageBtn = std::make_shared<Button>(0.6, -0.65 , width, height, atlasPath, " ", 30, Util::Color(255, 255, 255, 255));
     m_StorageBtn->SetZIndex(20);
     m_StorageBtn->SetOnClick([this]() { if (m_OnStorageBtnClick) m_OnStorageBtnClick(); });
 
-    // 🎰 稀有轉蛋按鈕
-    m_RareGachaBtn = std::make_shared<Button>(0.7, -0.65, width, height, atlasPath, " ", 30, Util::Color(255, 255, 255, 255));
+    // 🎰 稀有轉蛋按鈕 (改吃 gachaPath ！)
+    m_RareGachaBtn = std::make_shared<Button>(0.7, -0.65, width, height, gachaPath, " ", 30, Util::Color(255, 255, 255, 255));
     m_RareGachaBtn->SetZIndex(20);
     m_RareGachaBtn->SetOnClick([this]() { if (m_OnRareGachaBtnClick) m_OnRareGachaBtnClick(); });
 
-    // 🎰 貓咪轉蛋按鈕
-    m_NormalGachaBtn = std::make_shared<Button>(0.82, -0.65 , width, height, atlasPath, " ", 30, Util::Color(255, 255, 255, 255));
+    // 🎰 貓咪轉蛋按鈕 (改吃 gachaPath ！)
+    m_NormalGachaBtn = std::make_shared<Button>(0.82, -0.65 , width, height, gachaPath, " ", 30, Util::Color(255, 255, 255, 255));
     m_NormalGachaBtn->SetZIndex(20);
     m_NormalGachaBtn->SetOnClick([this]() { if (m_OnNormalGachaBtnClick) m_OnNormalGachaBtnClick(); });
 }
@@ -126,6 +127,12 @@ void HomeScene::Draw() {
         };
         m_UpgradeBtn->SetZIndex(22);
         m_UpgradeBtn->DrawRect(Cut::UPGRADE_X, Cut::UPGRADE_Y, Cut::UPGRADE_W, Cut::UPGRADE_H);
+
+        // 🚀 3. 歸位！把 scale 撐回大底框的大小，碰撞判定才會正常！
+        m_UpgradeBtn->m_Transform.scale = {
+            ((float)Cut::FRAME_W / sheetSize.x) * baseScale,
+            ((float)Cut::FRAME_H / sheetSize.y) * baseScale
+        };
     }
 
     if (m_TeamBtn) {
@@ -144,6 +151,12 @@ void HomeScene::Draw() {
         };
         m_TeamBtn->SetZIndex(22);
         m_TeamBtn->DrawRect(Cut::TEAM_X, Cut::TEAM_Y, Cut::TEAM_W, Cut::TEAM_H);
+
+        // 🚀 3. 歸位！把 scale 撐回大底框的大小，碰撞判定才會正常！
+        m_TeamBtn->m_Transform.scale = {
+            ((float)Cut::FRAME_W / sheetSize.x) * baseScale,
+            ((float)Cut::FRAME_H / sheetSize.y) * baseScale
+        };
     }
 
 
@@ -169,27 +182,23 @@ void HomeScene::Draw() {
     }
 
     // 🎰 畫稀有轉蛋 (文字 img007)
+    // 🎰 畫稀有轉蛋 (不需要 SetImage 了)
     if (m_RareGachaBtn) {
-        m_RareGachaBtn->SetImage(RESOURCE_DIR"/img/img007_tw.png");
-
-        // 注意這裡不需要 textBoost 了，直接用 baseScale 控制貓頭大小
         m_RareGachaBtn->m_Transform.scale = {
             ((float)Cut::RARE_GACHA_W / gachaSheetSize.x) * 0.75,
             ((float)Cut::RARE_GACHA_H / gachaSheetSize.y) * 0.75
         };
-        m_RareGachaBtn->SetZIndex(22); // 沒有底層了，直接放 21
+        m_RareGachaBtn->SetZIndex(22);
         m_RareGachaBtn->DrawRect(Cut::RARE_GACHA_X, Cut::RARE_GACHA_Y, Cut::RARE_GACHA_W, Cut::RARE_GACHA_H);
-
-        m_RareGachaBtn->SetImage(RESOURCE_DIR"/img/img010_tw.png");
     }
 
-    // 🎰 畫貓咪轉蛋 (底框 img010，文字 img007)
+    // 🎰 畫貓咪轉蛋 (不需要 SetImage 了)
     if (m_NormalGachaBtn) {
-
-        m_NormalGachaBtn->SetImage(RESOURCE_DIR"/img/img007_tw.png");
-        m_NormalGachaBtn->m_Transform.scale = { ((float)Cut::NORMAL_GACHA_W / gachaSheetSize.x) * 0.75 , ((float)Cut::NORMAL_GACHA_H / gachaSheetSize.y) * 0.75  };
+        m_NormalGachaBtn->m_Transform.scale = {
+            ((float)Cut::NORMAL_GACHA_W / gachaSheetSize.x) * 0.75 ,
+            ((float)Cut::NORMAL_GACHA_H / gachaSheetSize.y) * 0.75
+        };
         m_NormalGachaBtn->SetZIndex(22);
         m_NormalGachaBtn->DrawRect(Cut::NORMAL_GACHA_X, Cut::NORMAL_GACHA_Y, Cut::NORMAL_GACHA_W, Cut::NORMAL_GACHA_H);
-        m_NormalGachaBtn->SetImage(RESOURCE_DIR"/img/img010_tw.png"); // 畫完切回來
     }
 }

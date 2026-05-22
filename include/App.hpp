@@ -7,6 +7,9 @@
 #include "Util/BGM.hpp"
 #include "HomeScene.hpp"
 #include "StartScene.hpp"
+#include "StorageScene.hpp"
+#include "RareGachaScene.hpp"
+#include "NormalGachaScene.hpp"
 // #include "LevelSelectScene.hpp"
 class App {
 public:
@@ -16,6 +19,9 @@ public:
         LEVEL_SELECT,
         HOME,    // 👈 取代了 UPDATE
         BATTLE,  // 👈 取代了 UPDATE,
+        STORAGE,       // 👈 新增：冰箱狀態
+        RARE_GACHA,    // 👈 新增：稀有轉蛋狀態
+        NORMAL_GACHA,  // 👈 新增：貓咪轉蛋狀態
         END
     };
     State GetCurrentState() const { return m_CurrentState; }
@@ -31,8 +37,12 @@ private:
     void ValidTask();
     void LoadStartScene();
     void StartHomeScene();
-    void StartBattleScene(int stageIdx);
+   
 
+     void StartBattleScene(int stageIdx);
+    void StartStorageScene();
+    void StartRareGachaScene();
+    void StartNormalGachaScene();
 private:
     State m_CurrentState = State::START;
     std::shared_ptr<StartScene> m_StartScene;
@@ -40,6 +50,9 @@ private:
     std::shared_ptr<GameScene> m_GameScene;
     std::shared_ptr<Util::BGM> m_BattleBGM;
     std::shared_ptr<Util::BGM> m_MenuBGM;
+    std::shared_ptr<StorageScene> m_StorageScene;
+    std::shared_ptr<RareGachaScene> m_RareGachaScene;
+    std::shared_ptr<NormalGachaScene> m_NormalGachaScene;
     bool m_PendingQuit = false;
 };
 

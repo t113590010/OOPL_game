@@ -7,6 +7,8 @@
 #include "Entity/UnitID.hpp"
 #include "Core/Context.hpp"
 #include <SDL_mixer.h>
+
+#include <iostream>
 namespace {
     int stageIdx = -1;
 }
@@ -62,41 +64,100 @@ void App::StartHomeScene() {
     m_MenuBGM = std::make_shared<Util::BGM>(RESOURCE_DIR "/music/homebgm.mp3");
     m_MenuBGM->SetVolume(100);
     m_MenuBGM->Play(-1);
+    
     // 🚨 絕對不能在這裡 reset GameScene！交給 Update 去做！
+    if (!m_HomeScene) {
+        m_HomeScene = std::make_shared<HomeScene>();
+        
+        // 1. 開始遊戲按鈕 (整合了 GUI 的選關邏輯)
+        m_HomeScene->SetOnStartBtnClick([this]() {
+            if (m_MenuBGM) {
+                m_MenuBGM->FadeOut(500);
+            }
+            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+            stageIdx = -1;
+            m_CurrentState = State::LEVEL_SELECT;
+        });
 
-    m_HomeScene = std::make_shared<HomeScene>();
-    m_HomeScene->SetOnStartBtnClick([this]() {
-        if (m_MenuBGM) {
-              m_MenuBGM->FadeOut(500); // 快速淡出舊的
-          }
-        Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+        // 2. 升級按鈕
+        m_HomeScene->SetOnUpgradeBtnClick([this]() {
+            LOG_DEBUG("點擊了升級按鈕！");
+            // TODO: 之後在這裡呼叫 StartUpgradeScene();
+            Util::SFX(RESOURCE_DIR "/music/what-da-dog-doin.mp3").Play();
+        });
 
-        if (m_MenuBGM) {
-            m_MenuBGM->FadeOut(500);
-        }
+        // ==========================================
+        // 3. 隊伍編成按鈕 (保留你的新增)
+        // ==========================================
+        m_HomeScene->SetOnTeamBtnClick([this]() {
+            LOG_DEBUG("點擊了隊伍按鈕！");
+            // TODO: 之後在這裡呼叫 StartTeamScene();
+            Util::SFX(RESOURCE_DIR "/music/what-da-dog-doin.mp3").Play();
+        });
 
-        Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+        // 4. 倉庫按鈕
+        m_HomeScene->SetOnStorageBtnClick([this]() {
+            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+            LOG_DEBUG("ready to click STORAGE！");
+            StartStorageScene();
+        });
 
-        stageIdx = -1;
+        // 5. 稀有轉蛋按鈕
+        m_HomeScene->SetOnRareGachaBtnClick([this]() {
+            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+            LOG_DEBUG("ready to click StartRareGachaScene！");
+            StartRareGachaScene();
+        });
 
-        m_CurrentState = State::LEVEL_SELECT;
-    });
-    m_HomeScene->SetOnUpgradeBtnClick([this]() {
-        LOG_DEBUG("點擊了升級按鈕！");
-        // TODO: 之後在這裡呼叫 StartUpgradeScene();
-        // 你可以先播個簡單的按鈕音效
-        Util::SFX(RESOURCE_DIR "/music/what-da-dog-doin.mp3").Play();
-    });
-
-    // ==========================================
-    // 3. 隊伍編成按鈕 (新增)
-    // ==========================================
-    m_HomeScene->SetOnTeamBtnClick([this]() {
-        LOG_DEBUG("點擊了隊伍按鈕！");
-        // TODO: 之後在這裡呼叫 StartTeamScene();
-        Util::SFX(RESOURCE_DIR "/music/what-da-dog-doin.mp3").Play();
-    });
+        // 6. 一般轉蛋按鈕
+        m_HomeScene->SetOnNormalGachaBtnClick([this]() {
+            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+            LOG_DEBUG("ready to click StartNormalGachaScene！");
+            StartNormalGachaScene();
+        });
+    }
 }
+
+void App::StartStorageScene() {
+    LOG_DEBUG("click STORAGE！");
+
+    m_CurrentState = State::STORAGE;
+    if (!m_StorageScene) {
+        m_StorageScene = std::make_shared<StorageScene>();
+
+        m_StorageScene->SetOnReturnBtnClick([this]() {
+            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+            // 這裡只切換狀態，絕對不要呼叫 StartHomeScene()！
+            m_CurrentState = State::HOME;
+        });
+    }
+}
+
+void App::StartRareGachaScene() {
+    m_CurrentState = State::RARE_GACHA;
+    if (!m_RareGachaScene) {
+        m_RareGachaScene = std::make_shared<RareGachaScene>();
+
+        m_RareGachaScene->SetOnReturnBtnClick([this]() {
+            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+            m_CurrentState = State::HOME;
+        });
+    }
+}
+
+
+void App::StartNormalGachaScene() {
+    m_CurrentState = State::NORMAL_GACHA;
+    if (!m_NormalGachaScene) {
+        m_NormalGachaScene = std::make_shared<NormalGachaScene>();
+
+        m_NormalGachaScene->SetOnReturnBtnClick([this]() {
+            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+            m_CurrentState = State::HOME;
+        });
+    }
+}
+
 
 void App::StartBattleScene(int stageIdx){
     m_CurrentState = State::BATTLE;
@@ -219,6 +280,43 @@ void App::Update() {
                 }
             }
             m_GameScene->Draw();
+        }
+    }else if (m_CurrentState == State::STORAGE) {
+        // if (m_HomeScene) {
+        //     m_HomeScene.reset();
+        // }
+        if (m_StartScene) m_StartScene.reset();
+        LOG_DEBUG("STORAGE！");
+
+        if (m_StorageScene) {
+            m_StorageScene->Update();
+            m_StorageScene->Draw();
+        }
+    }
+    else if (m_CurrentState == State::RARE_GACHA) {
+        // if (m_HomeScene) {
+        //     m_HomeScene.reset();
+        // }
+        if (m_StartScene) m_StartScene.reset();
+        LOG_DEBUG("m_RareGachaScene！");
+
+
+        if (m_RareGachaScene) {
+            m_RareGachaScene->Update();
+            m_RareGachaScene->Draw();
+        }
+    }
+    else if (m_CurrentState == State::NORMAL_GACHA) {
+        // if (m_HomeScene) {
+        //     m_HomeScene.reset();
+        // }
+        if (m_StartScene) m_StartScene.reset();
+
+        LOG_DEBUG("m_NormalGachaScene！");
+
+        if (m_NormalGachaScene) {
+            m_NormalGachaScene->Update();
+            m_NormalGachaScene->Draw();
         }
     }
 }
