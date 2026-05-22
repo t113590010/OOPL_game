@@ -52,7 +52,6 @@ add_executable(${PROJECT_NAME}
         ${INCLUDE_FILES}
         include/StageConfig.hpp
         src/StageConfig.cpp
-
         # 修正：配合 files.cmake 的變數名稱
 )
 
