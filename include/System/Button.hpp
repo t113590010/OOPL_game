@@ -178,8 +178,14 @@ public:
         float drawHeight = m_Height;
 
         if (img) {
-            drawWidth = img->GetSize().x * m_Transform.scale.x;
-            drawHeight = img->GetSize().y * m_Transform.scale.y;
+            if (m_HasClipRect) {
+                // 👉 新增這層判斷：如果有切圖，碰撞區就照切出來的長寬算！
+                drawWidth = m_ClipW * m_Transform.scale.x;
+                drawHeight = m_ClipH * m_Transform.scale.y;
+            } else {
+                drawWidth = img->GetSize().x * m_Transform.scale.x;
+                drawHeight = img->GetSize().y * m_Transform.scale.y;
+            }
         }
 
         float halfWidth = drawWidth / 2.0f;
