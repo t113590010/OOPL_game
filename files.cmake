@@ -8,6 +8,9 @@ set(SRC_FILES
         "Scene/StorageScene.cpp"
         "Scene/RareGachaScene.cpp"
         "Scene/NormalGachaScene.cpp"
+        "Scene/LevelUpgradeScene.cpp"
+        "Scene/DeckScene.cpp"
+
         "Entity/Cats/Cat.cpp"
         "Entity/Cats/AxeCat.cpp"
         "Entity/Cats/ninja_cat.cpp"
@@ -56,6 +59,9 @@ set(INCLUDE_FILES
         "Scene/StorageScene.hpp"
         "Scene/RareGachaScene.hpp"
         "Scene/NormalGachaScene.hpp"
+        "Scene/LevelUpgradeScene.hpp"
+        "Scene/DeckScene.hpp"
+
         "Entity/Entity.hpp"
         "Entity/Cats/Cat.hpp"
         "Entity/Cats/AxeCat.hpp"

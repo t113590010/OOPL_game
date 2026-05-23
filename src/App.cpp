@@ -84,6 +84,7 @@ void App::StartHomeScene() {
             LOG_DEBUG("點擊了升級按鈕！");
             // TODO: 之後在這裡呼叫 StartUpgradeScene();
             Util::SFX(RESOURCE_DIR "/music/what-da-dog-doin.mp3").Play();
+            StartLevelUpgradeScene();
         });
 
         // ==========================================
@@ -93,6 +94,7 @@ void App::StartHomeScene() {
             LOG_DEBUG("點擊了隊伍按鈕！");
             // TODO: 之後在這裡呼叫 StartTeamScene();
             Util::SFX(RESOURCE_DIR "/music/what-da-dog-doin.mp3").Play();
+            StartDeckScene();
         });
 
         // 4. 倉庫按鈕
@@ -117,7 +119,38 @@ void App::StartHomeScene() {
         });
     }
 }
+void App::UpdateLevelSelectScene() {
 
+    std::cout << "[LEVEL_SELECT]\n";
+
+    const Util::Keycode stageKeys[] = {
+        Util::Keycode::NUM_1,
+        Util::Keycode::NUM_2,
+        Util::Keycode::NUM_3,
+        Util::Keycode::NUM_4,
+        Util::Keycode::NUM_5,
+    };
+
+    for (int i = 0; i < 5; ++i) {
+
+        if (Util::Input::IsKeyUp(stageKeys[i])) {
+
+            std::cout << "Select Stage "
+                      << (i + 1)
+                      << "\n";
+
+            Util::SFX(
+                RESOURCE_DIR "/music/StartBattle.mp3"
+            ).Play();
+
+            SDL_Delay(4000);
+
+            StartBattleScene(i);
+
+            return;
+        }
+    }
+}
 void App::StartStorageScene() {
     LOG_DEBUG("click STORAGE！");
 
@@ -132,7 +165,34 @@ void App::StartStorageScene() {
         });
     }
 }
+void App::StartDeckScene() {
+    LOG_DEBUG("click LEVEL UPGRADE！");
 
+    m_CurrentState = State::DECK;
+    if (!m_DeckScene) {
+        m_DeckScene = std::make_shared<DeckScene>();
+
+        m_DeckScene->SetOnReturnBtnClick([this]() {
+            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+            // 這裡只切換狀態，絕對不要呼叫 StartHomeScene()！
+            m_CurrentState = State::HOME;
+        });
+    }
+}
+void App::StartLevelUpgradeScene() {
+    LOG_DEBUG("click LEVEL UPGRADE！");
+
+    m_CurrentState = State::LEVEL_UPGRADE;
+    if (!m_LevelUpgradeScene) {
+        m_LevelUpgradeScene = std::make_shared<LevelUpgradeScene>();
+
+        m_LevelUpgradeScene->SetOnReturnBtnClick([this]() {
+            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+            // 這裡只切換狀態，絕對不要呼叫 StartHomeScene()！
+            m_CurrentState = State::HOME;
+        });
+    }
+}
 void App::StartRareGachaScene() {
     m_CurrentState = State::RARE_GACHA;
     if (!m_RareGachaScene) {
@@ -187,39 +247,7 @@ void App::Update() {
         m_CurrentState = State::END;
         return;
     }
-    if (m_CurrentState == State::LEVEL_SELECT) {
 
-        const Util::Keycode stageKeys[] = {
-            Util::Keycode::NUM_1,
-            Util::Keycode::NUM_2,
-            Util::Keycode::NUM_3,
-            Util::Keycode::NUM_4,
-            Util::Keycode::NUM_5,
-            Util::Keycode::NUM_6,
-            Util::Keycode::NUM_7,
-            Util::Keycode::NUM_8,
-            Util::Keycode::NUM_9,
-            Util::Keycode::NUM_0,
-        };
-
-        for (int i = 0; i < std::size(stageKeys); ++i) {
-
-            if (Util::Input::IsKeyUp(stageKeys[i])) {
-                stageIdx = i;
-            }
-        }
-
-        if (stageIdx != -1) {
-
-            Util::SFX(
-                RESOURCE_DIR "/music/StartBattle.mp3"
-            ).Play();
-
-            SDL_Delay(4000);
-
-            StartBattleScene(stageIdx);
-        }
-    }
     if (m_PendingQuit) {
         m_PendingQuit = false;
         StartHomeScene(); // 這裡才真正執行 reset 和 new
@@ -282,9 +310,7 @@ void App::Update() {
             m_GameScene->Draw();
         }
     }else if (m_CurrentState == State::STORAGE) {
-        // if (m_HomeScene) {
-        //     m_HomeScene.reset();
-        // }
+
         if (m_StartScene) m_StartScene.reset();
         LOG_DEBUG("STORAGE！");
 
@@ -294,9 +320,7 @@ void App::Update() {
         }
     }
     else if (m_CurrentState == State::RARE_GACHA) {
-        // if (m_HomeScene) {
-        //     m_HomeScene.reset();
-        // }
+
         if (m_StartScene) m_StartScene.reset();
         LOG_DEBUG("m_RareGachaScene！");
 
@@ -307,9 +331,7 @@ void App::Update() {
         }
     }
     else if (m_CurrentState == State::NORMAL_GACHA) {
-        // if (m_HomeScene) {
-        //     m_HomeScene.reset();
-        // }
+
         if (m_StartScene) m_StartScene.reset();
 
         LOG_DEBUG("m_NormalGachaScene！");
@@ -317,6 +339,28 @@ void App::Update() {
         if (m_NormalGachaScene) {
             m_NormalGachaScene->Update();
             m_NormalGachaScene->Draw();
+        }
+    }
+    else if (m_CurrentState == State::LEVEL_UPGRADE) {
+
+        if (m_StartScene) m_StartScene.reset();
+        LOG_DEBUG("m_LevelUpgradeScene！");
+
+
+        if (m_LevelUpgradeScene) {
+            m_LevelUpgradeScene->Update();
+            m_LevelUpgradeScene->Draw();
+        }
+    }
+    else if (m_CurrentState == State::DECK) {
+
+        if (m_StartScene) m_StartScene.reset();
+        LOG_DEBUG("m_DeckScene！");
+
+
+        if (m_DeckScene) {
+            m_DeckScene->Update();
+            m_DeckScene->Draw();
         }
     }
 }
