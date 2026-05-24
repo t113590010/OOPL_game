@@ -66,12 +66,12 @@ HomeScene::HomeScene() {
     m_StorageBtn->SetOnClick([this]() { if (m_OnStorageBtnClick) m_OnStorageBtnClick(); });
 
     // 🎰 稀有轉蛋按鈕 (改吃 gachaPath ！)
-    m_RareGachaBtn = std::make_shared<Button>(0.7, -0.65, width, height, gachaPath, " ", 30, Util::Color(255, 255, 255, 255));
+    m_RareGachaBtn = std::make_shared<Button>(0.82, -0.65, width, height, gachaPath, " ", 30, Util::Color(255, 255, 255, 255));
     m_RareGachaBtn->SetZIndex(20);
     m_RareGachaBtn->SetOnClick([this]() { if (m_OnRareGachaBtnClick) m_OnRareGachaBtnClick(); });
 
     // 🎰 貓咪轉蛋按鈕 (改吃 gachaPath ！)
-    m_NormalGachaBtn = std::make_shared<Button>(0.82, -0.65 , width, height, gachaPath, " ", 30, Util::Color(255, 255, 255, 255));
+    m_NormalGachaBtn = std::make_shared<Button>(0.71, -0.65 , width, height, gachaPath, " ", 30, Util::Color(255, 255, 255, 255));
     m_NormalGachaBtn->SetZIndex(20);
     m_NormalGachaBtn->SetOnClick([this]() { if (m_OnNormalGachaBtnClick) m_OnNormalGachaBtnClick(); });
 }

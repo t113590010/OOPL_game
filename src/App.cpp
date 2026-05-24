@@ -163,6 +163,19 @@ void App::StartStorageScene() {
             // 這裡只切換狀態，絕對不要呼叫 StartHomeScene()！
             m_CurrentState = State::HOME;
         });
+        m_StorageScene->SetOnToUse([this]() {
+            LOG_DEBUG("點擊了：使用貓咪！");
+            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+            // 這裡只切換狀態，絕對不要呼叫 StartHomeScene()！
+            m_CurrentState = State::HOME;
+        });
+
+        m_StorageScene->SetOnToXp([this]() {
+            LOG_DEBUG("點擊了：兌換 XP！");
+            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+              // 這裡只切換狀態，絕對不要呼叫 StartHomeScene()！
+              m_CurrentState = State::HOME;
+        });
     }
 }
 void App::StartDeckScene() {
@@ -202,6 +215,27 @@ void App::StartRareGachaScene() {
             Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
             m_CurrentState = State::HOME;
         });
+
+        m_RareGachaScene->SetOnStorageBtnClick([this]() {
+          // 音效可以保留，但切換場景要交給專屬函數！
+          StartStorageScene(); // 👈 改成這樣！
+      });
+
+        m_RareGachaScene->SetOnspanClick([this]() {
+          Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+          LOG_DEBUG("執行了 單抽 1 次！");
+          // TODO: 未來這裡要呼叫抽卡動畫的邏輯
+           StartStorageScene(); // 👈 改成這樣！
+
+      });
+        // 💰 綁定十連抽事件
+        m_RareGachaScene->SetOn_muti_spanClick([this]() {
+            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+            LOG_DEBUG("執行了 十連抽！");
+            // TODO: 未來這裡要呼叫抽卡動畫的邏輯
+             StartStorageScene(); // 👈 改成這樣！
+
+        });
     }
 }
 
@@ -214,6 +248,28 @@ void App::StartNormalGachaScene() {
         m_NormalGachaScene->SetOnReturnBtnClick([this]() {
             Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
             m_CurrentState = State::HOME;
+        });
+
+        m_NormalGachaScene->SetOnStorageBtnClick([this]() {
+             // 音效可以保留，但切換場景要交給專屬函數！
+             StartStorageScene(); // 👈 改成這樣！
+         });
+
+        m_NormalGachaScene->SetOnspanClick([this]() {
+            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+            LOG_DEBUG("執行了 單抽 1 次！");
+            // TODO: 未來這裡要呼叫抽卡動畫的邏輯
+             StartStorageScene(); // 👈 改成這樣！
+
+        });
+
+        // 💰 綁定十連抽事件
+        m_NormalGachaScene->SetOn_muti_spanClick([this]() {
+            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+            LOG_DEBUG("執行了 十連抽！");
+            // TODO: 未來這裡要呼叫抽卡動畫的邏輯
+             StartStorageScene(); // 👈 改成這樣！
+
         });
     }
 }
