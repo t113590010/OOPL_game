@@ -42,7 +42,7 @@ private:
     std::shared_ptr<NumberSystem> m_TicketNumber;  // 🎫 票卷
     // 這裡之後可以放你的貓咪網格、分頁按鈕等
     // 🪙 後台假資料 (用來測試運算邏輯)
-    int m_Tickets = 0;     // 👈 更改這個數字（例如改為 12、3、0）測試按鈕變化
+    int m_Tickets = 3;     // 👈 更改這個數字（例如改為 12、3、0）測試按鈕變化
     int m_CatFood = 139;
     int m_XP = 3000;
 
