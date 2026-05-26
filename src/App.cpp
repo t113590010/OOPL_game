@@ -259,7 +259,7 @@ void App::StartNormalGachaScene() {
             Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
             LOG_DEBUG("執行了 單抽 1 次！");
             // TODO: 未來這裡要呼叫抽卡動畫的邏輯
-             StartStorageScene(); // 👈 改成這樣！
+             // StartStorageScene(); // 👈 改成這樣！
 
         });
 
@@ -268,7 +268,7 @@ void App::StartNormalGachaScene() {
             Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
             LOG_DEBUG("執行了 十連抽！");
             // TODO: 未來這裡要呼叫抽卡動畫的邏輯
-             StartStorageScene(); // 👈 改成這樣！
+             // StartStorageScene(); // 👈 改成這樣！
 
         });
     }

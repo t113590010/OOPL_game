@@ -263,6 +263,15 @@ StorageScene::StorageScene() {
     addCatToStorage(UnitID::AXE_CAT);
     addCatToStorage(UnitID::CowCat);
     addCatToStorage(UnitID::FishCat);
+    addCatToStorage(UnitID::bighead);
+
+    addCatToStorage(UnitID::DogDoin);
+    addCatToStorage(UnitID::DogDoin);
+
+    addCatToStorage(UnitID::Peashooter);
+    addCatToStorage(UnitID::Queen);
+
+
     cat_count = m_StorageItems.size();
     m_cat_count->SetValue(cat_count); // 假資料：n隻貓咪
 

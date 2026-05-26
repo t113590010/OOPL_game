@@ -7,8 +7,19 @@
 #include <memory>
 #include <functional>
 #include "NumberSystem.hpp"
+#include <vector>
+#include "UnitData.hpp"
+#include "StorageItem.hpp"
+#include <filesystem> // 👈 記得在檔案最上面引入這個
+#include <iostream> // 👈 記得在檔案最上面引入這個
 class NormalGachaScene {
 public:
+    enum class GachaState {
+        IDLE,       // 閒置 (可點擊按鈕)
+        ANIMATING,  // 播放動畫中 (鎖定按鈕)
+        RESULT      // 顯示抽卡結果
+    };
+
     NormalGachaScene();
 
     void Update();
@@ -41,7 +52,7 @@ private:
     std::shared_ptr<NumberSystem> m_TicketNumber;  // 🎫 票卷
     // 這裡之後可以放你的貓咪網格、分頁按鈕等
     // 🪙 後台假資料 (用來測試運算邏輯)
-    int m_Tickets = 13;     // 👈 更改這個數字（例如改為 12、3、0）測試按鈕變化
+    int m_Tickets = 1333;     // 👈 更改這個數字（例如改為 12、3、0）測試按鈕變化
     int m_CatFood = 139;
     int m_XP = 3000;
 
@@ -50,6 +61,19 @@ private:
     std::shared_ptr<NumberSystem> m_MutiSpanCostNumber; // 多抽消耗
     std::shared_ptr<Button> m_SpanCatFoodIcon;
     std::shared_ptr<Button> m_MutiSpanCatFoodIcon;
+    // 🚀 扭蛋動畫與結果專用變數
+    GachaState m_State = GachaState::IDLE;
+    int m_AnimTimer = 0; // 用來簡單計時 (60 = 1秒)
+
+    // 記錄這次抽到的貓咪 ID (為了支援十連抽，用 vector 裝)
+    std::vector<UnitID> m_PulledCats;
+
+    // 用來在畫面上顯示抽到的貓咪 (類似你冰箱的 Popup)
+    std::vector<std::shared_ptr<Button>> m_ResultCatImages;
+    std::vector<std::shared_ptr<Util::Image>> m_AnimFrames;
+    Util::GameObject m_AnimObject; // 用來當作播放動畫的畫布
+    int animSpeed = 4; // 👈 調整播放速度 (每 2 幀換一張圖，數字越大播越慢)
+    Util::GameObject m_Background_black;
 };
 
 #endif

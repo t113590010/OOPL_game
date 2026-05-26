@@ -1,6 +1,7 @@
 #include "NormalGachaScene.hpp"
 #include "Core/Context.hpp"
 
+
 // 如果有專屬的切圖座標，可以建一個獨立的 namespace
 namespace Cut {
     // 🟡 返回按鈕：底板 (你之後自己填)
@@ -30,6 +31,24 @@ namespace Cut {
     const float CATFOOD_ICON_W = 219.0f - CATFOOD_ICON_X;
     const float CATFOOD_ICON_H = 203.0f-CATFOOD_ICON_Y;
 }
+UnitID PullOneCat() {
+    std::vector<UnitID> pool = {
+        UnitID::CAT,
+        UnitID::AXE_CAT,
+        UnitID::CowCat,
+        UnitID::FishCat,
+        UnitID::LONG_LEG_CAT,
+        UnitID::GaintCat,
+        UnitID::FlyCat,
+        UnitID::LongCat,
+        UnitID::DinoCat,
+        UnitID::bighead,
+
+
+    };
+    int randomIndex = rand() % pool.size();
+    return pool[randomIndex];
+}
 NormalGachaScene::NormalGachaScene() {
     // 1. 設定冰箱背景 (路徑請換成你實際的背景圖)
     auto bgImage = std::make_shared<Util::Image>(RESOURCE_DIR"/img/NormalGachaScene.png");
@@ -43,7 +62,11 @@ NormalGachaScene::NormalGachaScene() {
 
     // 自動算比例塞滿螢幕
     m_Background.m_Transform.scale = glm::vec2(windowWidth / imgSize.x, windowHeight / imgSize.y);
-
+    auto blackImg = std::make_shared<Util::Image>(RESOURCE_DIR "/img/black.png");
+    m_Background_black.SetDrawable(blackImg);
+    // 💡 設定層級為 94 (確保它在一般 UI 之上，但在結算的貓咪 95 之下)
+    m_Background_black.SetZIndex(89);
+    m_Background_black.m_Transform.scale = glm::vec2(windowWidth / blackImg->GetSize().x, windowHeight / blackImg->GetSize().y);
     const std::string img006Path = RESOURCE_DIR"/img/img006_tw.png";
     const std::string img007Path = RESOURCE_DIR"/img/img007_tw.png";
     const std::string atlasPath = RESOURCE_DIR"/img/img010_tw.png";
@@ -78,14 +101,78 @@ NormalGachaScene::NormalGachaScene() {
     m_span = std::make_shared<Button>(0.33f, spanOffset_Y, 300.0f, 86.0f, img007Path, " ", 30, Util::Color(255, 255, 255, 255));
     m_span->SetZIndex(1); // 設為 0，藏在背景下面，因為背景已經畫好按鈕了
     m_span->SetOnClick([this]() {
+        if (m_State != GachaState::IDLE) return; // 防呆：只有閒置時能按
+
+        // 1. 檢查與扣除資源
+        if (m_Tickets > 0) {
+            m_Tickets--;
+        } else if (m_CatFood >= 150) {
+            m_CatFood -= 150;
+        } else {
+            // std::cout << "[Gacha] 資源不足！" << std::endl;
+            return; // 沒錢不給抽
+        }
+
+        // 2. 更新畫面上的數字
+        UpdateGachaButtons();
+        if (m_CatFoodNumber) m_CatFoodNumber->SetValue(m_CatFood);
+
+        // 3. 隨機決定抽到的貓咪
+          m_PulledCats.clear();
+          m_PulledCats.push_back(PullOneCat()); // 🚀 改成呼叫真實的隨機抽卡！
+
+          // 4. 切換到動畫狀態
+          m_State = GachaState::ANIMATING;
+          m_AnimTimer = 0; // 重置計時器
+
+        // std::cout << "[Gacha] 開始播放扭蛋動畫..." << std::endl;
+
+        // 如果你有呼叫 App 的事件，也可以在這裡呼叫 (但記得不要在 App 裡切換場景)
         if (m_Onspan) m_Onspan();
     });
 
     // 💰 十連抽按鈕空殼 (設定在畫面更右下方)
     m_muti_span = std::make_shared<Button>(m_span->GetTransform().scale.x+spanOffset_X, spanOffset_Y, 300.0f, 86.0f, img007Path, " ", 30, Util::Color(255, 255, 255, 255));
     m_muti_span->SetZIndex(1); // 藏在背景下面
+    // m_muti_span->SetOnClick([this]() {
+    //     if (m_On_muti_span) m_On_muti_span();
+    // });
     m_muti_span->SetOnClick([this]() {
+        if (m_State != GachaState::IDLE) return; // 防呆
+
+        int pullCount = 0;
+
+        // 1. 檢查與扣除資源
+        if (m_Tickets > 0) {
+            // 如果有票，能抽幾張算幾張 (最多10張)
+            pullCount = (m_Tickets > 10) ? 10 : m_Tickets;
+            m_Tickets -= pullCount;
+        } else if (m_CatFood >= 1500) {
+            // 沒票但罐頭夠，標準十連抽
+            pullCount = 10;
+            m_CatFood -= 1500;
+        } else {
+            // std::cout << "[Gacha] 資源不足，無法十連抽！" << std::endl;
+            return;
+        }
+
+        // 2. 更新畫面數字
+        UpdateGachaButtons();
+        if (m_CatFoodNumber) m_CatFoodNumber->SetValue(m_CatFood);
+
+        // 3. 連續抽貓！
+        m_PulledCats.clear();
+        for (int i = 0; i < pullCount; ++i) {
+            m_PulledCats.push_back(PullOneCat()); // 呼叫你的抽卡機 n 次
+        }
+
+        // 4. 進入動畫狀態
+        m_State = GachaState::ANIMATING;
+        m_AnimTimer = 0;
+
+        // std::cout << "[Gacha] 開始播放多連抽動畫..." << std::endl;
         if (m_On_muti_span) m_On_muti_span();
+
     });
 
     m_XPNumber = std::make_shared<NumberSystem>(
@@ -138,6 +225,47 @@ NormalGachaScene::NormalGachaScene() {
         40.0f, 40.0f,
         img006Path, " ", 30, Util::Color(255, 255, 255, 255)
     );
+    // ==========================================
+    // 🎬 預先載入 69 張轉蛋動畫序列圖
+    // ==========================================
+    for (int i = 0; i < 69; ++i) {
+        // 組合路徑
+        std::string path = RESOURCE_DIR "/img/RareSpan_Fixed/RareSpan-" + std::to_string(i) + ".png";
+
+        // 🚨 檢查檔案到底存不存在於資料夾中！
+        if (!std::filesystem::exists(path)) {
+            std::cout << "error cant find " << path << std::endl;
+            // 💡 如果在終端機看到這行報錯，請去檢查你的資料夾
+            // 是不是補了零 (RareSpan-00.png)？還是副檔名大寫 (.PNG)？
+        } else {
+            m_AnimFrames.push_back(std::make_shared<Util::Image>(path));
+        }
+    }
+
+    // 防呆：確保陣列裡面真的有圖，才設定給動畫物件
+    if (!m_AnimFrames.empty()) {
+        m_AnimObject.SetDrawable(m_AnimFrames[0]);
+
+        // 🚀 動態計算全螢幕縮放比例 (就跟設定背景圖一模一樣！)
+        auto context = Core::Context::GetInstance();
+        float windowWidth = (float)context->GetWindowWidth();
+        float windowHeight = (float)context->GetWindowHeight();
+        glm::vec2 animImgSize = m_AnimFrames[0]->GetSize();
+
+        m_AnimObject.m_Transform.scale = {
+            windowWidth / animImgSize.x,
+            windowHeight / animImgSize.y
+        };
+    } else {
+        std::cout << "error img no reload！" << std::endl;
+    }
+    m_AnimObject.SetZIndex(90); // 確保在背景之上，但在大貓咪 (100) 之下
+
+    // 如果動畫圖片太小或太大，可以調這裡的 scale 放大縮小 (例如放大 1.5 倍)
+    // m_AnimObject.m_Transform.scale = { 1.5f, 1.5f };
+
+    // 將動畫固定在畫面正中央
+    m_AnimObject.m_Transform.translation = { 0.0f, 0.0f };
     // 🚀 初始化時，立刻執行一次判斷邏輯
     UpdateGachaButtons();
 }
@@ -166,13 +294,139 @@ void NormalGachaScene::SetOnStorageBtnClick(std::function<void()> callback) { m_
 void NormalGachaScene::SetOnspanClick(std::function<void()> callback) { m_Onspan = callback; }
 void NormalGachaScene::SetOn_muti_spanClick(std::function<void()> callback) { m_On_muti_span = callback; }
 void NormalGachaScene::Update() {
-    if (m_ReturnBtn) {
-        m_ReturnBtn->Update();
+    if (m_State == GachaState::IDLE) {
+        // 🚀 只有閒置狀態，才更新按鈕 (讓它們可以被點擊)
+        if (m_ReturnBtn) m_ReturnBtn->Update();
+        if (m_StorageBtn) m_StorageBtn->Update();
+        if (m_span) m_span->Update();
+        if (m_muti_span) m_muti_span->Update();
     }
-    if (m_StorageBtn) m_StorageBtn->Update();
-    if (m_span) m_span->Update();
-    if (m_muti_span) m_muti_span->Update();
-    // 之後這裡放其他冰箱內按鈕的 Update
+    else if (m_State == GachaState::ANIMATING) {
+        // 🚀 動畫播放中：按鈕全鎖死
+        m_AnimTimer++;
+
+        // int animSpeed = 2; // 👈 調整播放速度 (每 2 幀換一張圖，數字越大播越慢)
+        int currentFrame = m_AnimTimer / animSpeed; // 計算現在該播第幾張圖
+
+        // 當算出來的影格數 >= 69 (也就是動畫播完了)
+        if (currentFrame >= m_AnimFrames.size()) {
+            m_State = GachaState::RESULT;
+            // std::cout << "[Gacha] 動畫結束，顯示貓咪！" << std::endl;
+
+            m_ResultCatImages.clear();
+            int totalCats = m_PulledCats.size();
+
+            // 🌟 動態排版系統 + 擷取第一影格
+            for (int i = 0; i < totalCats; ++i) {
+                UnitID pulledID = m_PulledCats[i];
+                auto& stats = UnitData::Get(pulledID);
+
+                float ratioX = 0.0f;
+                float ratioY = 0.0f;
+                float catSize = (totalCats == 1) ? 200.0f : 140.0f;
+
+                if (totalCats == 1) {
+                    ratioX = 0.0f;
+                    ratioY = 0.0f;
+                } else {
+                    int row = i / 5;
+                    int col = i % 5;
+                    ratioX = (col - 2) * 0.3f;
+                    ratioY = (row == 0) ? 0.25f : -0.25f;
+                }
+
+                // 找尋對應的 .imgcut 檔案
+                std::string path = stats.imgPath;
+                size_t lastSlash = path.find_last_of("/\\");
+                std::string filename = path.substr(lastSlash + 1);
+                size_t dotPos = filename.find_last_of(".");
+                if (dotPos != std::string::npos) filename = filename.substr(0, dotPos);
+
+                std::string baseDir = path.substr(0, path.find_last_of("/\\"));
+                baseDir = baseDir.substr(0, baseDir.find_last_of("/\\"));
+                std::string imgcutPath = baseDir + "/imgcut/" + filename + ".imgcut";
+
+                if (std::filesystem::exists(imgcutPath)) {
+                    std::vector<SpriteFrame> allFrames = ParseImgCut(imgcutPath);
+                    if (!allFrames.empty()) {
+                        SpriteFrame frame0 = allFrames[0];
+
+                        // 📐 共用防壓扁魔法
+                        auto tempImg = std::make_shared<Util::Image>(stats.imgPath);
+                        float sheetWidth = tempImg->GetSize().x;
+                        float sheetHeight = tempImg->GetSize().y;
+                        float scaleFactor = catSize / std::max((float)frame0.w, (float)frame0.h);
+
+                      // ==========================================
+                        // 💡 特殊處理：巨神貓 (GaintCat) 需要組合「腳 + 身體」
+                        // ==========================================
+                        if (pulledID == UnitID::GaintCat && allFrames.size() >= 2) {
+                            SpriteFrame frame0 = allFrames[0]; // 身體
+                            SpriteFrame frame1 = allFrames[1]; // 腳
+
+                            // 1. 先畫腳 (放底層)
+                            auto catLegs = std::make_shared<Button>(
+                                ratioX, ratioY, catSize, catSize,
+                                stats.imgPath, " ", 30, Util::Color(255, 255, 255, 255)
+                            );
+                            catLegs->SetClipRect(frame1.x, frame1.y, frame1.w, frame1.h - 3);
+                            catLegs->SetScale((frame1.w * scaleFactor) / sheetWidth, (frame1.h * scaleFactor) / sheetHeight);
+
+                            // 🚀 關鍵對齊魔法 1：記下 UI 預設的中心座標當作「地板基準線」
+                            float baseX = catLegs->m_Transform.translation.x;
+                            float baseY = catLegs->m_Transform.translation.y-100.0f;
+
+                            // 把腳的中心點往上推「自己高度的一半」，這樣腳底就會剛好貼緊 baseY 地板！
+                            catLegs->m_Transform.translation.y = baseY + ((frame1.h / 2.0f) * scaleFactor);
+
+                            catLegs->SetZIndex(95);
+                            m_ResultCatImages.push_back(catLegs);
+
+                            // 2. 再畫身體 (放上層)
+                            auto catBody = std::make_shared<Button>(
+                                ratioX, ratioY, catSize, catSize,
+                                stats.imgPath, " ", 30, Util::Color(255, 255, 255, 255)
+                            );
+                            catBody->SetClipRect(frame0.x, frame0.y, frame0.w, frame0.h - 3);
+                            catBody->SetScale((frame0.w * scaleFactor) / sheetWidth, (frame0.h * scaleFactor) / sheetHeight);
+
+                            // 🚀 關鍵對齊魔法 2：先把身體的底部也貼齊 baseY 地板，然後加上你寫的 Offset！
+                            float bodyX = -3.0f;
+                            float bodyY = 15.0f;
+
+                            catBody->m_Transform.translation.x = baseX + (bodyX * scaleFactor);
+                            // 身體高度的一半 + 你的 bodyY
+                            catBody->m_Transform.translation.y = baseY + ((frame0.h / 2.0f) * scaleFactor) + (bodyY * scaleFactor);
+
+                            catBody->SetZIndex(96);
+                            m_ResultCatImages.push_back(catBody);
+                        }
+                        // ==========================================
+                        // 💡 一般貓咪：只要畫身體 (frame0)
+                        // ==========================================
+                        else {
+                            auto catBody = std::make_shared<Button>(
+                                ratioX, ratioY, catSize, catSize,
+                                stats.imgPath, " ", 30, Util::Color(255, 255, 255, 255)
+                            );
+                            catBody->SetClipRect(frame0.x, frame0.y, frame0.w, frame0.h - 3);
+                            catBody->SetScale((frame0.w * scaleFactor) / sheetWidth, (frame0.h * scaleFactor) / sheetHeight);
+                            catBody->SetZIndex(95);
+                            m_ResultCatImages.push_back(catBody);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else if (m_State == GachaState::RESULT) {
+        if (Util::Input::IsKeyDown(Util::Keycode::MOUSE_LB)) {
+            m_State = GachaState::IDLE;
+            m_ResultCatImages.clear(); // 🗑️ 清空畫面上的貓咪
+            m_PulledCats.clear();
+            // std::cout << "[Gacha] 關閉結算畫面，回到閒置狀態。" << std::endl;
+        }
+    }
 }
 
 void NormalGachaScene::Draw() {
@@ -315,5 +569,22 @@ void NormalGachaScene::Draw() {
     // 畫抽卡按鈕上的數字 (不管是票券還是罐頭，現在都一定會畫出來！)
     if (m_SpanCostNumber) m_SpanCostNumber->Draw();
     if (m_MutiSpanCostNumber) m_MutiSpanCostNumber->Draw();
+    if (m_State == GachaState::ANIMATING) {
+        // int animSpeed = 2; // 這裡要跟 Update 裡面的數值一致！
+        int currentFrame = m_AnimTimer / animSpeed;
 
+        // 防呆保護：確保沒有超出陣列範圍 (0 ~ 68)
+        if (currentFrame >= 0 && currentFrame < m_AnimFrames.size()) {
+            // 換上對應的序列圖並畫出來
+            m_AnimObject.SetDrawable(m_AnimFrames[currentFrame]);
+            m_AnimObject.Draw();
+        }
+    }
+    else if (m_State == GachaState::RESULT) {
+        m_Background_black.Draw();
+        // 畫出抽到的所有貓咪大圖
+        for (auto& img : m_ResultCatImages) {
+            if (img) img->Draw();
+        }
+    }
 }
