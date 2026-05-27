@@ -10,26 +10,52 @@ namespace Cut {
     const float POPUP_CANCEL_TXT_X = 446.0f, POPUP_CANCEL_TXT_Y = 0.0f, POPUP_CANCEL_TXT_W = 512.0f-POPUP_CANCEL_TXT_X, POPUP_CANCEL_TXT_H = 63.0f;
 }
 
-UnitID PullOneCat() {
-    std::vector<UnitID> pool = {
-        UnitID::CAT,
-        UnitID::AXE_CAT,
-        UnitID::CowCat,
-        UnitID::FishCat,
-        UnitID::LONG_LEG_CAT,
-        UnitID::GaintCat,
-        UnitID::FlyCat,
-        UnitID::LongCat,
-        UnitID::DinoCat,
-        UnitID::bighead
+struct DropRate {
+    UnitID id;
+    int weight;
+};
+
+static UnitID PullOneCat() {
+    static std::vector<DropRate> pool = {
+        {UnitID::CAT,           150},
+        {UnitID::AXE_CAT,       150},
+        {UnitID::CowCat,        150},
+        {UnitID::FishCat,       150},
+        {UnitID::LONG_LEG_CAT,  100},
+        {UnitID::GaintCat,      100},
+        {UnitID::FlyCat,         80},
+        {UnitID::LongCat,        70},
+        {UnitID::DinoCat,        40},
+        {UnitID::bighead,        10}
     };
-    return pool[rand() % pool.size()];
+
+    int totalWeight = 0;
+    for (const auto& item : pool) totalWeight += item.weight;
+
+    int randomVal = rand() % totalWeight;
+    int currentSum = 0;
+
+    for (const auto& item : pool) {
+        currentSum += item.weight;
+        if (randomVal < currentSum) {
+            return item.id;
+        }
+    }
+    return pool.front().id;
 }
 
 NormalGachaScene::NormalGachaScene() {
     auto context = Core::Context::GetInstance();
     float windowWidth = (float)context->GetWindowWidth();
     float windowHeight = (float)context->GetWindowHeight();
+
+    // ==========================================
+    // 👑 1. 讀取真實玩家資料
+    // ==========================================
+    auto playerData = PlayerData::GetInstance();
+    m_XP = playerData->GetXP();
+    m_CatFood = playerData->GetCatFood();
+    m_Tickets = playerData->GetNormalTickets(); // 假設你的 PlayerData 裡叫這個
 
     auto bgImage = std::make_shared<Util::Image>(RESOURCE_DIR"/img/NormalGachaScene.png");
     m_Background.SetDrawable(bgImage);
@@ -38,7 +64,7 @@ NormalGachaScene::NormalGachaScene() {
 
     auto blackImg = std::make_shared<Util::Image>(RESOURCE_DIR "/img/black.png");
     m_Background_black.SetDrawable(blackImg);
-    m_Background_black.SetZIndex(75); // 確保在背景之上，彈窗元件之下
+    m_Background_black.SetZIndex(75);
     m_Background_black.m_Transform.scale = glm::vec2(windowWidth / blackImg->GetSize().x, windowHeight / blackImg->GetSize().y);
 
     const std::string img006Path = RESOURCE_DIR"/img/img006_tw.png";
@@ -55,32 +81,40 @@ NormalGachaScene::NormalGachaScene() {
 
     float spanOffset_X = 0.11f, spanOffset_Y = -0.73f, spanOffset2_Y = -0.77f;
 
+    // ==========================================
+    // 👑 2. 單抽按鈕邏輯對接
+    // ==========================================
     m_span = std::make_shared<Button>(0.33f, spanOffset_Y, 300.0f, 86.0f, img007Path, " ", 30, Util::Color(255, 255, 255, 255));
-//     m_span = std::make_shared<Button>(
-//     0.33f, spanOffset_Y,
-//     Cut::SPAN_BTN_W, Cut::SPAN_BTN_H, // 👈 這裡一定要用對切圖大小
-//     img007Path, " ", 30, Util::Color(255, 255, 255, 255)
-// );
-
-
     m_span->SetZIndex(1);
     m_span->SetOnClick([this]() {
-
-
         if (m_State != GachaState::IDLE) return;
 
-        if (m_Tickets > 0) m_Tickets--; else if (m_CatFood >= 150) m_CatFood -= 150;
+        auto pData = PlayerData::GetInstance();
+
+        // 判斷真實資料的資源並扣除
+        if (pData->GetNormalTickets() > 0) {
+            pData->SpendNormalTickets(1);
+        }
+        else if (pData->GetCatFood() >= 150) {
+            pData->SpendCatFood(150);
+        }
         else {
             Util::SFX(RESOURCE_DIR "/music/fail_summon_cat.mp3").Play();
-
             return;
-        };
-        Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+        }
 
+        pData->SaveToFile(); // 🚀 關鍵：扣款成功馬上存檔！
+
+        // 更新畫面變數
+        m_Tickets = pData->GetNormalTickets();
+        m_CatFood = pData->GetCatFood();
+
+        Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
         Util::SFX(RESOURCE_DIR "/music/spin.mp3").Play();
 
         UpdateGachaButtons();
         if (m_CatFoodNumber) m_CatFoodNumber->SetValue(m_CatFood);
+        if (m_TicketNumber) m_TicketNumber->SetValue(m_Tickets);
 
         m_PulledCats.clear();
         m_PulledCats.push_back(PullOneCat());
@@ -88,32 +122,47 @@ NormalGachaScene::NormalGachaScene() {
         m_AnimTimer = 0;
         if (m_Onspan) m_Onspan();
     });
-    // m_muti_span = std::make_shared<Button>(
-    //       (m_span->GetTransform().scale.x) + spanOffset_X, spanOffset_Y,
-    //       Cut::SPAN_BTN_W, Cut::SPAN_BTN_H, // 👈 這裡也要對應
-    //       img007Path, " ", 30, Util::Color(255, 255, 255, 255)
-    //   );
+
+    // ==========================================
+    // 👑 3. 多抽按鈕邏輯對接
+    // ==========================================
     m_muti_span = std::make_shared<Button>(m_span->GetTransform().scale.x+spanOffset_X, spanOffset_Y, 300.0f, 86.0f, img007Path, " ", 30, Util::Color(255, 255, 255, 255));
     m_muti_span->SetZIndex(1);
     m_muti_span->SetOnClick([this]() {
         if (m_State != GachaState::IDLE) return;
 
+        auto pData = PlayerData::GetInstance();
         int pullCount = 0;
-        if (m_Tickets > 0) { pullCount = (m_Tickets > 10) ? 10 : m_Tickets; m_Tickets -= pullCount; }
-        else if (m_CatFood >= 1500) { pullCount = 10; m_CatFood -= 1500; }   else {
+
+        if (pData->GetNormalTickets() > 0) {
+            pullCount = (pData->GetNormalTickets() > 10) ? 10 : pData->GetNormalTickets();
+            pData->SpendNormalTickets(pullCount);
+        }
+        else if (pData->GetCatFood() >= 1500) {
+            pullCount = 10;
+            pData->SpendCatFood(1500);
+        }
+        else {
             Util::SFX(RESOURCE_DIR "/music/fail_summon_cat.mp3").Play();
-
             return;
-        };
-        Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+        }
 
+        pData->SaveToFile(); // 🚀 關鍵：扣款成功馬上存檔！
+
+        // 更新畫面變數
+        m_Tickets = pData->GetNormalTickets();
+        m_CatFood = pData->GetCatFood();
+
+        Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
         Util::SFX(RESOURCE_DIR "/music/spin.mp3").Play();
 
         UpdateGachaButtons();
         if (m_CatFoodNumber) m_CatFoodNumber->SetValue(m_CatFood);
+        if (m_TicketNumber) m_TicketNumber->SetValue(m_Tickets);
 
         m_PulledCats.clear();
         for (int i = 0; i < pullCount; ++i) m_PulledCats.push_back(PullOneCat());
+
         m_State = GachaState::ANIMATING;
         m_AnimTimer = 0;
         if (m_On_muti_span) m_On_muti_span();
@@ -128,10 +177,20 @@ NormalGachaScene::NormalGachaScene() {
     m_SpanCatFoodIcon = std::make_shared<Button>(0.32f, spanOffset2_Y, 40.0f, 40.0f, img006Path, " ", 30, Util::Color(255, 255, 255, 255));
     m_MutiSpanCatFoodIcon = std::make_shared<Button>(0.65f, spanOffset2_Y, 40.0f, 40.0f, img006Path, " ", 30, Util::Color(255, 255, 255, 255));
 
-    for (int i = 0; i < 69; ++i) {
-        std::string path = RESOURCE_DIR "/img/RareSpan_Fixed/RareSpan-" + std::to_string(i) + ".png";
-        if (std::filesystem::exists(path)) m_AnimFrames.push_back(std::make_shared<Util::Image>(path));
+    int frameIndex = 0;
+    std::string spinanimeFile =  RESOURCE_DIR "/img/NormalSpin2/frame_" ;
+    while (true) {
+        std::string path = spinanimeFile+ std::to_string(frameIndex) + ".png";
+        if (std::filesystem::exists(path)) {
+            m_AnimFrames.push_back(std::make_shared<Util::Image>(path));
+            frameIndex++;
+        } else {
+            break;
+        }
     }
+    LOG_DEBUG(m_AnimFrames.size());
+    spinAnimeSize = m_AnimFrames.size();
+
     if (!m_AnimFrames.empty()) {
         m_AnimObject.SetDrawable(m_AnimFrames[0]);
         glm::vec2 animImgSize = m_AnimFrames[0]->GetSize();
@@ -140,64 +199,63 @@ NormalGachaScene::NormalGachaScene() {
     m_AnimObject.SetZIndex(90);
     m_AnimObject.m_Transform.translation = { 0.0f, 0.0f };
 
-    // 初始化功能按鈕
+    // ==========================================
+    // 👑 4. 結算彈窗按鈕邏輯對接 (補上存檔)
+    // ==========================================
     float popup_btn_w = 225.0f, popup_btn_h = 40.0f;
     const std::string yesOrNoPath = RESOURCE_DIR"/img/yesOrNo.png";
 
     m_PopupUseBtn = std::make_shared<Button>(-0.2f, -0.3f, popup_btn_w-40, popup_btn_h-40, RESOURCE_DIR"/img/UseBtn.png", " ", 30, Util::Color(255, 255, 255, 255));
     m_PopupUseBtn->SetZIndex(80);
     m_PopupUseBtn->SetOnClick([this]() {
-        m_CurrentResultIndex++; // 下一隻
+        UnitID id = m_PulledCats[m_CurrentResultIndex];
+        PlayerData::GetInstance()->UnlockOrUpgradeCat(id);
+        PlayerData::GetInstance()->SaveToFile(); // 🚀 關鍵補上
+        m_CurrentResultIndex++;
         ShowNextResultCat();
     });
 
     m_PopupXpBtn = std::make_shared<Button>(0.2f, -0.3f, popup_btn_w, popup_btn_h, RESOURCE_DIR"/img/ToXpBtnpng.png", " ", 30, Util::Color(255, 255, 255, 255));
     m_PopupXpBtn->SetZIndex(80);
     m_PopupXpBtn->SetOnClick([this]() {
-        m_XP += 10000;
+        UnitID id = m_PulledCats[m_CurrentResultIndex];
+        int earnXp = UnitData::Get(id).rank * 10000;
+
+        PlayerData::GetInstance()->AddXP(earnXp);
+        PlayerData::GetInstance()->SaveToFile(); // 🚀 關鍵補上
+
+        m_XP = PlayerData::GetInstance()->GetXP();
         if (m_XPNumber) m_XPNumber->SetValue(m_XP);
-        m_CurrentResultIndex++; // 下一隻
+        m_CurrentResultIndex++;
         ShowNextResultCat();
     });
 
     m_PopupCancelBtn = std::make_shared<Button>(0.3f, -0.1f, 150.0f, 40.0f, yesOrNoPath, " ", 30, Util::Color(255, 255, 255, 255));
     m_PopupCancelBtn->SetZIndex(80);
     m_PopupCancelBtn->SetOnClick([this]() {
-        m_CurrentResultIndex++; // 下一隻
+        UnitID id = m_PulledCats[m_CurrentResultIndex];
+        PlayerData::GetInstance()->AddToFridge(id);
+        PlayerData::GetInstance()->SaveToFile(); // 🚀 關鍵補上
+        m_CurrentResultIndex++;
         ShowNextResultCat();
     });
 
     UpdateGachaButtons();
 }
 
-// ==========================================
-// 🚀 彈窗序列生成核心邏輯（包含巨神貓特判下半身）
-// ==========================================
 void NormalGachaScene::ShowNextResultCat() {
     if (m_CurrentResultIndex < m_PulledCats.size()) {
         Util::SFX(RESOURCE_DIR "/music/get_unit_item.mp3").Play();
-        
+
         UnitID id = m_PulledCats[m_CurrentResultIndex];
         auto& stats = UnitData::Get(id);
 
-        // 1. 生成預設的 StorageItem（維持原有結構）
         m_SelectedPopupCat = std::make_shared<StorageItem>(0.0f, 0.0f, id);
         m_IsPopupOpen = true;
 
         m_PopupDisplayLegs = nullptr;
         m_PopupDisplayBody = nullptr;
 
-        // 2. 🌟 巨神貓特判：精準對齊你的骨架系統，手動幫彈窗刻出完整的下半身！
-        std::string path = stats.imgPath;
-        size_t lastSlash = path.find_last_of("/\\");
-        std::string filename = path.substr(lastSlash + 1);
-        size_t dotPos = filename.find_last_of(".");
-        if (dotPos != std::string::npos) filename = filename.substr(0, dotPos);
-        std::string baseDir = path.substr(0, path.find_last_of("/\\"));
-        baseDir = baseDir.substr(0, baseDir.find_last_of("/\\"));
-        std::string imgcutPath = baseDir + "/imgcut/" + filename + ".imgcut";
-
-        // 🌟 巨神貓特判：手動幫它縫合下半身
         if (id == UnitID::GaintCat) {
             std::string path = stats.imgPath;
             size_t lastSlash = path.find_last_of("/\\");
@@ -214,29 +272,22 @@ void NormalGachaScene::ShowNextResultCat() {
                     float sheetWidth = std::make_shared<Util::Image>(stats.imgPath)->GetSize().x;
                     float sheetHeight = std::make_shared<Util::Image>(stats.imgPath)->GetSize().y;
 
-                    // 🚨 這裡就是之前害你看不見巨神貓的元凶！
-                    // 我現在完全 100% 照抄你 StorageItem 建構子裡的放大比例算法！
                     float showCat = 100.0f;
                     float baseScale = showCat / std::max((float)allFrames[0].w, (float)allFrames[0].h);
-                    float finalScale = baseScale * 2.5f; // 真真實實的放大 2.5 倍！
+                    float finalScale = baseScale * 2.5f;
 
-                    // 1. 建立身體
                     m_PopupDisplayBody = std::make_shared<Button>(0.0f, 0.4f, 100.0f, 100.0f, stats.imgPath, " ", 30, Util::Color(255, 255, 255, 255));
                     m_PopupDisplayBody->SetClipRect(allFrames[0].x, allFrames[0].y, allFrames[0].w, allFrames[0].h-3);
                     m_PopupDisplayBody->SetScale((allFrames[0].w * finalScale) / sheetWidth, (allFrames[0].h * finalScale) / sheetHeight);
 
-                    // 2 建立腳部 (0.0f, 0.4f 完全對齊冰箱彈窗的高度)
                     m_PopupDisplayLegs = std::make_shared<Button>(0.0f, 0.40f, 100.0f, 100.0f, stats.imgPath, " ", 30, Util::Color(255, 255, 255, 255));
                     m_PopupDisplayLegs->SetClipRect(allFrames[1].x, allFrames[1].y, allFrames[1].w, allFrames[1].h);
                     m_PopupDisplayLegs->SetScale((allFrames[1].w * finalScale) / sheetWidth, (allFrames[1].h * finalScale) / sheetHeight);
                     m_PopupDisplayLegs->SetZIndex(80);
 
-                    // 用你測過最完美的 -100.0f 往下沉
                     float baseY = m_PopupDisplayLegs->m_Transform.translation.y - 140.0f;
                     m_PopupDisplayLegs->m_Transform.translation.y = baseY + ((allFrames[1].h / 2.0f) * finalScale);
 
-
-                    // 完美套用你的 Offset: bodyX = -3.0f, bodyY = 15.0f
                     m_PopupDisplayBody->m_Transform.translation.x = m_PopupDisplayLegs->m_Transform.translation.x + (-3.0f * finalScale);
                     m_PopupDisplayBody->m_Transform.translation.y = baseY + ((allFrames[0].h / 2.0f) * finalScale) + (15.0f * finalScale);
                     m_PopupDisplayBody->SetZIndex(81);
@@ -245,7 +296,6 @@ void NormalGachaScene::ShowNextResultCat() {
 
         }
     } else {
-        // 全部點完，功德圓滿，回到主抽卡畫面
         m_State = GachaState::IDLE;
         m_IsPopupOpen = false;
         m_SelectedPopupCat = nullptr;
@@ -285,11 +335,10 @@ void NormalGachaScene::Update() {
         if (currentFrame >= m_AnimFrames.size()) {
             m_State = GachaState::RESULT;
             m_CurrentResultIndex = 0;
-            ShowNextResultCat(); // 動畫一停，立刻砸出第一隻貓的個別介面
+            ShowNextResultCat();
         }
     }
     else if (m_State == GachaState::RESULT) {
-
         if (m_IsPopupOpen) {
             if (m_PopupUseBtn) m_PopupUseBtn->Update();
             if (m_PopupXpBtn) m_PopupXpBtn->Update();
@@ -305,7 +354,6 @@ void NormalGachaScene::Draw() {
     static auto img007Atlas = std::make_shared<Util::Image>(RESOURCE_DIR"/img/img007_tw.png");
     glm::vec2 sheetSize007 = img007Atlas->GetSize();
     float iconBoost = 0.8f, baseScale = 1.0f;
-
 
     if (m_ReturnBtn) {
         m_ReturnBtn->m_Transform.scale = { ((float)Cut::RETURN_BASE_W / sheetSize.x) * baseScale, ((float)Cut::RETURN_BASE_H / sheetSize.y) * baseScale };
@@ -332,35 +380,29 @@ void NormalGachaScene::Draw() {
     if (m_CatFoodNumber) m_CatFoodNumber->Draw();
     if (m_TicketNumber) m_TicketNumber->Draw();
     if (m_SpanCostNumber) m_SpanCostNumber->Draw();
-
+    float btn_size =  1.1f;
     if (m_Tickets > 0) {
         if (m_MutiSpanCostNumber) m_MutiSpanCostNumber->Draw();
         if (m_span) {
-            m_span->m_Transform.scale = { ((float)Cut::SPAN_BTN_W / sheetSize007.x) * 1.0f, ((float)Cut::SPAN_BTN_H / sheetSize007.y) * 1.0f };
+            m_span->m_Transform.scale = { ((float)Cut::SPAN_BTN_W / sheetSize007.x) *btn_size, ((float)Cut::SPAN_BTN_H / sheetSize007.y) * btn_size };
             m_span->SetZIndex(1);
-            // m_span->SetZIndex(21);
             m_span->DrawRect(Cut::SPAN_BTN_X, Cut::SPAN_BTN_Y, Cut::SPAN_BTN_W, Cut::SPAN_BTN_H);
         }
         if (m_muti_span) {
-            m_muti_span->m_Transform.scale = { ((float)Cut::SPAN_BTN_W / sheetSize007.x) * 1.0f, ((float)Cut::SPAN_BTN_H / sheetSize007.y) * 1.0f };
-            // m_muti_span->SetZIndex(21);
+            m_muti_span->m_Transform.scale = { ((float)Cut::SPAN_BTN_W / sheetSize007.x) *btn_size, ((float)Cut::SPAN_BTN_H / sheetSize007.y) * btn_size };
             m_muti_span->SetZIndex(1);
-
             m_muti_span->DrawRect(Cut::SPAN_BTN_X, Cut::SPAN_BTN_Y, Cut::SPAN_BTN_W, Cut::SPAN_BTN_H);
         }
     } else {
         float catFoodScale = 0.8f;
         if (m_span) {
-            m_span->m_Transform.scale = { ((float)Cut::SPAN_BTN_W / sheetSize007.x) * 1.0f, ((float)Cut::SPAN_BTN_H / sheetSize007.y) * 1.0f };
-            // m_span->SetZIndex(99);
+            m_span->m_Transform.scale = { ((float)Cut::SPAN_BTN_W / sheetSize007.x) *btn_size, ((float)Cut::SPAN_BTN_H / sheetSize007.y) * btn_size };
             m_span->SetZIndex(21);
             m_span->DrawRect(Cut::SPAN_BTN_X, Cut::SPAN_BTN_Y, Cut::SPAN_BTN_W, Cut::SPAN_BTN_H);
         }
         if (m_muti_span) {
-            m_muti_span->m_Transform.scale = { ((float)Cut::SPAN_BTN_W / sheetSize007.x) * 1.0f, ((float)Cut::SPAN_BTN_H / sheetSize007.y) * 1.0f };
+            m_muti_span->m_Transform.scale = { ((float)Cut::SPAN_BTN_W / sheetSize007.x) *btn_size, ((float)Cut::SPAN_BTN_H / sheetSize007.y) * btn_size };
             m_muti_span->SetZIndex(21);
-            // m_muti_span->SetZIndex(99);
-
             m_muti_span->DrawRect(Cut::SPAN_BTN_X, Cut::SPAN_BTN_Y, Cut::SPAN_BTN_W, Cut::SPAN_BTN_H);
         }
         if (m_SpanCatFoodIcon) {
@@ -386,9 +428,8 @@ void NormalGachaScene::Draw() {
     }
     else if (m_State == GachaState::RESULT) {
         if (m_IsPopupOpen && m_SelectedPopupCat) {
-            m_Background_black.Draw(); // 刷暗背景
+            m_Background_black.Draw();
 
-            // 🚀 核心繪製：如果是巨神貓，就畫出完美的身體與下半身長腿組合！一般貓就用預設的 DrawForPopup
             if (m_PopupDisplayBody) {
                 if (m_PopupDisplayLegs) m_PopupDisplayLegs->Draw();
                 m_PopupDisplayBody->Draw();
@@ -396,7 +437,6 @@ void NormalGachaScene::Draw() {
                 m_SelectedPopupCat->DrawForPopup();
             }
 
-            // 畫出按鈕
             if (m_PopupUseBtn) m_PopupUseBtn->Draw();
             if (m_PopupXpBtn) m_PopupXpBtn->Draw();
             if (m_PopupCancelBtn) {

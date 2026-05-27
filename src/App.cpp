@@ -7,14 +7,14 @@
 #include "Entity/UnitID.hpp"
 #include "Core/Context.hpp"
 #include <SDL_mixer.h>
-
+#include "PlayerData.hpp"
 #include <iostream>
 namespace {
     int stageIdx = -1;
 }
 void App::Start() {
     LOG_TRACE("Start");
-
+    PlayerData::GetInstance()->LoadFromFile();
     LOG_DEBUG("=== SDL_mixer 支援的音樂格式清單 ===");
     int numDecoders = Mix_GetNumMusicDecoders();
     for (int i = 0; i < numDecoders; ++i) {
@@ -225,7 +225,7 @@ void App::StartRareGachaScene() {
           Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
           LOG_DEBUG("執行了 單抽 1 次！");
           // TODO: 未來這裡要呼叫抽卡動畫的邏輯
-           StartStorageScene(); // 👈 改成這樣！
+           // StartStorageScene(); // 👈 改成這樣！
 
       });
         // 💰 綁定十連抽事件
@@ -233,7 +233,7 @@ void App::StartRareGachaScene() {
             Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
             LOG_DEBUG("執行了 十連抽！");
             // TODO: 未來這裡要呼叫抽卡動畫的邏輯
-             StartStorageScene(); // 👈 改成這樣！
+             // StartStorageScene(); // 👈 改成這樣！
 
         });
     }
@@ -340,6 +340,11 @@ void App::Update() {
             m_HomeScene->Update();
             m_HomeScene->Draw();
         }
+        // if (m_StorageScene) m_StorageScene.reset();        // 👈 補上
+        // if (m_RareGachaScene) m_RareGachaScene.reset();    // 👈 補上
+        // if (m_NormalGachaScene) m_NormalGachaScene.reset();// 👈 補上
+        // if (m_LevelUpgradeScene) m_LevelUpgradeScene.reset(); // 👈 補上
+        // if (m_DeckScene) m_DeckScene.reset();              // 👈 補上
     }
     else if (m_CurrentState == State::BATTLE) {
         // 🚀 回到主迴圈安全的地方了，把前一個主畫面殺掉
@@ -423,6 +428,7 @@ void App::Update() {
 
 void App::End() {
     // LOG_TRACE("End");
+    PlayerData::GetInstance()->SaveToFile();
     if (m_BattleBGM) {
         m_BattleBGM->Pause();
     }

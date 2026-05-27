@@ -9,7 +9,7 @@
 #include "NumberSystem.hpp"
 #include "StorageItem.hpp"
 #include "Background.hpp"
-
+#include "PlayerData.hpp"
 class StorageScene {
 public:
     StorageScene();
@@ -47,14 +47,16 @@ private:
     std::shared_ptr<StorageItem> m_SelectedPopupCat; // 記錄彈窗目前是哪隻貓
 
     // 彈窗裡的兩個新按鈕，加上一個取消按鈕
-    std::shared_ptr<Button> m_PopupUseBtn;
-    std::shared_ptr<Button> m_PopupXpBtn;
-    std::shared_ptr<Button> m_PopupCancelBtn;
+    std::shared_ptr<Button> m_PopupUseBtn=nullptr;
+    std::shared_ptr<Button> m_PopupXpBtn=nullptr;
+    std::shared_ptr<Button> m_PopupCancelBtn=nullptr;
     // 這裡之後可以放你的貓咪網格、分頁按鈕等
     // std::vector<std::shared_ptr<Button>> m_CatSlo
     // // 你的 StorageScene.hpp 裡面應該要有這個來裝所有冰箱裡的貓：
     std::vector<std::shared_ptr<StorageItem>> m_StorageItems;
     Util::GameObject m_Background_black;
+    std::shared_ptr<Button> m_PopupDisplayBody = nullptr;
+    std::shared_ptr<Button> m_PopupDisplayLegs = nullptr;
 
 };
 

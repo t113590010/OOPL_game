@@ -2,6 +2,7 @@
 
 set(SRC_FILES
         "App.cpp"
+
         "Scene/StartScene.cpp"
         "Scene/HomeScene.cpp"
         "Scene/GameScene.cpp"
@@ -38,6 +39,8 @@ set(SRC_FILES
         "Entity/Base.cpp"
         "Entity/UnitFactory.cpp"
         "Entity/UnitData.cpp"
+
+        "System/PlayerData.cpp"
 
         "System/SpawnSystem.cpp"
         "System/PauseMenu.cpp"
@@ -96,6 +99,7 @@ set(INCLUDE_FILES
         "System/BattleSystem.hpp"
         "System/Background.hpp"
 
+        "System/PlayerData.hpp"
         "System/CollisionSystem.hpp"
         "System/Button.hpp"
         "System/UIText.hpp"

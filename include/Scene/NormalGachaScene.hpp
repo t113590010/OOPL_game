@@ -12,7 +12,8 @@
 #include "StorageItem.hpp"
 #include <filesystem>
 #include <iostream>
-
+#include <format>
+#include "PlayerData.hpp"
 class NormalGachaScene {
 public:
     enum class GachaState {
@@ -51,8 +52,8 @@ private:
     std::shared_ptr<NumberSystem> m_TicketNumber;  // 🎫 票卷
 
     // 🪙 後台資源假資料
-    int m_Tickets = 100;
-    int m_CatFood = 139;
+    int m_Tickets = 0;
+    int m_CatFood = 114514;
     int m_XP = 3000;
 
     // 🚀 按鈕上面的消耗數字
@@ -68,7 +69,7 @@ private:
 
     std::vector<std::shared_ptr<Util::Image>> m_AnimFrames;
     Util::GameObject m_AnimObject;
-    int animSpeed = 4;
+    int animSpeed = 6.9 ;
     Util::GameObject m_Background_black;
 
     // ==========================================
@@ -87,6 +88,7 @@ private:
     std::shared_ptr<Button> m_PopupUseBtn;
     std::shared_ptr<Button> m_PopupXpBtn;
     std::shared_ptr<Button> m_PopupCancelBtn;
+    int spinAnimeSize ;
 };
 
 #endif
