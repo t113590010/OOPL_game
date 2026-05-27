@@ -49,6 +49,7 @@ set(SRC_FILES
         "System/BattleSystem.cpp"
         "System/CollisionSystem.cpp"
         "System/UISystem.cpp"
+        "System/LevelSystem.cpp"
 
 )
 
@@ -105,6 +106,7 @@ set(INCLUDE_FILES
         "System/UIText.hpp"
         "System/WorldText.hpp"
         "System/UISystem.hpp"
+        "System/LevelSystem.hpp"
 
 )
 set(TEST_FILES

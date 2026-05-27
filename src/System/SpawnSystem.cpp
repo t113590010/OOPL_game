@@ -158,8 +158,13 @@ void SpawnSystem::Update(
                     float spawnY = GameConfig::BASE_Y + GameConfig::SPAWN_OFFSET_Y
                                  + (static_cast<float>(rand()) / RAND_MAX * 2.0f - 1.0f)
                                  * GameConfig::RANDOM_SPAWN_OFFSET_Y_MAX;
+                    UnitLevelData debugLevel;
 
-                    auto newUnit = UnitFactory::CreateUnit(targetId, spawnX, spawnY, true);
+                    debugLevel.baseLevel = 20;
+                    debugLevel.plusLevel = 0;
+
+                    auto newUnit = UnitFactory::CreateUnit(targetId, spawnX, spawnY, true, debugLevel);
+
                     if (newUnit) {
                         currentMoney -= cost;
                         m_CooldownTimers[i] = UnitData::Get(targetId).spawnCd;
