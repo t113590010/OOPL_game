@@ -6,7 +6,8 @@
 #include "Button.hpp"
 #include <memory>
 #include <functional>
-
+#include "NumberSystem.hpp"
+#include "DeckUI.hpp"
 class DeckScene {
 public:
     DeckScene();
@@ -26,6 +27,12 @@ private:
 
     // 這裡之後可以放你的貓咪網格、分頁按鈕等
     // std::vector<std::shared_ptr<Button>> m_CatSlots;
+    std::shared_ptr<NumberSystem> m_XPNumber;
+    std::shared_ptr<NumberSystem> m_CatFoodNumber; // 🥫 罐頭
+    int m_CatFood = 139;
+    int m_XP = 3000;
+
+    std::shared_ptr<DeckUI> m_DeckUI;
 };
 
 #endif

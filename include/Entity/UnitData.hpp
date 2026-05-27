@@ -72,6 +72,7 @@ struct UnitStats {
     std::string imgPath;
 
     std::string iconPath; // UI 專用方形頭像
+    std::string ediPath;
 };
 
 // ========================================================
@@ -123,7 +124,8 @@ public:
                 // =========================
 
                 "",
-                ""
+                "",
+                RESOURCE_DIR "/img/edi_f.png"
             };
 
             return defaultStats;

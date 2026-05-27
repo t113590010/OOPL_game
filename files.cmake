@@ -45,6 +45,8 @@ set(SRC_FILES
         "System/SpawnSystem.cpp"
         "System/PauseMenu.cpp"
         "System/SureMenu.cpp"
+        "System/DeckUI.cpp"
+        "System/CatCardUI.cpp"
 
         "System/BattleSystem.cpp"
         "System/CollisionSystem.cpp"
@@ -99,6 +101,8 @@ set(INCLUDE_FILES
         "System/SureMenu.hpp"
         "System/BattleSystem.hpp"
         "System/Background.hpp"
+        "System/DeckUI.hpp"
+        "System/CatCardUI.hpp"
 
         "System/PlayerData.hpp"
         "System/CollisionSystem.hpp"

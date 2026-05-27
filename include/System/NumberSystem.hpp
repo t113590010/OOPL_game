@@ -32,12 +32,17 @@ public:
         m_CharHeight = char_height;
         m_CurrentValue = 0;
     }
-
+    void SetPosition(float absoluteX, float absoluteY) {
+        m_StartX = absoluteX;
+        m_StartY = absoluteY;
+    }
     // 💡 更新你要顯示的數字
     void SetValue(int newValue) {
         m_CurrentValue = newValue;
     }
-
+    void SetScale(float scale) {
+        m_Scale = scale;
+    }
     // 💡 繪製函數：拆解數字並連續繪製
     void Draw() {
         if (!m_Visible) return;
@@ -61,8 +66,8 @@ public:
 
             m_Transform.translation = { currentX, m_StartY };
             m_Transform.scale = {
-                (clipW / sheetSize.x) * (m_CharWidth / clipW),
-                (clipH / sheetSize.y) * (m_CharHeight / clipH)
+                (clipW / sheetSize.x) * ((m_CharWidth * m_Scale) / clipW),
+             (clipH / sheetSize.y) * ((m_CharHeight * m_Scale) / clipH)
             };
 
             DrawRect(clipX, clipY, clipW, clipH);
@@ -90,6 +95,7 @@ public:
         }
     }
 private:
+    float m_Scale = 1.0f;
     float m_StartX;
     float m_StartY;
     float m_CharWidth;

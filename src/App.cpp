@@ -284,13 +284,13 @@ void App::StartBattleScene(int stageIdx){
 
     // 🚨 絕對不能在這裡 reset HomeScene！交給 Update 去做！
 
-    std::vector<UnitID> globalPlayerDeck = {
-        UnitID::Peashooter, UnitID::LONG_LEG_CAT, UnitID::AXE_CAT, UnitID::CowCat, UnitID::Queen,
-        UnitID::FlyCat, UnitID::FishCat, UnitID::DinoCat, UnitID::GaintCat, UnitID::DogDoin,
-    };
-
+    // std::vector<UnitID> globalPlayerDeck = {
+    //     UnitID::Peashooter, UnitID::LONG_LEG_CAT, UnitID::AXE_CAT, UnitID::CowCat, UnitID::Queen,
+    //     UnitID::FlyCat, UnitID::FishCat, UnitID::DinoCat, UnitID::GaintCat, UnitID::DogDoin,
+    // };
+    std::vector<UnitID> realPlayerDeck = PlayerData::GetInstance()->GetDeck();
     m_GameScene = std::make_shared<GameScene>(
-        globalPlayerDeck,
+        realPlayerDeck,
         STAGES[stageIdx]
     );
     m_GameScene->SetOnQuitGame([this]() {
