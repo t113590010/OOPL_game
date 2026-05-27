@@ -7,14 +7,14 @@
 #include "Entity/UnitID.hpp"
 #include "Core/Context.hpp"
 #include <SDL_mixer.h>
-
+#include "PlayerData.hpp"
 #include <iostream>
 namespace {
     int stageIdx = -1;
 }
 void App::Start() {
     LOG_TRACE("Start");
-
+    PlayerData::GetInstance()->LoadFromFile();
     LOG_DEBUG("=== SDL_mixer 支援的音樂格式清單 ===");
     int numDecoders = Mix_GetNumMusicDecoders();
     for (int i = 0; i < numDecoders; ++i) {
@@ -152,7 +152,7 @@ void App::UpdateLevelSelectScene() {
     }
 }
 void App::StartStorageScene() {
-    LOG_DEBUG("click STORAGE！");
+    // LOG_DEBUG("click STORAGE！");
 
     m_CurrentState = State::STORAGE;
     if (!m_StorageScene) {
@@ -167,14 +167,14 @@ void App::StartStorageScene() {
             LOG_DEBUG("點擊了：使用貓咪！");
             Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
             // 這裡只切換狀態，絕對不要呼叫 StartHomeScene()！
-            m_CurrentState = State::HOME;
+            // m_CurrentState = State::HOME;
         });
 
         m_StorageScene->SetOnToXp([this]() {
             LOG_DEBUG("點擊了：兌換 XP！");
             Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
               // 這裡只切換狀態，絕對不要呼叫 StartHomeScene()！
-              m_CurrentState = State::HOME;
+              // m_CurrentState = State::HOME;
         });
     }
 }
@@ -225,7 +225,7 @@ void App::StartRareGachaScene() {
           Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
           LOG_DEBUG("執行了 單抽 1 次！");
           // TODO: 未來這裡要呼叫抽卡動畫的邏輯
-           StartStorageScene(); // 👈 改成這樣！
+           // StartStorageScene(); // 👈 改成這樣！
 
       });
         // 💰 綁定十連抽事件
@@ -233,7 +233,7 @@ void App::StartRareGachaScene() {
             Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
             LOG_DEBUG("執行了 十連抽！");
             // TODO: 未來這裡要呼叫抽卡動畫的邏輯
-             StartStorageScene(); // 👈 改成這樣！
+             // StartStorageScene(); // 👈 改成這樣！
 
         });
     }
@@ -259,7 +259,7 @@ void App::StartNormalGachaScene() {
             Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
             LOG_DEBUG("執行了 單抽 1 次！");
             // TODO: 未來這裡要呼叫抽卡動畫的邏輯
-             StartStorageScene(); // 👈 改成這樣！
+             // StartStorageScene(); // 👈 改成這樣！
 
         });
 
@@ -268,7 +268,7 @@ void App::StartNormalGachaScene() {
             Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
             LOG_DEBUG("執行了 十連抽！");
             // TODO: 未來這裡要呼叫抽卡動畫的邏輯
-             StartStorageScene(); // 👈 改成這樣！
+             // StartStorageScene(); // 👈 改成這樣！
 
         });
     }
@@ -340,6 +340,11 @@ void App::Update() {
             m_HomeScene->Update();
             m_HomeScene->Draw();
         }
+        // if (m_StorageScene) m_StorageScene.reset();        // 👈 補上
+        // if (m_RareGachaScene) m_RareGachaScene.reset();    // 👈 補上
+        // if (m_NormalGachaScene) m_NormalGachaScene.reset();// 👈 補上
+        // if (m_LevelUpgradeScene) m_LevelUpgradeScene.reset(); // 👈 補上
+        // if (m_DeckScene) m_DeckScene.reset();              // 👈 補上
     }
     else if (m_CurrentState == State::BATTLE) {
         // 🚀 回到主迴圈安全的地方了，把前一個主畫面殺掉
@@ -368,7 +373,7 @@ void App::Update() {
     }else if (m_CurrentState == State::STORAGE) {
 
         if (m_StartScene) m_StartScene.reset();
-        LOG_DEBUG("STORAGE！");
+        // LOG_DEBUG("STORAGE！");
 
         if (m_StorageScene) {
             m_StorageScene->Update();
@@ -378,7 +383,7 @@ void App::Update() {
     else if (m_CurrentState == State::RARE_GACHA) {
 
         if (m_StartScene) m_StartScene.reset();
-        LOG_DEBUG("m_RareGachaScene！");
+        // LOG_DEBUG("m_RareGachaScene！");
 
 
         if (m_RareGachaScene) {
@@ -390,7 +395,7 @@ void App::Update() {
 
         if (m_StartScene) m_StartScene.reset();
 
-        LOG_DEBUG("m_NormalGachaScene！");
+        // LOG_DEBUG("m_NormalGachaScene！");
 
         if (m_NormalGachaScene) {
             m_NormalGachaScene->Update();
@@ -400,7 +405,7 @@ void App::Update() {
     else if (m_CurrentState == State::LEVEL_UPGRADE) {
 
         if (m_StartScene) m_StartScene.reset();
-        LOG_DEBUG("m_LevelUpgradeScene！");
+        // LOG_DEBUG("m_LevelUpgradeScene！");
 
 
         if (m_LevelUpgradeScene) {
@@ -411,7 +416,7 @@ void App::Update() {
     else if (m_CurrentState == State::DECK) {
 
         if (m_StartScene) m_StartScene.reset();
-        LOG_DEBUG("m_DeckScene！");
+        // LOG_DEBUG("m_DeckScene！");
 
 
         if (m_DeckScene) {
@@ -422,7 +427,8 @@ void App::Update() {
 }
 
 void App::End() {
-    LOG_TRACE("End");
+    // LOG_TRACE("End");
+    PlayerData::GetInstance()->SaveToFile();
     if (m_BattleBGM) {
         m_BattleBGM->Pause();
     }

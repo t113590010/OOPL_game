@@ -130,6 +130,11 @@ public:
     }
 
     void SetOnClick(std::function<void()> callback) {
+        if (!callback) {
+            LOG_DEBUG(m_CurrentContent+"empty");
+            // 如果傳進來的是空的，千萬不要設，設了就會崩潰！
+            return;
+        }
         m_OnClick = callback;
     }
 

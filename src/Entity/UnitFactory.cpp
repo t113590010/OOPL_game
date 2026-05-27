@@ -1,3 +1,4 @@
+#include <iostream>
 #include "Entity/UnitFactory.hpp"
 #include "Entity/Cats/Cat.hpp"
 #include "Entity/Cats/LongLegCat.hpp"
@@ -11,21 +12,16 @@
 #include "Entity/Cats/DogDoin.hpp"
 #include "Entity/Cats/Peashooter.hpp"
 #include "Entity/Cats/Queen.hpp"
-
 #include "Entity/Enemies/Enemy.hpp" // 💡 記得補上
 #include "Entity/Enemies/GAY.hpp" // 💡 記得補上
 #include "Entity/Enemies/Snack.hpp" // 💡 記得補上
 #include "Entity/Enemies/p3.hpp" // 💡 記得補上
 #include "Entity/Enemies/bighead.hpp" // 💡 記得補上
 #include "Entity/Enemies/redPig.hpp" // 💡 記得補上
-
-
 #include "Entity/UnitData.hpp"     // 💡 核心：引入神級資料庫
 #include <filesystem> // 💡 核心：引入檔案系統，讓 C++ 能檢查硬碟裡的檔案存不存在！
-#include <iostream>
 #include <fstream>
 #include <sstream>
-
 #include "LongCat.hpp"
 #include "ninja_cat.hpp"
 
@@ -73,7 +69,16 @@ std::string UnitFactory::GetUnitIconPath(UnitID id) {
 }
 
 // 實體產兵區
-std::shared_ptr<Entity> UnitFactory::CreateUnit(UnitID id, float x, float y, bool isPlayer) {
+std::shared_ptr<Entity>
+UnitFactory::CreateUnit(
+    UnitID id,
+    float x,
+    float y,
+    bool isPlayer,
+
+    const UnitLevelData& levelData
+)
+{
     std::shared_ptr<Entity> newUnit = nullptr;
 
     switch (id) {
@@ -103,7 +108,37 @@ std::shared_ptr<Entity> UnitFactory::CreateUnit(UnitID id, float x, float y, boo
     if (newUnit) {
         newUnit->SetTeam(isPlayer);
         auto& stats = UnitData::Get(id);
+        int finalHP = stats.hp;
 
+        int finalDamage = stats.damage;
+
+        // =====================================
+        // 玩家角色才吃 LevelSystem
+        // =====================================
+
+        if (stats.category == UnitCategory::PLAYER) {
+
+            finalHP =
+                LevelSystem::CalculateHP(
+                    id,
+                    levelData
+                );
+
+            finalDamage =
+                LevelSystem::CalculateDamage(
+                    id,
+                    levelData
+                );
+        }
+        std::cout
+    << "[LevelSystem] "
+    << "UnitID = "
+    << static_cast<int>(id)
+    << " | HP = "
+    << finalHP
+    << " | Damage = "
+    << finalDamage
+    << std::endl;
         if (!stats.imgPath.empty()) {
             std::string path = stats.imgPath;
 

@@ -52,6 +52,8 @@ add_executable(${PROJECT_NAME}
         ${INCLUDE_FILES}
         include/StageConfig.hpp
         src/StageConfig.cpp
+        include/System/LevelSystem.hpp
+        src/System/LevelSystem.cpp
         # 修正：配合 files.cmake 的變數名稱
 )
 

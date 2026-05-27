@@ -5,6 +5,7 @@
 #include <string>
 #include "Entity/UnitID.hpp"
 #include "Entity.hpp"
+#include "System/LevelSystem.hpp"
 
 std::vector<SpriteFrame> ParseImgCut(const std::string& filepath);
 
@@ -12,8 +13,16 @@ std::vector<SpriteFrame> ParseImgCut(const std::string& filepath);
 class UnitFactory {
 public:
     // 產兵邏輯維持原樣
-    static std::shared_ptr<Entity> CreateUnit(UnitID id, float x, float y, bool isPlayer);
+    static std::shared_ptr<Entity>
+    CreateUnit(
+        UnitID id,
+        float x,
+        float y,
+        bool isPlayer,
 
+        const UnitLevelData& levelData =
+            UnitLevelData{}
+    );
     // 💡 這些 Getter 改成直接去 UnitData 抓資料
     static int GetUnitCost(UnitID id);
     static float GetUnitSpawnCooldown(UnitID id);
@@ -21,5 +30,6 @@ public:
     static std::string GetUnitIconPath(UnitID id);
     // 不需要 private 的 s_Configs 了，因為 UnitData 就是我們的 Config
 };
+
 
 #endif

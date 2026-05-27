@@ -13,6 +13,8 @@ namespace Cut {
     // 👇 扭蛋 (img007)
     const float RARE_GACHA_X = 116.0f, RARE_GACHA_Y = 262.0f, RARE_GACHA_W = 99.0f, RARE_GACHA_H = 85.0f;
     const float NORMAL_GACHA_X = 215.0f, NORMAL_GACHA_Y = 262.0f, NORMAL_GACHA_W = 99.0f, NORMAL_GACHA_H = 85.0f;
+
+
 }
 HomeScene::HomeScene() {
     auto bgImage = std::make_shared<Util::Image>(RESOURCE_DIR"/img/homeBackground.png");

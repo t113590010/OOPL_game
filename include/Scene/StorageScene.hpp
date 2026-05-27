@@ -7,7 +7,9 @@
 #include <memory>
 #include <functional>
 #include "NumberSystem.hpp"
-
+#include "StorageItem.hpp"
+#include "Background.hpp"
+#include "PlayerData.hpp"
 class StorageScene {
 public:
     StorageScene();
@@ -38,9 +40,24 @@ private:
     int m_CatFood = 139;
     int m_XP = 3000;
     int cat_count =1234567890;
+    std::shared_ptr<StorageItem> m_TestCat;
+    // 🚀 彈窗介面專屬變數
+    bool m_IsPopupOpen = false;
+    bool m_LockPopupClick = false;   // 🚀 新增：防止點擊穿透的防呆鎖
+    std::shared_ptr<StorageItem> m_SelectedPopupCat; // 記錄彈窗目前是哪隻貓
 
+    // 彈窗裡的兩個新按鈕，加上一個取消按鈕
+    std::shared_ptr<Button> m_PopupUseBtn=nullptr;
+    std::shared_ptr<Button> m_PopupXpBtn=nullptr;
+    std::shared_ptr<Button> m_PopupCancelBtn=nullptr;
     // 這裡之後可以放你的貓咪網格、分頁按鈕等
-    // std::vector<std::shared_ptr<Button>> m_CatSlots;
+    // std::vector<std::shared_ptr<Button>> m_CatSlo
+    // // 你的 StorageScene.hpp 裡面應該要有這個來裝所有冰箱裡的貓：
+    std::vector<std::shared_ptr<StorageItem>> m_StorageItems;
+    Util::GameObject m_Background_black;
+    std::shared_ptr<Button> m_PopupDisplayBody = nullptr;
+    std::shared_ptr<Button> m_PopupDisplayLegs = nullptr;
+
 };
 
 #endif
