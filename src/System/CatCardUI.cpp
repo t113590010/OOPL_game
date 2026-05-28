@@ -2,8 +2,9 @@
 #include "Core/Context.hpp"
 #include "PlayerData.hpp"
 
-CatCardUI::CatCardUI(UnitID id, float pos_ratio_x, float pos_ratio_y)
-    : m_UnitID(id) {
+CatCardUI::CatCardUI(UnitID id, float pos_ratio_x, float pos_ratio_y, bool isUpgradeMode)
+    : m_UnitID(id), m_IsUpgradeMode(isUpgradeMode) {
+
     const UnitStats& stats = UnitData::Get(id);
     // 🚀 1. 拋棄舊的推算法，直接跟 PlayerData 拿最新的雙軌等級！
     PlayerData::CatLevel catLevel = PlayerData::GetInstance()->GetCatLevel(id);
@@ -72,7 +73,7 @@ CatCardUI::CatCardUI(UnitID id, float pos_ratio_x, float pos_ratio_y)
     m_ExtraLevelNumber = std::make_shared<NumberSystem>(0.0f, 0.0f, 15.0f, 20.0f, RESOURCE_DIR"/img/moneyInfo.png");
     // TODO: 之後這裡可以改成從 PlayerData 讀取這隻貓的「加值」
     m_ExtraLevelNumber->SetValue("+90");
-
+    m_ExtraLevelNumber->SetZIndex(35);
     // 🚀 2. 初始化「等級」圖片
     lvl_Icon = std::make_shared<Button>(
          pos_ratio_x, pos_ratio_y, 10.0f, 5.0f,
@@ -94,8 +95,44 @@ CatCardUI::CatCardUI(UnitID id, float pos_ratio_x, float pos_ratio_y)
     } else {
         m_ExtraLevelNumber = nullptr; // 沒有吃重複貓，就不顯示加值
     }
+    int displayCostOrXP = 0;
+    m_CostBg = std::make_shared<Button>(
+        pos_ratio_x, pos_ratio_y, 110.0f, 30.0f,
+        RESOURCE_DIR"/img/fullBlack.png", " ", 31, Util::Color(0,0,0,0)
+    );
+    // 💡 調整 Z-Index：確保它蓋在瑕疵上面（卡片背景是30），但不會擋到數字
+    m_CostBg->SetZIndex(0);
+    m_CostBgBaseScale = m_CostBg->m_Transform.scale;
+    m_CostBgScale = 2.0f;
+
+    if (m_IsUpgradeMode) {
+        // 🌟 升級模式：顯示下一級需要的 XP (這裡我先假設每級需要: 基礎等級 * 200，你可以自己換公式)
+        displayCostOrXP = catLevel.base * 200;
+
+        // 建立 XP 底框 (因為你截圖裡看起來是個 UI 切圖，我用 Button 幫你裝著)
+        m_CostXPSlot = std::make_shared<Button>(
+            pos_ratio_x, pos_ratio_y, 200.0f, 40.0f, // 寬高你可以依據切圖調整
+            RESOURCE_DIR"/img/costXpSlot.png", " ", 32, Util::Color(0,0,0,0) // 記得換成這張圖所在的圖集
+        );
+        m_CostXPSlot->SetZIndex(32);
+        m_CostXpBaseScale = m_CostXPSlot->m_Transform.scale;
+        m_CostOffset = { 110.0f, -48.0f };
+        m_CostBaseScale = 1.3f;
+        m_CostBg->SetZIndex(31);
+
+        // m_CostBgOffset = { 50.0f, -85.0f };
+    } else {
+        // 🌟 隊伍模式：顯示原本的戰鬥 Cost
+        displayCostOrXP = stats.cost;
+        m_CostXPSlot = nullptr;
+        m_CostOffset ={ 40.0f, -85.0f };
+        // m_CostBgOffset = { 50.0f, -85.0f };
+        m_CostBaseScale = 1.0f;
+        m_CostBg->SetZIndex(0);
+    }
+
     m_CostNumber = std::make_shared<NumberSystem>(0.0f, 0.0f, 15.0f, 20.0f, RESOURCE_DIR"/img/moneyInfo.png");
-    m_CostNumber->SetValue(stats.cost);
+    m_CostNumber->SetValue(displayCostOrXP);
 
     m_SwapBtn = std::make_shared<Button>(
         pos_ratio_x, pos_ratio_y, 40.0f, 40.0f,
@@ -135,8 +172,19 @@ void CatCardUI::ApplyTransform(float finalX, float scale) {
         m_LevelNumber->SetScale(scale);
     }
     if (m_CostNumber) {
-        m_CostNumber->SetPosition(cx + (OFFSET_COST.x * scale), cy + (OFFSET_COST.y * scale));
-        m_CostNumber->SetScale(scale);
+        m_CostNumber->SetPosition(cx + (m_CostOffset.x * scale), cy + (m_CostOffset.y * scale));
+
+        // 🚀 將整張卡片的總縮放 (scale) 乘上數字的專屬縮放 (m_CostBaseScale)
+        m_CostNumber->SetScale(scale * m_CostBaseScale);
+    }
+    if (m_CostXPSlot) {
+        // 🚀 套用專屬的偏移量 OFFSET_COST_XP_BG，並且乘上 scale 確保滑動時不會跑位
+        m_CostXPSlot->m_Transform.translation = {
+            cx + (OFFSET_COST_XP_BG.x * scale),
+            cy + (OFFSET_COST_XP_BG.y * scale)
+        };
+
+        m_CostXPSlot->m_Transform.scale = m_CostXpBaseScale * scale;
     }
     if (m_SwapBtn) {
         m_SwapBtn->m_Transform.translation = { cx + (OFFSET_SWAP.x * scale), cy + (OFFSET_SWAP.y * scale) };
@@ -146,6 +194,13 @@ void CatCardUI::ApplyTransform(float finalX, float scale) {
     if (m_ExtraLevelNumber) {
         m_ExtraLevelNumber->SetPosition(cx + (OFFSET_EXTRA_LEVEL.x * scale), cy + (OFFSET_EXTRA_LEVEL.y * scale));
         m_ExtraLevelNumber->SetScale(scale);
+    }
+    if (m_CostBg) {
+        m_CostBg->m_Transform.translation = {
+            cx + (m_CostBgOffset.x * scale),
+            cy + (m_CostBgOffset.y * scale)
+        };
+        m_CostBg->m_Transform.scale = m_CostBgBaseScale * (scale * m_CostBgScale);
     }
     if (lvl_Icon) {
         lvl_Icon->m_Transform.translation = { cx + (OFFSET_LVL_ICON.x * scale*LvlIconScaleX), cy + (OFFSET_LVL_ICON.y * scale*LvlIconScaleX) };
@@ -201,8 +256,15 @@ void CatCardUI::Draw() {
     if (m_BackgroundBtn) m_BackgroundBtn->Draw();
     if (m_CatIcon) m_CatIcon->Draw();
     // if (m_NameImage) m_NameImage->Draw();
+    if (m_CostBg) m_CostBg->Draw();
+    if (m_CostXPSlot) {
+        // TODO: 填上這塊「需要XP」圖案在圖集裡的實際位置
+        m_CostXPSlot->Draw();
+    }
     if (m_LevelNumber) m_LevelNumber->Draw();
+
     if (m_CostNumber) m_CostNumber->Draw();
+
     if (m_SwapBtn && m_IsSelected) m_SwapBtn->Draw();
 
     if (m_ExtraLevelNumber) m_ExtraLevelNumber->Draw();

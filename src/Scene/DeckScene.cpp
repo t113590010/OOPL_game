@@ -96,6 +96,17 @@ DeckScene::DeckScene() {
     m_ReturnBtn->SetOnClick([this]() {
         if (m_OnReturn) m_OnReturn();
     });
+
+    m_Upg = std::make_shared<Button>(
+        -0.078f, -0.93f, 15, 25,
+        RESOURCE_DIR"/img/upgrade.png", " ", 30, Util::Color(255, 255, 255, 255)
+    );
+    m_Upg->SetZIndex(0);
+    m_Upg->SetOnClick([this]() {
+        if (m_OnUpg) m_OnUpg();
+    });
+
+
     m_XPNumber = std::make_shared<NumberSystem>(0.84f, 0.93f, 29.0f, 38.0f, RESOURCE_DIR"/img/moneyInfo.png");
     m_XPNumber->SetValue(m_XP);
 
@@ -197,7 +208,9 @@ int DeckScene::GetHoveredSlotIndex(glm::vec2 mousePos) {
 void DeckScene::SetOnReturnBtnClick(std::function<void()> callback) {
     m_OnReturn = callback;
 }
-
+void DeckScene::SetOnUpgClick(std::function<void()> callback) {
+    m_OnUpg = callback;
+}
 void DeckScene::EquipCatToSlot(UnitID draggedCat, int targetSlotIndex) {
     if (targetSlotIndex < 0 || targetSlotIndex >= m_Slots.size() || static_cast<int>(draggedCat) == 0) {
         return;
@@ -251,6 +264,9 @@ void DeckScene::Refresh() {
 void DeckScene::Update() {
     if (m_ReturnBtn) {
         m_ReturnBtn->Update();
+    }
+    if (m_Upg) {
+        m_Upg->Update();
     }
     // 之後這裡放其他冰箱內按鈕的 Update
     auto pData = PlayerData::GetInstance();
@@ -379,6 +395,10 @@ void DeckScene::Draw() {
             ((float)Cut::RETURN_BASE_W / sheetSize.x) * baseScale,
             ((float)Cut::RETURN_BASE_H / sheetSize.y) * baseScale
         };
+    }
+
+    if (m_Upg) {
+        m_Upg->Draw();
     }
     // 之後這裡放其他冰箱內按鈕的 Draw (如果要用 DrawRect 疊圖一樣寫在這裡)
     if (m_XPNumber) m_XPNumber->Draw();

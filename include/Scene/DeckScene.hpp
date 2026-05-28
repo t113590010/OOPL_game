@@ -18,6 +18,8 @@ public:
 
     // 綁定返回主畫面的事件
     void SetOnReturnBtnClick(std::function<void()> callback);
+    void SetOnUpgClick(std::function<void()> callback);
+
     void Refresh();
     // 幫助判斷落點的輔助函數
     int GetHoveredSlotIndex(glm::vec2 mousePos);
@@ -28,6 +30,8 @@ private:
     // 預留返回按鈕
     std::shared_ptr<Button> m_ReturnBtn;
     std::function<void()> m_OnReturn;
+    std::shared_ptr<Button> m_Upg;
+    std::function<void()> m_OnUpg;
 
     // 這裡之後可以放你的貓咪網格、分頁按鈕等
     // std::vector<std::shared_ptr<Button>> m_CatSlots;

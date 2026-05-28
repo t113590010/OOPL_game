@@ -83,7 +83,8 @@ void App::StartHomeScene() {
         m_HomeScene->SetOnUpgradeBtnClick([this]() {
             LOG_DEBUG("點擊了升級按鈕！");
             // TODO: 之後在這裡呼叫 StartUpgradeScene();
-            Util::SFX(RESOURCE_DIR "/music/what-da-dog-doin.mp3").Play();
+            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+
             StartLevelUpgradeScene();
         });
 
@@ -93,7 +94,8 @@ void App::StartHomeScene() {
         m_HomeScene->SetOnTeamBtnClick([this]() {
             LOG_DEBUG("點擊了隊伍按鈕！");
             // TODO: 之後在這裡呼叫 StartTeamScene();
-            Util::SFX(RESOURCE_DIR "/music/what-da-dog-doin.mp3").Play();
+            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+
             StartDeckScene();
         });
 
@@ -190,10 +192,17 @@ void App::StartDeckScene() {
             // 這裡只切換狀態，絕對不要呼叫 StartHomeScene()！
             m_CurrentState = State::HOME;
         });
+
+        m_DeckScene->SetOnUpgClick([this]() {
+            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+            // 這裡只切換狀態，絕對不要呼叫 StartHomeScene()！
+            StartLevelUpgradeScene();
+        });
     }
     if (m_DeckScene) {
         m_DeckScene->Refresh();
     }
+
 }
 void App::StartLevelUpgradeScene() {
     LOG_DEBUG("click LEVEL UPGRADE！");

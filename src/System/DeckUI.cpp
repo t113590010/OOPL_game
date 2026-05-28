@@ -13,14 +13,14 @@ void DeckUI::LoadCats(const std::vector<UnitID>& catList) {
     m_ScrollX = 0.0f;
     m_TargetScrollX = 0.0f;
     // 🚀 決定整排卡片的高度 (調大會往上)
-    float baseYRatio = -0.4f;
+    // float baseYRatio = -0.4f;
     m_CurrentCenterIndex = 0;
-
+    float baseYRatio = m_BaseYRatio;
     for (size_t i = 0; i < catList.size(); ++i) {
         UnitID id = catList[i];
 
         // 初始 X 直接給 0，Update 會自動把他們排好
-        auto card = std::make_shared<CatCardUI>(id, 0.0f, baseYRatio);
+        auto card = std::make_shared<CatCardUI>(id, 0.0f, baseYRatio, m_IsUpgradeMode);
 
         card->SetOnClick([this](UnitID selectedId) {
             if (!m_IsDragging && m_OnCatSelected) m_OnCatSelected(selectedId);
@@ -32,7 +32,9 @@ void DeckUI::LoadCats(const std::vector<UnitID>& catList) {
         m_Cards.push_back(card);
     }
 }
-
+void DeckUI::SetBaseYRatio(float yRatio) {
+    m_BaseYRatio = yRatio;
+}
 UnitID DeckUI::GetCenterCatID() const {
     if (m_Cards.empty()) return static_cast<UnitID>(0);
 
@@ -176,7 +178,9 @@ void DeckUI::Draw() {
         card->Draw();
     }
 }
-
+void DeckUI::SetUpgradeMode(bool isUpgrade) {
+    m_IsUpgradeMode = isUpgrade;
+}
 void DeckUI::SetOnCatSelected(std::function<void(UnitID)> callback) {
     m_OnCatSelected = callback;
 }
