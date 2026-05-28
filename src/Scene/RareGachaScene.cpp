@@ -26,7 +26,7 @@ static UnitID PullOneCat() {
         {UnitID::FlyCat,         80},
         {UnitID::LongCat,        70},
         {UnitID::DinoCat,        40},
-        {UnitID::bighead,        10},
+        // {UnitID::bighead,        50},
         {UnitID::Queen,          50},
         {UnitID::Peashooter,     50},
         {UnitID::DogDoin,        50}

@@ -19,7 +19,10 @@ public:
     // 💡 分開兩種點擊事件
     void SetOnCatSelected(std::function<void(UnitID)> callback);
     void SetOnSwapClick(std::function<void(UnitID)> callback);
+    void SetOnCatDraggedOut(std::function<void(UnitID)> callback);
 
+    // 🚀 取得正中央那張卡片的 ID (拖拉時通常是抓正中央那張)
+    UnitID GetCenterCatID() const;
 private:
     std::vector<std::shared_ptr<CatCardUI>> m_Cards; // 🚀 改成存放卡片組件
 
@@ -34,6 +37,10 @@ private:
     // 排版參數
     float m_BaseYRatio = -0.55f; // 下方列表的 Y 軸比例
     float m_Spacing = 280.0f;    // 🚀 每張卡片的間距 (因為你的卡片變寬了，這裡要調大)
+    std::function<void(UnitID)> m_OnCatDraggedOut;
+    bool m_IsDraggingCatOut = false; // 是否進入了往上拖拉的模式
+    float m_TargetScrollX = 0.0f;
+    int m_CurrentCenterIndex = 0;
 };
 
 #endif

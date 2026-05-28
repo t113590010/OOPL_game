@@ -3,7 +3,7 @@
 
 // 如果有專屬的切圖座標，可以建一個獨立的 namespace
 #include "PlayerData.hpp"
-
+#include <glm/trigonometric.hpp>
 namespace Cut {
     const float RETURN_ICON_X = 423.0f;
     const float RETURN_ICON_Y = 170.0f;
@@ -49,6 +49,32 @@ DeckScene::DeckScene() {
     float windowWidth = (float)context->GetWindowWidth();
     float windowHeight = (float)context->GetWindowHeight();
     glm::vec2 imgSize = bgImage->GetSize();
+    // 🚀 設定邊框寬度 (你可以去小畫家量一下木頭邊框實際多寬，這裡先抓 120)
+    float borderWidth = 30.0f;
+
+    // 初始化左邊框
+    m_LeftBorder = std::make_shared<Button>(
+        -1.035f, 0.0f,
+        windowHeight,  // 🚀 原本的高 -> 現在變成寬
+        borderWidth,   // 🚀 原本的寬 -> 現在變成高
+        RESOURCE_DIR"/img/img008_tw.png",
+        " ", 20, Util::Color(0,0,0,0)
+    );
+    m_LeftBorder->SetZIndex(80);
+    // 轉 90 度後，原本橫向的 windowHeight 就會完美變成垂直高度！
+    m_LeftBorder->m_Transform.rotation = glm::radians(-90.0f);
+
+    // 初始化右邊框
+    m_RightBorder = std::make_shared<Button>(
+        1.035f, 0.0f,
+        windowHeight,  // 🚀 同樣寬高對調
+        borderWidth,
+        RESOURCE_DIR"/img/img008_tw.png",
+        " ", 20, Util::Color(0,0,0,0)
+    );
+    m_RightBorder->SetZIndex(80);
+    m_RightBorder->m_Transform.rotation = glm::radians(90.0f);
+
 
     m_Background.m_Transform.scale = glm::vec2(windowWidth / imgSize.x, windowHeight / imgSize.y);
     // auto blackImg = std::make_shared<Util::Image>(RESOURCE_DIR "/img/black.png");
@@ -81,26 +107,147 @@ DeckScene::DeckScene() {
 
     // 假設你要把圖鑑裡所有已解鎖的貓都丟進去滑動列表
     // 你可以自己寫一個函數把 PlayerData::m_UnlockedCats 的 Key 抽出來，或是先寫死幾隻測試
-    std::vector<UnitID> testCatList = {
-        UnitID::CAT, UnitID::AXE_CAT, UnitID::LongCat,
-        UnitID::LONG_LEG_CAT, UnitID::CowCat, UnitID::FishCat, // 多塞幾隻測滑動長度
-        UnitID::DinoCat, UnitID::FlyCat, UnitID::GaintCat
-    };
-
-    m_DeckUI->LoadCats(testCatList);
-
+    // std::vector<UnitID> testCatList = {
+    //     UnitID::CAT, UnitID::AXE_CAT, UnitID::LongCat,
+    //     UnitID::LONG_LEG_CAT, UnitID::CowCat, UnitID::FishCat, // 多塞幾隻測滑動長度
+    //     UnitID::DinoCat, UnitID::FlyCat, UnitID::GaintCat
+    // };
+    //
+    // m_DeckUI->LoadCats(testCatList);
+    std::vector<UnitID> realCatList = PlayerData::GetInstance()->GetUnlockedCatsList();
+    m_DeckUI->LoadCats(realCatList);
     // 註冊當列表內的貓咪被點擊時，你要做什麼事？
     m_DeckUI->SetOnCatSelected([this](UnitID selectedId) {
         LOG_DEBUG("在隊伍編成畫面，玩家選中了貓咪 ID: " + std::to_string(static_cast<int>(selectedId)));
         // TODO: 之後在這裡處理點擊下方角色，替換掉上方陣容的邏輯
     });
 
-}
+    m_DeckUI->SetOnCatDraggedOut([this](UnitID draggedId) {
+        if (!m_IsDraggingGhost && static_cast<int>(draggedId) != 0) {
+            LOG_DEBUG("開始拖拉貓咪: " + std::to_string(static_cast<int>(draggedId)));
+            m_IsDraggingGhost = true;
+            m_DraggedUnitID = draggedId;
+            m_DraggedFromSlot = -1;
+            // 🚀 建立懸浮頭像 (Ghost)
+            const UnitStats& stats = UnitData::Get(draggedId);
+            m_DragGhostIcon = std::make_shared<Util::GameObject>(std::make_unique<Util::Image>(stats.iconPath), 90); // Z-Index 設超高
+            m_DragGhostIcon->m_Transform.scale = { 1.5f, 1.5f };
+        }
+    });
+    // 設定第一格(左上角)的基準點
+    float startX = -0.35f;
+    float startY =  0.49f;
 
+    // 設定格子與格子之間的距離
+    float spacingX = 0.205f;
+    float spacingY = 0.25f;
+
+    m_Slots.clear();
+    // 🚀 取得真實存檔裡的 10 格陣容
+    const auto& currentDeck = PlayerData::GetInstance()->GetDeck();
+    for (int i = 0; i < 10; ++i) {
+        // 核心排版算式：
+        // i % 5 算出行(Column)：0,1,2,3,4, 0,1,2,3,4
+        // i / 5 算出列(Row)   ：0,0,0,0,0, 1,1,1,1,1
+        float posX = startX + (i % 5) * spacingX;
+        float posY = startY - (i / 5) * spacingY;
+
+        auto slot = std::make_shared<SlotUI>(i, posX, posY);
+        slot->SetUnit(currentDeck[i]);
+        // 設定點擊事件：當玩家點了這個格子，把它設為「選中狀態」
+        slot->SetOnClick([this](int index) {
+            LOG_DEBUG("點擊了出陣列表第 " + std::to_string(index + 1) + " 格！");
+
+            m_CurrentSelectedSlot = index;
+
+            // 把所有格子都取消選中，只亮起被點的那個
+            for (auto& s : m_Slots) {
+                s->SetSelected(false);
+            }
+            m_Slots[index]->SetSelected(true);
+        });
+        m_Slots.push_back(slot);
+    }
+}
+int DeckScene::GetHoveredSlotIndex(glm::vec2 mousePos) {
+    // Slot 的物理寬高 (跟你 SlotUI.hpp 裡設定的一致)
+    // 💡 記得去確認一下你 SlotUI.hpp 裡面的 m_Width 和 m_Height 實體大小
+    float slotWidth = 113.0f;
+    float slotHeight = 87.0f;
+
+    for (int i = 0; i < m_Slots.size(); ++i) {
+        // 🚀 修正：直接拿絕對像素座標，不要再乘以 halfW / halfH
+        float cx = m_Slots[i]->GetBaseX();
+        float cy = m_Slots[i]->GetBaseY();
+
+        // 計算 AABB 邊界
+        float left   = cx - (slotWidth / 2.0f);
+        float right  = cx + (slotWidth / 2.0f);
+        float bottom = cy - (slotHeight / 2.0f);
+        float top    = cy + (slotHeight / 2.0f);
+
+        // 如果滑鼠在這個矩形範圍內，就回傳這個格子的 Index
+        if (mousePos.x >= left && mousePos.x <= right &&
+            mousePos.y >= bottom && mousePos.y <= top) {
+            return i;
+            }
+    }
+    return -1; // 沒碰到任何格子
+}
 void DeckScene::SetOnReturnBtnClick(std::function<void()> callback) {
     m_OnReturn = callback;
 }
 
+void DeckScene::EquipCatToSlot(UnitID draggedCat, int targetSlotIndex) {
+    if (targetSlotIndex < 0 || targetSlotIndex >= m_Slots.size() || static_cast<int>(draggedCat) == 0) {
+        return;
+    }
+
+    int existingSlotIndex = -1;
+    for (int i = 0; i < m_Slots.size(); ++i) {
+        if (m_Slots[i]->GetUnitID() == draggedCat) {
+            existingSlotIndex = i;
+            break;
+        }
+    }
+
+    UnitID displacedCat = m_Slots[targetSlotIndex]->GetUnitID();
+    auto pData = PlayerData::GetInstance(); // 🚀 取得單例
+
+    if (existingSlotIndex != -1) {
+        // 互換位置
+        m_Slots[existingSlotIndex]->SetUnit(displacedCat);
+        pData->SetDeckUnit(existingSlotIndex, displacedCat); // 🚀 同步資料
+
+        m_Slots[targetSlotIndex]->SetUnit(draggedCat);
+        pData->SetDeckUnit(targetSlotIndex, draggedCat);     // 🚀 同步資料
+    }
+    else {
+        // 覆蓋新位置
+        m_Slots[targetSlotIndex]->SetUnit(draggedCat);
+        pData->SetDeckUnit(targetSlotIndex, draggedCat);     // 🚀 同步資料
+    }
+
+    // 🚀 動作完成，立刻存檔！
+    pData->SaveToFile();
+}
+void DeckScene::Refresh() {
+    auto pData = PlayerData::GetInstance();
+
+    // 1. 重新讀取最新陣容，並更新上方的 10 個格子
+    // (因為你的 SlotUI::SetUnit 裡面會自動去抓最新等級，所以只要重新 Set 一次就搞定了！)
+    const auto& currentDeck = pData->GetDeck();
+    for (int i = 0; i < 10; ++i) {
+        m_Slots[i]->SetUnit(currentDeck[i]);
+    }
+
+    // 2. 重新讀取最新的解鎖名單，並更新下方冰箱
+    // (DeckUI::LoadCats 會清空舊卡片並重新生成，自然就會抓到剛抽到的新貓跟最新等級)
+    std::vector<UnitID> realCatList = pData->GetUnlockedCatsList();
+    m_DeckUI->LoadCats(realCatList);
+
+    LOG_DEBUG("DeckScene 資料已重新整理！");
+}
 void DeckScene::Update() {
     if (m_ReturnBtn) {
         m_ReturnBtn->Update();
@@ -118,6 +265,86 @@ void DeckScene::Update() {
         if (m_CatFoodNumber) m_CatFoodNumber->SetValue(m_CatFood);
     }
     if (m_DeckUI) m_DeckUI->Update();
+
+    if (m_LeftBorder) m_LeftBorder->Update();
+    if (m_RightBorder) m_RightBorder->Update();
+    for (auto& slot : m_Slots) slot->Update();
+
+    glm::vec2 mousePos = Util::Input::GetCursorPosition();
+    bool isMouseDown = Util::Input::IsKeyPressed(Util::Keycode::MOUSE_LB);
+
+    // ==========================================
+    // 🚀 1. 新增：從上方 10 個格子「拔出」貓咪
+    // ==========================================
+    // 如果滑鼠按著，且「沒有」在拖拉任何東西，就檢查是不是按在上方格子上
+    if (isMouseDown && !m_IsDraggingGhost) {
+        int hoveredIndex = GetHoveredSlotIndex(mousePos);
+
+        if (hoveredIndex != -1) {
+            UnitID slotCat = m_Slots[hoveredIndex]->GetUnitID();
+
+            if (static_cast<int>(slotCat) != 0) {
+                m_IsDraggingGhost = true;
+                m_DraggedUnitID = slotCat;
+                m_DraggedFromSlot = hoveredIndex;
+
+                // 拔起來 (UI 變空位)
+                m_Slots[hoveredIndex]->SetUnit(static_cast<UnitID>(0));
+
+                // 🚀 同步資料：這格現在空了，並存檔！
+                PlayerData::GetInstance()->SetDeckUnit(hoveredIndex, static_cast<UnitID>(0));
+                PlayerData::GetInstance()->SaveToFile();
+
+                const UnitStats& stats = UnitData::Get(slotCat);
+                m_DragGhostIcon = std::make_shared<Util::GameObject>(std::make_unique<Util::Image>(stats.ediPath), 90);
+                m_DragGhostIcon->m_Transform.scale = { 1.5f, 1.5f };
+            }
+        }
+    }
+
+    // ==========================================
+    // 2. 處理拖拉懸浮頭像與放開落點
+    // ==========================================
+    if (m_IsDraggingGhost) {
+        if (m_DragGhostIcon) {
+            m_DragGhostIcon->m_Transform.translation = mousePos;
+        }
+
+        if (!isMouseDown) { // 玩家放開滑鼠
+            int targetSlotIndex = GetHoveredSlotIndex(mousePos);
+
+            if (targetSlotIndex != -1) { // 丟進了某個格子
+
+                if (m_DraggedFromSlot == -1) {
+                    // 🌟 情況 A：從冰箱來的 -> 交給大總管去重複並裝備
+                    EquipCatToSlot(m_DraggedUnitID, targetSlotIndex);
+                }
+                else {
+                    // 🌟 情況 B：從上方別的格子來的 -> 執行精準的 A-B 互換！
+                    UnitID displacedCat = m_Slots[targetSlotIndex]->GetUnitID(); // 記下目標格原本是誰(可能是B貓，也可能是空位0)
+
+                    m_Slots[targetSlotIndex]->SetUnit(m_DraggedUnitID); // 把手上的 A 貓放進目標格
+
+                    // 把原本的 B 貓，放回 A 貓被挖空的那個舊位置裡！
+                    if (m_DraggedFromSlot != targetSlotIndex) {
+                        m_Slots[m_DraggedFromSlot]->SetUnit(displacedCat);
+                    }
+                }
+            } else {
+                // 丟到了場外
+                if (m_DraggedFromSlot != -1) {
+                    // 因為點擊時已經先把它清空了，這裡不用做任何事，它就自然被卸除了！
+                    LOG_DEBUG("丟到場外，貓咪解除裝備！");
+                }
+            }
+
+            // 清理狀態
+            m_IsDraggingGhost = false;
+            m_DraggedUnitID = static_cast<UnitID>(0);
+            m_DraggedFromSlot = -1; // 🚀 重置來源
+            m_DragGhostIcon = nullptr;
+        }
+    }
 }
 
 void DeckScene::Draw() {
@@ -157,4 +384,18 @@ void DeckScene::Draw() {
     if (m_XPNumber) m_XPNumber->Draw();
     if (m_CatFoodNumber) m_CatFoodNumber->Draw();
     if (m_DeckUI) m_DeckUI->Draw();
+    if (m_LeftBorder) {
+        // 例如木頭柱子在圖片的 x=10, y=20, w=100, h=500
+        m_LeftBorder->DrawRect(481, 0, 863-481, 77);
+    }
+
+    // 🚀 畫出右遮罩
+    if (m_RightBorder) {
+        // 如果左右柱子圖案一樣，這裡可以直接代入一樣的 xywh
+        m_RightBorder->DrawRect(481, 0, 863-481, 77);
+    }
+    for (auto& slot : m_Slots) slot->Draw();
+    if (m_DragGhostIcon && m_IsDraggingGhost) {
+        m_DragGhostIcon->Draw();
+    }
 }

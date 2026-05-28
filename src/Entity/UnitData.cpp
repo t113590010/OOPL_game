@@ -78,7 +78,7 @@ UnitData::s_Stats = {
             LevelType::BASIC_CAT,
 
             RESOURCE_DIR "/img/axe_cat.png",
-            RESOURCE_DIR "/img/斧頭貓.png",
+            RESOURCE_DIR "/img/axe_cat_icon.png",
             RESOURCE_DIR "/img/axecat/edi_f.png"
         }
     },
@@ -262,7 +262,8 @@ UnitData::s_Stats = {
             LevelType::SUPER_RARE,
 
             RESOURCE_DIR "/img/DogDoin.png",
-            RESOURCE_DIR "/img/DogDoinIcon.png"
+            RESOURCE_DIR "/img/DogDoinIcon.png",
+            RESOURCE_DIR "/img/edi_f.png"
         }
     },
 
@@ -284,7 +285,8 @@ UnitData::s_Stats = {
             LevelType::SUPER_RARE,
 
             RESOURCE_DIR "/img/Peashooter.png",
-            RESOURCE_DIR "/img/PeashooterIdel.png"
+            RESOURCE_DIR "/img/PeashooterIdel.png",
+            RESOURCE_DIR "/img/edi_f.png"
         }
     },
 
@@ -306,7 +308,8 @@ UnitData::s_Stats = {
             LevelType::SUPER_RARE,
 
             RESOURCE_DIR "/img/Queen.png",
-            RESOURCE_DIR "/img/QueenIcon.png"
+            RESOURCE_DIR "/img/QueenIcon.png",
+            RESOURCE_DIR "/img/edi_f.png"
         }
     },
 
@@ -421,7 +424,9 @@ UnitData::s_Stats = {
             LevelType::NONE,
 
             RESOURCE_DIR "/img/big_head.png",
-            ""
+            "",
+            RESOURCE_DIR "/img/edi_f.png"
+
         }
     },
 

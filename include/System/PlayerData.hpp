@@ -8,6 +8,12 @@
 
 class PlayerData {
 public:
+    // 🚀 新增：定義貓咪的雙軌等級結構體
+    struct CatLevel {
+        int base = 1; // 基礎等級 (吃 XP 升級)
+        int plus = 0; // 額外等級 (轉蛋吃重複貓)
+    };
+
     // 單例模式：全域唯一存取點
     static PlayerData* GetInstance();
 
@@ -29,7 +35,7 @@ public:
     void AddNormalTickets(int amount) { m_NormalTickets += amount; }
     bool SpendNormalTickets(int amount);
 
-    // 🌟 補上稀有票券的 Get / Add / Spend
+    // 稀有票券
     int GetRareTickets() const { return m_RareTickets; }
     void AddRareTickets(int amount) { m_RareTickets += amount; }
     bool SpendRareTickets(int amount);
@@ -39,9 +45,14 @@ public:
     void SetDeckUnit(int index, UnitID id);
 
     // ================= 圖鑑與解鎖 =================
+    // 🚀 分流管理：區分首次解鎖、吃 XP 升級、轉蛋加值
+    void UnlockCat(UnitID id);           // 首次抽到，解鎖 1 等 +0
+    void UpgradeCatBaseLevel(UnitID id); // 吃 XP 提升基礎等級
+    void AddCatPlusLevel(UnitID id);     // 冰箱使用重複貓，提升額外等級
     void UnlockOrUpgradeCat(UnitID id);
     bool HasCat(UnitID id) const;
-    int GetCatLevel(UnitID id) const;
+    CatLevel GetCatLevel(UnitID id) const; // 🚀 改回傳 CatLevel 結構體
+    std::vector<UnitID> GetUnlockedCatsList() const;
 
     // ================= 冰箱 (Storage) =================
     void AddToFridge(UnitID id);
@@ -55,13 +66,13 @@ private:
     int m_XP = 0;
     int m_CatFood = 0;
     int m_NormalTickets = 0;
-    int m_RareTickets = 0; // 🌟 稀有票券變數
+    int m_RareTickets = 0;
 
     // 隊伍固定 10 格
     std::vector<UnitID> m_Deck;
 
-    // 已解鎖貓咪 (Key: ID, Value: 等級)
-    std::unordered_map<UnitID, int> m_UnlockedCats;
+    // 🚀 升級：將儲存型態從 int 改為 CatLevel 結構體
+    std::unordered_map<UnitID, CatLevel> m_UnlockedCats;
 
     // 冰箱內的貓咪 (抽到但還沒使用的)
     std::vector<UnitID> m_Fridge;

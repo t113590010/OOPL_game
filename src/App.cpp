@@ -191,6 +191,9 @@ void App::StartDeckScene() {
             m_CurrentState = State::HOME;
         });
     }
+    if (m_DeckScene) {
+        m_DeckScene->Refresh();
+    }
 }
 void App::StartLevelUpgradeScene() {
     LOG_DEBUG("click LEVEL UPGRADE！");
