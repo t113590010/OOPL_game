@@ -54,7 +54,7 @@ UnitData::s_Stats = {
             LevelType::BASIC_CAT,
 
             RESOURCE_DIR "/img/longlegcat_1.png",
-            RESOURCE_DIR "/img/longlegcat_1_icon.png",
+            RESOURCE_DIR "/img/longlegcat_1_icon (2).png",
             RESOURCE_DIR "/img/longlegcat/edi_f.png"
 
         }

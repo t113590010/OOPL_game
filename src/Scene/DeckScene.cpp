@@ -296,7 +296,7 @@ void DeckScene::Update() {
                 PlayerData::GetInstance()->SaveToFile();
 
                 const UnitStats& stats = UnitData::Get(slotCat);
-                m_DragGhostIcon = std::make_shared<Util::GameObject>(std::make_unique<Util::Image>(stats.ediPath), 90);
+                m_DragGhostIcon = std::make_shared<Util::GameObject>(std::make_unique<Util::Image>(stats.iconPath), 90);
                 m_DragGhostIcon->m_Transform.scale = { 1.5f, 1.5f };
             }
         }
