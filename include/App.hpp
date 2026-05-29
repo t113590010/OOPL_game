@@ -12,7 +12,7 @@
 #include "NormalGachaScene.hpp"
 #include "LevelUpgradeScene.hpp"
 #include "DeckScene.hpp"
-
+#include <LevelSelectScene.hpp>
 
 class App {
 public:
@@ -35,16 +35,14 @@ public:
     void Start();
 
     void Update();
-    void UpdateLevelSelectScene();
     void End(); // NOLINT(readability-convert-member-functions-to-static)
 
 private:
     void ValidTask();
     void LoadStartScene();
     void StartHomeScene();
-   
-
-     void StartBattleScene(int stageIdx);
+    void StartLevelSelectScene();
+    void StartBattleScene(int stageIdx);
     void StartStorageScene();
     void StartRareGachaScene();
     void StartNormalGachaScene();
@@ -63,6 +61,7 @@ private:
     std::shared_ptr<StorageScene> m_StorageScene;
     std::shared_ptr<RareGachaScene> m_RareGachaScene;
     std::shared_ptr<NormalGachaScene> m_NormalGachaScene;
+    std::shared_ptr<LevelSelectScene> m_LevelSelectScene;
     bool m_PendingQuit = false;
 };
 

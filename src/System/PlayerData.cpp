@@ -2,8 +2,8 @@
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+#include <algorithm>
 
-// 取得絕對路徑的私有輔助函式
 std::string GetSaveFilePath() {
     return std::string(RESOURCE_DIR) + "/../PlayerData/save.txt";
 }
@@ -14,17 +14,15 @@ PlayerData* PlayerData::GetInstance() {
 }
 
 PlayerData::PlayerData() {
-    // 初始資源配給
     m_XP = 0;
-    m_CatFood = 1500;
+    m_CatFood = 999999;
     m_NormalTickets = 100;
-    m_RareTickets = 50; // 🌟 預設給 100 張稀有券測試
+    m_RareTickets = 50;
 
-    // 隊伍初始化為 10 格空位
     m_Deck.resize(10, UnitID::NONE);
 
-    // 新手預設解鎖基礎貓，並預設裝備在第一格
-    m_UnlockedCats[UnitID::CAT] = 1;
+    // 🚀 新手預設解鎖基礎貓：基礎 1 等，加值 +0
+    m_UnlockedCats[UnitID::CAT] = CatLevel{1, 0};
     m_Deck[0] = UnitID::CAT;
 }
 
@@ -43,7 +41,6 @@ bool PlayerData::SpendNormalTickets(int amount) {
     return false;
 }
 
-// 🌟 實作扣除稀有票券的功能
 bool PlayerData::SpendRareTickets(int amount) {
     if (m_RareTickets >= amount) { m_RareTickets -= amount; return true; }
     return false;
@@ -55,18 +52,34 @@ void PlayerData::SetDeckUnit(int index, UnitID id) {
     }
 }
 
-void PlayerData::UnlockOrUpgradeCat(UnitID id) {
-    m_UnlockedCats[id]++;
+// 🚀 實作全新的解鎖與升級機制
+void PlayerData::UnlockCat(UnitID id) {
+    if (!HasCat(id)) {
+        m_UnlockedCats[id] = CatLevel{1, 0}; // 首次解鎖，1等+0
+    }
+}
+
+void PlayerData::UpgradeCatBaseLevel(UnitID id) {
+    if (HasCat(id)) {
+        m_UnlockedCats[id].base++; // 吃 XP 升級基礎等級
+    }
+}
+
+void PlayerData::AddCatPlusLevel(UnitID id) {
+    if (HasCat(id)) {
+        m_UnlockedCats[id].plus++; // 轉蛋重複，提升額外等級
+    }
 }
 
 bool PlayerData::HasCat(UnitID id) const {
     return m_UnlockedCats.find(id) != m_UnlockedCats.end();
 }
 
-int PlayerData::GetCatLevel(UnitID id) const {
+// 🚀 回傳完整的結構體物件，若無此貓則回傳預設防呆
+PlayerData::CatLevel PlayerData::GetCatLevel(UnitID id) const {
     auto it = m_UnlockedCats.find(id);
     if (it != m_UnlockedCats.end()) return it->second;
-    return 0;
+    return CatLevel{1, 0};
 }
 
 void PlayerData::AddToFridge(UnitID id) {
@@ -77,6 +90,15 @@ void PlayerData::RemoveFromFridge(int index) {
     if (index >= 0 && index < static_cast<int>(m_Fridge.size())) {
         m_Fridge.erase(m_Fridge.begin() + index);
     }
+}
+
+std::vector<UnitID> PlayerData::GetUnlockedCatsList() const {
+    std::vector<UnitID> list;
+    for (const auto& pair : m_UnlockedCats) {
+        list.push_back(pair.first);
+    }
+    std::sort(list.begin(), list.end());
+    return list;
 }
 
 // ----------------- 存檔寫入 -----------------
@@ -94,7 +116,7 @@ void PlayerData::SaveToFile() {
         return;
     }
 
-    // 🌟 1. 存貨幣 (補上 m_RareTickets)
+    // 1. 存貨幣
     file << m_XP << " " << m_CatFood << " " << m_NormalTickets << " " << m_RareTickets << "\n";
 
     // 2. 存隊伍
@@ -104,10 +126,10 @@ void PlayerData::SaveToFile() {
     }
     file << "\n";
 
-    // 3. 存圖鑑
+    // 3. 存圖鑑 (🚀 調整：寫入 每個ID 的 基礎等級 與 額外等級)
     file << m_UnlockedCats.size() << "\n";
     for (const auto& pair : m_UnlockedCats) {
-        file << static_cast<int>(pair.first) << " " << pair.second << "\n";
+        file << static_cast<int>(pair.first) << " " << pair.second.base << " " << pair.second.plus << "\n";
     }
 
     // 4. 存冰箱
@@ -127,7 +149,6 @@ bool PlayerData::LoadFromFile() {
 
     if (!file.is_open()) return false;
 
-    // 🌟 2. 讀取貨幣 (補上 m_RareTickets 讀取，舊存檔會讀取失敗並回傳 false)
     if (!(file >> m_XP >> m_CatFood >> m_NormalTickets >> m_RareTickets)) return false;
 
     // 3. 讀取隊伍
@@ -141,15 +162,15 @@ bool PlayerData::LoadFromFile() {
         m_Deck[i] = static_cast<UnitID>(idRaw);
     }
 
-    // 4. 讀取圖鑑
+    // 4. 讀取圖鑑 (🚀 調整：讀取 每個ID 的 基礎等級 與 額外等級)
     size_t unlockSize = 0;
     if (!(file >> unlockSize) || unlockSize > 1000) return false;
 
     m_UnlockedCats.clear();
     for (size_t i = 0; i < unlockSize; ++i) {
-        int idRaw, level;
-        if (!(file >> idRaw >> level)) return false;
-        m_UnlockedCats[static_cast<UnitID>(idRaw)] = level;
+        int idRaw, baseLvl, plusLvl;
+        if (!(file >> idRaw >> baseLvl >> plusLvl)) return false;
+        m_UnlockedCats[static_cast<UnitID>(idRaw)] = CatLevel{baseLvl, plusLvl};
     }
 
     // 5. 讀取冰箱

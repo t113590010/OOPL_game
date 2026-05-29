@@ -9,7 +9,6 @@
 #include "NumberSystem.hpp"
 #include "StorageItem.hpp"
 #include "Background.hpp"
-#include "PlayerData.hpp"
 class StorageScene {
 public:
     StorageScene();

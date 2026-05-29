@@ -7,7 +7,17 @@ namespace {
     }
 
 }
+const std::unordered_map<
+    int,
+    StageDisplayData
+> STAGE_DISPLAY_DATA = {
 
+    {1, {1, "台灣", 2}},
+    {2, {2, "香港", 3}},
+    {3, {3, "泰國", 4}},
+    {4, {4, "日本", 5}},
+    {5, {5, "韓國", 6}}
+};
 const std::vector<StageData> STAGES = {
 
     {

@@ -11,6 +11,7 @@ set(SRC_FILES
         "Scene/NormalGachaScene.cpp"
         "Scene/LevelUpgradeScene.cpp"
         "Scene/DeckScene.cpp"
+        "Scene/LevelSelectScene.cpp"
 
         "Entity/Cats/Cat.cpp"
         "Entity/Cats/AxeCat.cpp"
@@ -45,6 +46,9 @@ set(SRC_FILES
         "System/SpawnSystem.cpp"
         "System/PauseMenu.cpp"
         "System/SureMenu.cpp"
+        "System/DeckUI.cpp"
+        "System/CatCardUI.cpp"
+        "System/SlotUI.cpp"
 
         "System/BattleSystem.cpp"
         "System/CollisionSystem.cpp"
@@ -65,6 +69,7 @@ set(INCLUDE_FILES
         "Scene/NormalGachaScene.hpp"
         "Scene/LevelUpgradeScene.hpp"
         "Scene/DeckScene.hpp"
+        "Scene/LevelSelectScene.hpp"
 
         "Entity/Entity.hpp"
         "Entity/Cats/Cat.hpp"
@@ -99,6 +104,9 @@ set(INCLUDE_FILES
         "System/SureMenu.hpp"
         "System/BattleSystem.hpp"
         "System/Background.hpp"
+        "System/DeckUI.hpp"
+        "System/CatCardUI.hpp"
+        "System/SlotUI.hpp"
 
         "System/PlayerData.hpp"
         "System/CollisionSystem.hpp"

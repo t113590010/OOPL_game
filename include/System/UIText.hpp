@@ -13,7 +13,7 @@ public:
     // 💡 建構子大進化：傳入比例 X, 比例 Y, 初始文字, 字體大小, 顏色
     UIText(float scaleX, float scaleY, const std::string& text, int fontSize, const Util::Color& color)
         : GameObject(
-             std::make_unique<Util::Text>(RESOURCE_DIR"/Font/arial.ttf", fontSize, text, color),
+             std::make_unique<Util::Text>(RESOURCE_DIR"/Font/GenSenRounded2TW-M.otf", fontSize, text, color),
              100) {
 
         auto context = Core::Context::GetInstance();

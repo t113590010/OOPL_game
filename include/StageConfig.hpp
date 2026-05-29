@@ -1,6 +1,6 @@
 #ifndef STAGECONFIG_HPP
 #define STAGECONFIG_HPP
-
+#include <unordered_map>
 #include <vector>
 #include <string>
 #include "Entity/UnitID.hpp"
@@ -34,7 +34,17 @@ struct EnemyWave {
 
     float timer = 0.0f;
 };
+struct StageDisplayData {
+    int stageID;
 
+    std::string stageName;
+
+    int energyCost;
+};
+extern const std::unordered_map<
+    int,
+    StageDisplayData
+> STAGE_DISPLAY_DATA;
 struct StageData {
 
     int stageID;

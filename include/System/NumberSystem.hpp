@@ -16,11 +16,9 @@ public:
         WHITE_SMALL   // 你新發現的白色字體 (儲藏庫用)
     };
 
-
-    // 💡 建構子：最後面多加一個 font_type，預設給 YELLOW_BIG 就不會弄壞原本的扭蛋機
     NumberSystem(float pos_ratio_x, float pos_ratio_y, float char_width, float char_height, const std::string& img_path, FontType font_type = FontType::YELLOW_BIG)
         : GameObject(std::make_unique<Util::Image>(img_path), 50),
-          m_FontType(font_type) { // 👈 存下字體類型
+          m_FontType(font_type) {
 
         auto context = Core::Context::GetInstance();
         float halfW = context->GetWindowWidth() / 2.0f;
@@ -30,15 +28,29 @@ public:
         m_StartY = halfH * pos_ratio_y;
         m_CharWidth = char_width;
         m_CharHeight = char_height;
-        m_CurrentValue = 0;
+        m_CurrentValueStr = "0"; // 🚀 改用字串儲存
     }
 
-    // 💡 更新你要顯示的數字
+    void SetPosition(float absoluteX, float absoluteY) {
+        m_StartX = absoluteX;
+        m_StartY = absoluteY;
+    }
+
+    // 🚀 多載 1：相容原本的 int 輸入
     void SetValue(int newValue) {
-        m_CurrentValue = newValue;
+        m_CurrentValueStr = std::to_string(newValue);
     }
 
-    // 💡 繪製函數：拆解數字並連續繪製
+    // 🚀 多載 2：支援字串輸入 (可以傳入 "+90", "/", "MAX")
+    void SetValue(const std::string& newValue) {
+        m_CurrentValueStr = newValue;
+    }
+
+    void SetScale(float scale) {
+        m_Scale = scale;
+    }
+
+    // 💡 繪製函數：拆解字串並連續繪製
     void Draw() {
         if (!m_Visible) return;
 
@@ -46,89 +58,109 @@ public:
         if (!img) return;
         glm::vec2 sheetSize = img->GetSize();
 
-        std::string numStr = std::to_string(m_CurrentValue);
+        std::string numStr = m_CurrentValueStr;
+
+        // 🚀 攔截 MAX：如果字串是 MAX，我們把它當作單一特殊字元 'M' 處理，避免拆成三個字母
+        if (numStr == "MAX" || numStr == "max") {
+            numStr = "M";
+        }
 
         float currentX = m_StartX;
 
-        // 4. 迴圈：由右至左畫數字
+        // 由右至左畫字元
         for (size_t i = 0; i < numStr.length(); ++i) {
-            // 反向讀取：i=0 讀最後一個字，i=1 讀倒數第二個字
             char c = numStr[numStr.length() - 1 - i];
-            int digit = c - '0';
 
             float clipX = 0.0f, clipY = 0.0f, clipW = 50.0f, clipH = 50.0f;
-            GetClipInfo(digit, clipX, clipY, clipW, clipH);
+
+            // 🚀 改傳 char 給 GetClipInfo 去查字典
+            GetClipInfo(c, clipX, clipY, clipW, clipH);
 
             m_Transform.translation = { currentX, m_StartY };
             m_Transform.scale = {
-                (clipW / sheetSize.x) * (m_CharWidth / clipW),
-                (clipH / sheetSize.y) * (m_CharHeight / clipH)
+                (clipW / sheetSize.x) * ((m_CharWidth * m_Scale) / clipW),
+                (clipH / sheetSize.y) * ((m_CharHeight * m_Scale) / clipH)
             };
 
             DrawRect(clipX, clipY, clipW, clipH);
 
-            // ==========================================
-            // 🚀 字距微調系統 (Kerning)
-            // ==========================================
-            // 預設每個數字往左推的距離 (你可以調這個基礎值，例如 0.9f 讓字距更緊湊)
-            float step = m_CharWidth * 0.91f;
+            // 字距微調系統 (Kerning)
+            float step = m_CharWidth * m_Scale * 0.91f;
 
-            // 如果「下一個準備要畫的數字」(也就是目前的左邊那個數字) 是特定的瘦子
-            // 我們就讓它不要退那麼多，這樣就能完美貼齊！
             if (i + 1 < numStr.length()) {
                 char nextChar = numStr[numStr.length() - 1 - (i + 1)];
                 if (nextChar == '1') {
-                    // 因為 1 比較瘦，往左退少一點 (0.7f 倍)
-                    step = m_CharWidth * 0.87f;
+                    step = m_CharWidth * m_Scale * 0.87f;
+                } else if (nextChar == '+') {
+                    step = m_CharWidth * m_Scale * 0.80f;
                 }
-                // 你還可以繼續加，例如：
-                // else if (nextChar == '7') { step = m_CharWidth * 0.85f; }
             }
-
-            // 把 X 座標往「左」推，準備畫下一個數字
             currentX -= step;
         }
     }
 private:
+    float m_Scale = 1.0f;
     float m_StartX;
     float m_StartY;
     float m_CharWidth;
     float m_CharHeight;
-    int m_CurrentValue;
+    std::string m_CurrentValueStr; // 🚀 統一儲存成字串
     FontType m_FontType;
-    // 💡 這個私有函數負責「查字典」：給你數字 0~9，回傳切圖座標
-    void GetClipInfo(int digit, float& x, float& y, float& w, float& h) {
+
+    // 💡 查字典：現在改成吃 char 了！
+    void GetClipInfo(char c, float& x, float& y, float& w, float& h) {
         if (m_FontType == FontType::YELLOW_BIG) {
-            // ==========================================
-            // 🟡 原本的黃色大數字邏輯
-            // ==========================================
             w = 32.0f;
             h = 44.0f;
             float startX = 0.0f;
             float startY = 0.0f;
-
-            if (digit >= 8) {
-                x = startX + ((digit - 8) * w);
+            float offsetSpeX = 4.0f;
+            // 🚀 數字 0~9 的處理
+            if (c >= '0' && c <= '9') {
+                int digit = c - '0';
+                if (digit >= 8) {
+                    x = startX + ((digit - 8) * w);
+                    y = startY + h;
+                } else {
+                    x = startX + (digit * w);
+                    y = startY;
+                }
+            }
+            // 🚀 特殊符號處理 (你要填入實際的 xywh)
+            else if (c == '+') {
+                x = startX + ((14 - 8) * w)+offsetSpeX+2.0;
                 y = startY + h;
-            } else {
-                x = startX + (digit * w);
-                y = startY;
+            }
+            else if (c == '/') {
+                x = startX + ((10 - 8) * w);
+                y = startY + h;
+            }
+            else if (c == 'M') {
+                // 'M' 代表整個 MAX 圖示
+                x = 448.0; y = 44.0f; // TODO: 填入 MAX 的座標
+                w = 512.0f-x; h=71.0-y;        // MAX 通常比較寬，這裡 w 要改大一點
+            }
+            else if (c == '$') {//元
+                x = startX + ((11 - 8) * w)+offsetSpeX;
+                y = startY + h;
             }
         }
         else if (m_FontType == FontType::WHITE_SMALL) {
-            // ==========================================
-            // ⚪ 新增的白色數字邏輯 (等待你填入數據)
-            // ==========================================
-            w = 28.0f; // TODO: 填入白色數字的寬度
-            h = 335.0f-295.0f; // TODO: 填入白色數字的高度
-            float startX = 0.0f; // TODO: 白色數字 '0' 的 X 座標
-            float startY = 295.0f; // TODO: 白色數字 '0' 的 Y 座標
+            w = 28.0f;
+            h = 335.0f - 295.0f;
+            float startX = 0.0f;
+            float startY = 295.0f;
 
-            // 🚀 套用你量出來的排列規則公式
-            x = startX + (digit * w);
-            y = startY;
+            if (c >= '0' && c <= '9') {
+                int digit = c - '0';
+                x = startX + (digit * w);
+                y = startY;
+            }
+            // 🚀 白色字體的特殊符號也寫在這裡
+            else if (c == '+') {
+                // TODO
+            }
         }
-
     }
 };
 

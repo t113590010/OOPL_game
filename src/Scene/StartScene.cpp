@@ -6,7 +6,7 @@ StartScene::StartScene() {
     // 1. 設定背景圖
     // ==========================================
     // 請把 RESOURCE_DIR"/img/start_bg.png" 換成你真正的主畫面背景圖
-    auto bgImage = std::make_shared<Util::Image>(RESOURCE_DIR"/img/homeBackground.png");
+    auto bgImage = std::make_shared<Util::Image>(RESOURCE_DIR"/img/StartScene.png");
     m_Background.SetDrawable(bgImage);
     m_Background.SetZIndex(10);
     // 🚀 召喚大管家，抓取最準確的視窗尺寸
@@ -21,13 +21,13 @@ StartScene::StartScene() {
     // 2. 設定開始按鈕
     // ==========================================
     m_StartBtn = std::make_shared<Button>(
-        0.0f, -0.2f,               // X 在正中間，Y 稍微偏下一點 (-0.2f)
-        250.0f, 80.0f,             // 按鈕長寬
+        0.0f, -0.215f,               // X 在正中間，Y 稍微偏下一點 (-0.2f)
+        220.0f, 70.0f,             // 按鈕長寬
         RESOURCE_DIR"/img/battleStart.png", // 按鈕底圖
         " ", 40,          // 文字與大小
         Util::Color(255, 255, 255, 255)
     );
-    m_StartBtn->SetZIndex(20); // 按鈕蓋在背景上面
+    m_StartBtn->SetZIndex(0); // 按鈕蓋在背景上面
 
     // 綁定點擊事件
     m_StartBtn->SetOnClick([this]() {

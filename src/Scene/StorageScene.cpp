@@ -3,6 +3,7 @@
 #include <iostream>
 #include <algorithm>
 #include <filesystem>
+#include "PlayerData.hpp"
 
 namespace Cut {
     const float RETURN_ICON_X = 423.0f;

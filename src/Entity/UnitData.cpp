@@ -30,7 +30,9 @@ UnitData::s_Stats = {
             LevelType::BASIC_CAT,
 
             RESOURCE_DIR "/img/cat_1.png",
-            RESOURCE_DIR "/img/cat_1_icon.png"
+            RESOURCE_DIR "/img/cat_1_icon.png",
+            RESOURCE_DIR "/img/cat/edi_f.png"
+
         }
     },
 
@@ -52,7 +54,9 @@ UnitData::s_Stats = {
             LevelType::BASIC_CAT,
 
             RESOURCE_DIR "/img/longlegcat_1.png",
-            RESOURCE_DIR "/img/longlegcat_1_icon.png"
+            RESOURCE_DIR "/img/longlegcat_1_icon (2).png",
+            RESOURCE_DIR "/img/longlegcat/edi_f.png"
+
         }
     },
 
@@ -74,7 +78,8 @@ UnitData::s_Stats = {
             LevelType::BASIC_CAT,
 
             RESOURCE_DIR "/img/axe_cat.png",
-            RESOURCE_DIR "/img/斧頭貓.png"
+            RESOURCE_DIR "/img/axe_cat_icon.png",
+            RESOURCE_DIR "/img/axecat/edi_f.png"
         }
     },
 
@@ -96,7 +101,8 @@ UnitData::s_Stats = {
             LevelType::SUPER_RARE,
 
             RESOURCE_DIR "/img/ninja_cat_3.png",
-            RESOURCE_DIR "/img/ninja_cat_3_icon.png"
+            RESOURCE_DIR "/img/ninja_cat_3_icon.png",
+            RESOURCE_DIR "/img/ninja_cat_3.png"//我打算放棄這隻角色 所以給他預設的
         }
     },
 
@@ -118,7 +124,8 @@ UnitData::s_Stats = {
             LevelType::BASIC_CAT,
 
             RESOURCE_DIR "/img/LongCat.png",
-            RESOURCE_DIR "/img/LongCatIcon.png"
+            RESOURCE_DIR "/img/LongCatIcon.png",
+            RESOURCE_DIR "/img/longcat/edi_f.png"
         }
     },
 
@@ -140,7 +147,8 @@ UnitData::s_Stats = {
             LevelType::BASIC_CAT,
 
             RESOURCE_DIR "/img/CowCat.png",
-            RESOURCE_DIR "/img/CowCatIcon.png"
+            RESOURCE_DIR "/img/CowCatIcon.png",
+            RESOURCE_DIR "/img/cowcat/edi_f.png"
         }
     },
 
@@ -162,7 +170,8 @@ UnitData::s_Stats = {
             LevelType::BASIC_CAT,
 
             RESOURCE_DIR "/img/FlyCat.png",
-            RESOURCE_DIR "/img/FlyCatIcon.png"
+            RESOURCE_DIR "/img/FlyCatIcon.png",
+            RESOURCE_DIR "/img/flycat/edi_f.png"
         }
     },
 
@@ -184,7 +193,8 @@ UnitData::s_Stats = {
             LevelType::BASIC_CAT,
 
             RESOURCE_DIR "/img/FishCat.png",
-            RESOURCE_DIR "/img/FishCatIcon.png"
+            RESOURCE_DIR "/img/FishCatIcon.png",
+            RESOURCE_DIR "/img/fishcat/edi_f.png"
         }
     },
 
@@ -206,7 +216,8 @@ UnitData::s_Stats = {
             LevelType::BASIC_CAT,
 
             RESOURCE_DIR "/img/DinoCat.png",
-            RESOURCE_DIR "/img/DinoCatIcon.png"
+            RESOURCE_DIR "/img/DinoCatIcon.png",
+            RESOURCE_DIR "/img/dinocat/edi_f.png"
         }
     },
 
@@ -228,7 +239,8 @@ UnitData::s_Stats = {
             LevelType::SUPER_RARE,
 
             RESOURCE_DIR "/img/GaintCat.png",
-            RESOURCE_DIR "/img/GaintCatIcon.png"
+            RESOURCE_DIR "/img/GaintCatIcon.png",
+            RESOURCE_DIR "/img/gaintcat/edi_f.png"
         }
     },
 
@@ -250,7 +262,8 @@ UnitData::s_Stats = {
             LevelType::SUPER_RARE,
 
             RESOURCE_DIR "/img/DogDoin.png",
-            RESOURCE_DIR "/img/DogDoinIcon.png"
+            RESOURCE_DIR "/img/DogDoinIcon.png",
+            RESOURCE_DIR "/img/edi_f.png"
         }
     },
 
@@ -272,7 +285,8 @@ UnitData::s_Stats = {
             LevelType::SUPER_RARE,
 
             RESOURCE_DIR "/img/Peashooter.png",
-            RESOURCE_DIR "/img/PeashooterIdel.png"
+            RESOURCE_DIR "/img/PeashooterIdel.png",
+            RESOURCE_DIR "/img/edi_f.png"
         }
     },
 
@@ -294,7 +308,8 @@ UnitData::s_Stats = {
             LevelType::SUPER_RARE,
 
             RESOURCE_DIR "/img/Queen.png",
-            RESOURCE_DIR "/img/QueenIcon.png"
+            RESOURCE_DIR "/img/QueenIcon.png",
+            RESOURCE_DIR "/img/edi_f.png"
         }
     },
 
@@ -409,7 +424,9 @@ UnitData::s_Stats = {
             LevelType::NONE,
 
             RESOURCE_DIR "/img/big_head.png",
-            ""
+            "",
+            RESOURCE_DIR "/img/edi_f.png"
+
         }
     },
 

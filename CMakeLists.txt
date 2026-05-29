@@ -54,6 +54,8 @@ add_executable(${PROJECT_NAME}
         src/StageConfig.cpp
         include/System/LevelSystem.hpp
         src/System/LevelSystem.cpp
+        include/Scene/LevelSelectScene.hpp
+        src/Scene/LevelSelectScene.cpp
         # 修正：配合 files.cmake 的變數名稱
 )
 
