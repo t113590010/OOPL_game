@@ -18,12 +18,10 @@ int main(int, char**) {
             case App::State::RARE_GACHA:    // 👈 補上稀有轉蛋
             case App::State::NORMAL_GACHA:  // 👈 補上一般轉蛋
             case App::State::LEVEL_UPGRADE:  // 👈 補上升級
+            case App::State::LEVEL_SELECT:
             case App::State::DECK:  // 👈 補上隊伍編成
 
                 app.Update();
-                break;
-            case App::State::LEVEL_SELECT:
-                app.UpdateLevelSelectScene();
                 break;
             case App::State::END:
                 app.End();

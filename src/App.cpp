@@ -71,12 +71,9 @@ void App::StartHomeScene() {
         
         // 1. 開始遊戲按鈕 (整合了 GUI 的選關邏輯)
         m_HomeScene->SetOnStartBtnClick([this]() {
-            if (m_MenuBGM) {
-                m_MenuBGM->FadeOut(500);
-            }
             Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
             stageIdx = -1;
-            m_CurrentState = State::LEVEL_SELECT;
+            StartLevelSelectScene();
         });
 
         // 2. 升級按鈕
@@ -121,38 +118,7 @@ void App::StartHomeScene() {
         });
     }
 }
-void App::UpdateLevelSelectScene() {
 
-    std::cout << "[LEVEL_SELECT]\n";
-
-    const Util::Keycode stageKeys[] = {
-        Util::Keycode::NUM_1,
-        Util::Keycode::NUM_2,
-        Util::Keycode::NUM_3,
-        Util::Keycode::NUM_4,
-        Util::Keycode::NUM_5,
-    };
-
-    for (int i = 0; i < 5; ++i) {
-
-        if (Util::Input::IsKeyUp(stageKeys[i])) {
-
-            std::cout << "Select Stage "
-                      << (i + 1)
-                      << "\n";
-
-            Util::SFX(
-                RESOURCE_DIR "/music/StartBattle.mp3"
-            ).Play();
-
-            SDL_Delay(4000);
-
-            StartBattleScene(i);
-
-            return;
-        }
-    }
-}
 void App::StartStorageScene() {
     // LOG_DEBUG("click STORAGE！");
 
@@ -204,18 +170,39 @@ void App::StartDeckScene() {
     }
 
 }
-void App::StartLevelUpgradeScene() {
-    LOG_DEBUG("click LEVEL UPGRADE！");
+void App::StartLevelSelectScene()
+{
+    m_CurrentState = State::LEVEL_SELECT;
 
-    m_CurrentState = State::LEVEL_UPGRADE;
-    if (!m_LevelUpgradeScene) {
-        m_LevelUpgradeScene = std::make_shared<LevelUpgradeScene>();
+    if (!m_LevelSelectScene)
+    {
+        m_LevelSelectScene =
+            std::make_shared<LevelSelectScene>();
 
-        m_LevelUpgradeScene->SetOnReturnBtnClick([this]() {
-            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
-            // 這裡只切換狀態，絕對不要呼叫 StartHomeScene()！
-            m_CurrentState = State::HOME;
-        });
+        m_LevelSelectScene
+            ->SetOnReturnBtnClick(
+            [this]()
+            {
+                m_CurrentState = State::HOME;
+            }
+        );
+
+        m_LevelSelectScene
+            ->SetOnStageSelected(
+            [this](int stageId)
+            {
+                if (m_MenuBGM) {
+                    m_MenuBGM->FadeOut(500);
+                    m_MenuBGM.reset();
+                }
+                Util::SFX(
+                RESOURCE_DIR "/music/StartBattle.mp3"
+                ).Play();
+
+                SDL_Delay(4000);
+                StartBattleScene(stageId);
+            }
+        );
     }
 }
 void App::StartRareGachaScene() {
@@ -286,7 +273,20 @@ void App::StartNormalGachaScene() {
     }
 }
 
+void App::StartLevelUpgradeScene() {
+    LOG_DEBUG("click LEVEL UPGRADE！");
 
+    m_CurrentState = State::LEVEL_UPGRADE;
+    if (!m_LevelUpgradeScene) {
+        m_LevelUpgradeScene = std::make_shared<LevelUpgradeScene>();
+
+        m_LevelUpgradeScene->SetOnReturnBtnClick([this]() {
+            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+            // 這裡只切換狀態，絕對不要呼叫 StartHomeScene()！
+            m_CurrentState = State::HOME;
+        });
+    }
+}
 void App::StartBattleScene(int stageIdx){
     m_CurrentState = State::BATTLE;
 
@@ -434,6 +434,19 @@ void App::Update() {
         if (m_DeckScene) {
             m_DeckScene->Update();
             m_DeckScene->Draw();
+        }
+    } else if (
+    m_CurrentState ==
+    State::LEVEL_SELECT
+)
+    {
+        if (m_StartScene)
+            m_StartScene.reset();
+
+        if (m_LevelSelectScene)
+        {
+            m_LevelSelectScene->Update();
+            m_LevelSelectScene->Draw();
         }
     }
 }

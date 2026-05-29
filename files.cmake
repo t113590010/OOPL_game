@@ -11,6 +11,7 @@ set(SRC_FILES
         "Scene/NormalGachaScene.cpp"
         "Scene/LevelUpgradeScene.cpp"
         "Scene/DeckScene.cpp"
+        "Scene/LevelSelectScene.cpp"
 
         "Entity/Cats/Cat.cpp"
         "Entity/Cats/AxeCat.cpp"
@@ -68,6 +69,7 @@ set(INCLUDE_FILES
         "Scene/NormalGachaScene.hpp"
         "Scene/LevelUpgradeScene.hpp"
         "Scene/DeckScene.hpp"
+        "Scene/LevelSelectScene.hpp"
 
         "Entity/Entity.hpp"
         "Entity/Cats/Cat.hpp"
