@@ -59,6 +59,13 @@ public:
     const std::vector<UnitID>& GetFridge() const { return m_Fridge; }
     void RemoveFromFridge(int index);
 
+    // ================= 關卡進度 =================
+
+    int GetMaxUnlockedStage() const;
+
+    bool IsStageUnlocked(int stageID) const;
+
+    void ClearStage(int stageID);
 private:
     PlayerData(); // 隱藏建構子
     ~PlayerData() = default;
@@ -76,6 +83,10 @@ private:
 
     // 冰箱內的貓咪 (抽到但還沒使用的)
     std::vector<UnitID> m_Fridge;
+
+    // 世界篇進度
+    int m_MaxUnlockedStage = 1;
+
 };
 
 #endif
