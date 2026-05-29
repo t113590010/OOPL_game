@@ -24,7 +24,14 @@ public:
         m_LastText = text; // 記錄初始文字
         m_Visible = true;
     }
-
+    void SetPosition(float x, float y)
+    {
+        m_Transform.translation =
+        {
+            x,
+            y
+        };
+    }
     // 💡 通用的更新方法：你給我什麼字，我就顯示什麼字
     void UpdateText(const std::string& newText) {
         // 一樣保留「髒標記 (Dirty Flag)」的優化邏輯：字不一樣才重畫

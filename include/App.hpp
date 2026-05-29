@@ -50,6 +50,7 @@ private:
     void StartDeckScene();
 
 private:
+    int m_CurrentStageID = 0;
     State m_CurrentState = State::START;
     std::shared_ptr<StartScene> m_StartScene;
     std::shared_ptr<HomeScene> m_HomeScene;
