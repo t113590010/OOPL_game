@@ -47,7 +47,10 @@ public:
     }
 
     void SetScale(float scale) {
-        m_Scale = scale;
+        m_Scale ={ scale,scale};
+    }
+    void SetScale(const glm::vec2& scaleVec) {
+        m_Scale = scaleVec;
     }
 
     // 💡 繪製函數：拆解字串並連續繪製
@@ -78,28 +81,28 @@ public:
 
             m_Transform.translation = { currentX, m_StartY };
             m_Transform.scale = {
-                (clipW / sheetSize.x) * ((m_CharWidth * m_Scale) / clipW),
-                (clipH / sheetSize.y) * ((m_CharHeight * m_Scale) / clipH)
+                (clipW / sheetSize.x) * ((m_CharWidth * m_Scale.x) / clipW),
+                (clipH / sheetSize.y) * ((m_CharHeight * m_Scale.y) / clipH)
             };
 
             DrawRect(clipX, clipY, clipW, clipH);
 
             // 字距微調系統 (Kerning)
-            float step = m_CharWidth * m_Scale * 0.91f;
+            float step = m_CharWidth * m_Scale.x* 0.91f;
 
             if (i + 1 < numStr.length()) {
                 char nextChar = numStr[numStr.length() - 1 - (i + 1)];
                 if (nextChar == '1') {
-                    step = m_CharWidth * m_Scale * 0.87f;
+                    step = m_CharWidth * m_Scale.x * 0.87f;
                 } else if (nextChar == '+') {
-                    step = m_CharWidth * m_Scale * 0.80f;
+                    step = m_CharWidth * m_Scale.x * 0.80f;
                 }
             }
             currentX -= step;
         }
     }
 private:
-    float m_Scale = 1.0f;
+    glm::vec2 m_Scale = {1.0f, 1.0f};
     float m_StartX;
     float m_StartY;
     float m_CharWidth;

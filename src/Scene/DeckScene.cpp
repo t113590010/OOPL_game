@@ -4,6 +4,8 @@
 // 如果有專屬的切圖座標，可以建一個獨立的 namespace
 #include "PlayerData.hpp"
 #include <glm/trigonometric.hpp>
+#include "Util/SFX.hpp"
+
 namespace Cut {
     const float RETURN_ICON_X = 423.0f;
     const float RETURN_ICON_Y = 170.0f;
@@ -77,25 +79,43 @@ DeckScene::DeckScene() {
 
 
     m_Background.m_Transform.scale = glm::vec2(windowWidth / imgSize.x, windowHeight / imgSize.y);
-    // auto blackImg = std::make_shared<Util::Image>(RESOURCE_DIR "/img/black.png");
-    // m_Background_black.SetDrawable(blackImg);
-    // m_Background_black.SetZIndex(49);
-    // m_Background_black.m_Transform.scale = glm::vec2(windowWidth / blackImg->GetSize().x, windowHeight / blackImg->GetSize().y);
+    auto blackImg = std::make_unique<Util::Image>(RESOURCE_DIR "/img/black.png");
+    glm::vec2 blackImgSize = blackImg->GetSize();
+
+    m_PopupBg = std::make_shared<Util::GameObject>(std::move(blackImg), 95);
+    m_PopupBg->m_Transform.scale = glm::vec2(windowWidth / blackImgSize.x, windowHeight / blackImgSize.y);
 
     const std::string img006Path = RESOURCE_DIR"/img/img006_tw.png";
     const std::string img007Path = RESOURCE_DIR"/img/img007_tw.png";
     const std::string yesOrNoPath = RESOURCE_DIR"/img/yesOrNo.png";
 
     float btnSize = 100.0f;
-
+    m_EmptyDeckPopup = std::make_shared<Util::GameObject>(std::make_unique<Util::Image>(RESOURCE_DIR"/img/failReturn.png"), 100); // Z-Index 設 100 保證在最上層
+    m_EmptyDeckPopup->m_Transform.scale = { 0.5f, 0.5f }; // 依照你的圖片大小調整比例
     m_ReturnBtn = std::make_shared<Button>(
         -0.8f, -0.87f, btnSize, btnSize,
         img006Path, " ", 30, Util::Color(255, 255, 255, 255)
     );
     m_ReturnBtn->SetZIndex(20);
     m_ReturnBtn->SetOnClick([this]() {
-        if (m_OnReturn) m_OnReturn();
-    });
+         // 🚀 1. 檢查目前上陣的貓咪數量
+         int equippedCount = 0;
+         for (int i = 0; i < 10; ++i) {
+             if (static_cast<int>(m_Slots[i]->GetUnitID()) != 0) {
+                 equippedCount++;
+             }
+         }
+
+         // 🚀 2. 判斷是否放行
+         if (equippedCount == 0) {
+             // ❌ 隊伍空的：發出錯誤音效，並打開彈出視窗
+             Util::SFX(RESOURCE_DIR "/music/fail_summon_cat.mp3").Play();
+             m_IsPopupActive = true;
+         } else {
+             // ✅ 隊伍有貓：正常返回主畫面
+             if (m_OnReturn) m_OnReturn();
+         }
+     });
 
     m_Upg = std::make_shared<Button>(
         -0.078f, -0.93f, 15, 25,
@@ -262,12 +282,20 @@ void DeckScene::Refresh() {
     LOG_DEBUG("DeckScene 資料已重新整理！");
 }
 void DeckScene::Update() {
+    if (m_IsPopupActive) {
+        // 當玩家點擊滑鼠左鍵(放開的那一瞬間)時，關閉視窗
+        if (Util::Input::IsKeyDown(Util::Keycode::MOUSE_LB)) {
+            m_IsPopupActive = false;
+        }
+        return; // ⚠️ 關鍵：直接 return 結束 Update，底下的按鈕就點不到了！
+    }
     if (m_ReturnBtn) {
         m_ReturnBtn->Update();
     }
     if (m_Upg) {
         m_Upg->Update();
     }
+
     // 之後這裡放其他冰箱內按鈕的 Update
     auto pData = PlayerData::GetInstance();
 
@@ -417,5 +445,11 @@ void DeckScene::Draw() {
     for (auto& slot : m_Slots) slot->Draw();
     if (m_DragGhostIcon && m_IsDraggingGhost) {
         m_DragGhostIcon->Draw();
+    }
+    if (m_IsPopupActive ) {
+        if ( m_EmptyDeckPopup) {
+        m_EmptyDeckPopup->Draw();
+        }
+        if (m_PopupBg) m_PopupBg->Draw();
     }
 }

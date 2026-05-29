@@ -15,6 +15,9 @@ namespace {
 void App::Start() {
     LOG_TRACE("Start");
     PlayerData::GetInstance()->LoadFromFile();
+    SDL_StopTextInput();
+
+
     LOG_DEBUG("=== SDL_mixer 支援的音樂格式清單 ===");
     int numDecoders = Mix_GetNumMusicDecoders();
     for (int i = 0; i < numDecoders; ++i) {

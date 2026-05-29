@@ -5,6 +5,8 @@
 #include <iostream>
 #include <algorithm>
 #include "Entity/UnitFactory.hpp"
+#include "Util/SFX.hpp"
+
 GameScene::GameScene(
     const std::vector<UnitID>& playerDeck,
     const StageData& stage
@@ -14,8 +16,7 @@ GameScene::GameScene(
       m_EquippedDeck(playerDeck),
       m_SpawnSystem(stage.waves){
     m_CameraX = GameConfig::CAMERA_MAX_X;
-    m_CameraX = GameConfig::CAMERA_MAX_X;
-    // 玩家基地放在左下角 (X 為負數，Y 為負數)
+
     m_PlayerBase = std::make_shared<Base>(Vector2{GameConfig::PLAYER_BASE_X, GameConfig::BASE_Y}, GameConfig::BASE_HP);
     m_PlayerBase->SetImage(RESOURCE_DIR "/img/catBase.png");
     m_PlayerBase->SetSize(GameConfig::BASE_SIZE_X,GameConfig::BASE_SIZE_Y);
@@ -27,7 +28,7 @@ GameScene::GameScene(
     } else {
         std::cout << "cant find imgcut \n";
     }
-    // 敵人基地放在右下角 (X 為正數，Y 為負數)
+
     m_EnemyBase = std::make_shared<Base>(Vector2{GameConfig::ENEMY_BASE_X, GameConfig::BASE_Y}, stage.enemyBaseHP);
     m_EnemyBase->SetImage(RESOURCE_DIR "/img/enemyBase.png");
     m_EnemyBase->SetTeam(false);
@@ -36,123 +37,108 @@ GameScene::GameScene(
     m_Entities.push_back(m_PlayerBase);
     m_Entities.push_back(m_EnemyBase);
     m_Background = std::make_shared<Background>(RESOURCE_DIR "/img/bg.png");
-    m_MoneyText = std::make_shared<UIText>(
-         GameConfig::MONEY_TEXT_X, GameConfig::MONEY_TEXT_Y,
-         "MONEY: 0 / " + std::to_string(GameConfig::MAX_MONEY_LEVEL_1),
-         30,
-         Util::Color(255, 255, 0, 255)
-     );
 
-    m_WinText = std::make_shared<UIText>(0, 0, "VICTORY!", 30, SDL_Color{255, 215, 0, 255}); // 金色
-    m_LoseText = std::make_shared<UIText>(0, 0, "DEFEAT!", 30, SDL_Color{255, 0, 0, 255});   // 紅色
+    // ==========================================
+    // 🚀 新增：用圖片數字顯示戰鬥金錢 (右上角)
+    // ==========================================
+    m_CurrentMoneyNumber = std::make_shared<NumberSystem>(0.63f, 0.85f, 25.0f, 35.0f, RESOURCE_DIR"/img/moneyInfo.png");
+    m_MaxMoneyNumber = std::make_shared<NumberSystem>(0.85f, 0.85f, 25.0f, 35.0f, RESOURCE_DIR"/img/moneyInfo.png");
+    m_CurrentMoneyNumber->SetZIndex(0);
 
+    // ==========================================
+    // 🚀 新增：載入勝利/失敗的 img004_tw.png 切圖
+    // ==========================================
+    // 建立勝利圖 (放在正中央)
+    m_WinImage = std::make_shared<Button>(
+        0.0f, 0.3f, 200.0f, 100.0f,
+        RESOURCE_DIR"/img/img004_tw.png", " ", 100, Util::Color(0,0,0,0)
+    );
+    // 建立失敗圖 (放在正中央)
+    m_LoseImage = std::make_shared<Button>(
+    0.0f, 0.3f, 250.0f, 100.0f,
+        RESOURCE_DIR"/img/img004_tw.png", " ", 100, Util::Color(0,0,0,0)
+    );
 
+    // 血量文字保留
     m_BaseNameText = std::make_shared<WorldText>(
         GameConfig::PLAYER_BASE_X,
         GameConfig::BASE_Y + GameConfig::BASE_SIZE_Y+20,
         " "
     );
     m_EnemyBaseText = std::make_shared<WorldText>(
-          GameConfig::ENEMY_BASE_X,          // 使用敵方基地的 X 座標
-          GameConfig::BASE_Y + GameConfig::BASE_SIZE_Y+20,       // 一樣的高度
+          GameConfig::ENEMY_BASE_X,
+          GameConfig::BASE_Y + GameConfig::BASE_SIZE_Y+20,
           " "
       );
-    // 產生設定按鈕
+
     pauseBtn = std::make_shared<Button>(
-        GameConfig::PAUSE_BUTTON_RATIO_X,
-        GameConfig::PAUSE_BUTTON_RATIO_Y,
-        GameConfig::PAUSE_BUTTON_SIZE,
-        GameConfig::PAUSE_BUTTON_SIZE,
-        RESOURCE_DIR"/img/pause.png", // 你的設定圖示
-        "  ", // 設定按鈕通常不用文字
-        12,
-        Util::Color(255, 255, 255, 255)
+        GameConfig::PAUSE_BUTTON_RATIO_X, GameConfig::PAUSE_BUTTON_RATIO_Y,
+        GameConfig::PAUSE_BUTTON_SIZE, GameConfig::PAUSE_BUTTON_SIZE,
+        RESOURCE_DIR"/img/pause.png", "  ", 12, Util::Color(255, 255, 255, 255)
     );
     pauseBtn->SetZIndex(80);
+
     m_UISystem.Init(m_EquippedDeck);
     m_UISystem.SetOnFireCannon([this]() {
         if (m_PlayerBase->IsCannonReady()) {
             m_PlayerBase->FireCannon();
         } else {
-            // (選用) 如果玩家在充能沒滿時狂按，可以播個失敗音效
             Util::SFX(RESOURCE_DIR "/music/fail_summon_cat.mp3").Play();
         }
     });
-    // 🚀 綁定錢包升級邏輯
+
     m_UISystem.SetOnWalletUpgrade([this]() {
-        // 🚀 1. 判斷是否小於最大等級
         if (m_WalletLevel < GameConfig::MAX_MONEY_LEVEL && m_CurrentMoney >= m_WalletUpgradeCost) {
             Util::SFX(RESOURCE_DIR "/music/upgmoney.mp3").Play();
-
             m_CurrentMoney -= m_WalletUpgradeCost;
             m_WalletLevel++;
-
-            // 🚀 2. 使用你的 MONEY_LEVEL_INCREASE 來增加上限！
             m_CurrentMaxMoney += GameConfig::MONEY_LEVEL_INCREASE;
-
-            // 🚀 3. 判斷是否滿級
             if (m_WalletLevel == GameConfig::MAX_MONEY_LEVEL) {
-                m_WalletUpgradeCost = -1; // 滿級
+                m_WalletUpgradeCost = -1;
             } else {
-                // 🚀 4. 使用你的花費增加倍率
                 m_WalletUpgradeCost += GameConfig::WALLET_UPGRADE_COST_INCREASE;
             }
-
             std::cout << "錢包升級！目前等級：" << m_WalletLevel << "，新上限：" << m_CurrentMaxMoney << "\n";
-
         } else {
             Util::SFX(RESOURCE_DIR "/music/fail_summon_cat.mp3").Play();
         }
     });
+
     m_PauseMenu = std::make_shared<PauseMenu>();
-    // 綁定暫停選單裡面的按鈕功能
-
     m_PauseMenu->SetOnQuit([this]() {
-         std::cout << "come back start scene\n"; // 你原本的 Log 保留
+        std::cout << "come back start scene\n";
         Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
-
         m_PauseMenu->SetBgZindex(51);
         m_SureMenu = std::make_shared<SureMenu>();
 
-       // 選「是」：關掉選單，並且真的退出遊戲
        m_SureMenu->SetOnConfirm([this]() {
-        Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
-
+           Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
            m_SureMenu.reset();
            if (m_OnQuitGame) m_OnQuitGame();
        });
 
-       // 選「否」：玩家反悔，只要關掉確認選單，維持原本的暫停畫面
        m_SureMenu->SetOnCancel([this]() {
-        Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
-
+           Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
            m_SureMenu.reset();
-        m_PauseMenu->SetBgZindex(49);
-
+           m_PauseMenu->SetBgZindex(49);
        });
      });
 
-    // 📍 修改你剛才寫的 pauseBtn：
     pauseBtn->SetOnClick([this]() {
         Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
-
-        m_IsPaused = !m_IsPaused; // 按下暫停鈕，觸發時間停止！
+        m_IsPaused = !m_IsPaused;
         m_PauseMenu->SetBgZindex(49);
         m_SureMenu.reset();
     });
 }
+
 void GameScene::Update(float dt) {
     m_StageTimer += dt;
-    // 1. 金錢與相機邏輯 (保持不變)
     if (pauseBtn) pauseBtn->Update();
     if (m_IsPaused) {
-        if (m_SureMenu) {
-            m_SureMenu->Update(); // 如果有彈出確認選單，就只讓確認選單動
-        }
-        else if (m_PauseMenu) {
-            m_PauseMenu->Update(); // 沒有確認選單，才輪到暫停選單動
-        }
-        return; // <--- 魔法在這裡！底下的產兵、移動、碰撞全部都不會執行！遊戲畫面瞬間凍結！
+        if (m_SureMenu) m_SureMenu->Update();
+        else if (m_PauseMenu) m_PauseMenu->Update();
+        return;
     }
     m_CurrentMoney += GameConfig::MONEY_GROWTH_SPEED * dt;
     if (m_CurrentMoney > m_CurrentMaxMoney) {
@@ -163,58 +149,44 @@ void GameScene::Update(float dt) {
     if (Util::Input::IsKeyPressed(Util::Keycode::LEFT) || Util::Input::IsKeyPressed(Util::Keycode::A)) m_CameraX -= m_CameraSpeed * dt;
     if (m_CameraX < GameConfig::CAMERA_MIN_X) m_CameraX = GameConfig::CAMERA_MIN_X;
     if (m_CameraX > GameConfig::CAMERA_MAX_X) m_CameraX = GameConfig::CAMERA_MAX_X;
-    // 🚀 3. 新增按鈕更新邏輯 (抓取滑鼠座標與左鍵狀態)
 
-
-
-    // 2. 叫生成系統做事
-    // 💡 以前幾十行的代碼現在變一行！
     m_UISystem.Update(m_EquippedDeck, m_SpawnSystem.GetCooldownTimers(), m_CurrentMoney, m_WalletUpgradeCost,m_PlayerBase->GetCannonProgress(),m_PlayerBase->IsCannonReady());
     int clickedSlot = m_UISystem.GetClickedSlot();
 
     m_SpawnSystem.Update(
-        dt,
-        m_StageTimer,
-        m_Stage,
-        m_Entities,
-        m_CurrentMoney,
-        m_PlayerBase,
-        m_EnemyBase,
-        m_EquippedDeck,
-        clickedSlot
+        dt, m_StageTimer, m_Stage, m_Entities, m_CurrentMoney, m_PlayerBase, m_EnemyBase, m_EquippedDeck, clickedSlot
     );
     m_UISystem.ResetClick();
-    // 3. 更新所有 Entity
+
     for (auto& entity : m_Entities) {
         entity->Update(dt);
     }
 
-    // 4. 叫碰撞系統做事
-    // 💡 以前那坨雙重迴圈變一行！
     m_CollisionSystem.Update(m_Entities);
     m_BattleSystem.Update(dt, m_Entities);
-    // 5. 移除死亡單位
     RemoveDeadEntities();
+
     if (!m_PlayerBase->IsAlive()) {
         std::cout << "🚨 [Game Over] 玩家主堡被摧毀，你輸了！\n";
         if (m_BaseNameText) m_BaseNameText->UpdateText(std::to_string(0));
         Util::SFX(RESOURCE_DIR "/music/lose.mp3").Play();
-        return; // 遊戲結束，提早 return 停止更新
+        return;
     }
     else if (!m_EnemyBase->IsAlive()) {
         std::cout << "🏆 [Victory] 敵方主堡被摧毀，你贏了！\n";
         Util::SFX(RESOURCE_DIR "/music/win.mp3").Play();
         if (m_EnemyBaseText) m_EnemyBaseText->UpdateText(std::to_string(0));
+        return;
+    }
 
-        return; // 遊戲結束，提早 return 停止更新
-    }
-    // 6. UI 更新 (保持不變)
-    if (m_MoneyText) {
-        m_MoneyText->UpdateText("MONEY: " + std::to_string((int)m_CurrentMoney) + " / " + std::to_string((int)m_CurrentMaxMoney));
-    }
+    // 🚀 更新金錢數字 (只更新，不拼接字串了！)
+    if (m_CurrentMoneyNumber) m_CurrentMoneyNumber->SetValue(static_cast<int>(m_CurrentMoney));
+    if (m_MaxMoneyNumber) m_MaxMoneyNumber->SetValue(std::to_string(static_cast<int>(m_CurrentMoney))+'/'+std::to_string(static_cast<int>(m_CurrentMaxMoney))+'$') ;
+
     if (m_BaseNameText) m_BaseNameText->UpdateText(std::to_string(m_PlayerBase->GetHP()));
     if (m_EnemyBaseText) m_EnemyBaseText->UpdateText(std::to_string(m_EnemyBase->GetHP()));
 }
+
 void GameScene::RemoveDeadEntities() {
     m_Entities.erase(
         std::remove_if(m_Entities.begin(), m_Entities.end(),
@@ -223,34 +195,37 @@ void GameScene::RemoveDeadEntities() {
 }
 
 void GameScene::Draw() {
-    if (m_Background) {
-        m_Background->Draw(m_CameraX);
-    }
-    for (auto& entity : m_Entities) {
-        // 把 m_CameraX 交給實體，讓它自己算該畫在哪裡
-        entity->Draw(m_CameraX);
+    if (m_Background) m_Background->Draw(m_CameraX);
 
+    for (auto& entity : m_Entities) {
+        entity->Draw(m_CameraX);
     }
+
     if (m_BaseNameText) m_BaseNameText->Draw(m_CameraX);
     if (m_EnemyBaseText) m_EnemyBaseText->Draw(m_CameraX);
-    if (m_MoneyText) {
-        m_MoneyText->Draw(); // 👈 只要這短短一行就夠了！
-    }
+
+    // 🚀 畫出金錢數字
+    // if (m_CurrentMoneyNumber) m_CurrentMoneyNumber->Draw();
+    if (m_MaxMoneyNumber) m_MaxMoneyNumber->Draw();
 
     m_UISystem.Draw(m_EquippedDeck, m_SpawnSystem.GetCooldownTimers(), m_CurrentMoney);
+
+    // 🚀 替換勝利與失敗的畫面，使用 img004_tw.png 切圖
     if (!m_PlayerBase->IsAlive()) {
-        if (m_LoseText) m_LoseText->Draw(); // 主堡死了，每一幀都狂畫 DEFEAT
+        // 抓取 img004_tw.png 裡面 "慘敗..." 的大概座標
+        if (m_WinImage) m_WinImage->DrawRect(0, 110, 309, 110);
+
     }
     else if (!m_EnemyBase->IsAlive()) {
-        if (m_WinText) m_WinText->Draw();   // 敵人死了，每一幀都狂畫 VICTORY
+        // 抓取 img004_tw.png 裡面 "大獲全勝!!" 的大概座標
+        if (m_LoseImage) m_LoseImage->DrawRect(0, 0, 512, 110);
+
     }
-    if (pauseBtn) {
-        pauseBtn->Draw();
-    }
+
+    if (pauseBtn) pauseBtn->Draw();
 
     if (m_IsPaused) {
         if (m_PauseMenu) m_PauseMenu->Draw();
-
-        if (m_SureMenu) m_SureMenu->Draw(); // 確認選單最後畫，絕對壓在最上面！
+        if (m_SureMenu) m_SureMenu->Draw();
     }
 }
