@@ -49,6 +49,8 @@ set(SRC_FILES
         "System/DeckUI.cpp"
         "System/CatCardUI.cpp"
         "System/SlotUI.cpp"
+        "System/StageCardUI.cpp"
+        "System/StageSelectUI.cpp"
 
         "System/BattleSystem.cpp"
         "System/CollisionSystem.cpp"
@@ -107,6 +109,8 @@ set(INCLUDE_FILES
         "System/DeckUI.hpp"
         "System/CatCardUI.hpp"
         "System/SlotUI.hpp"
+        "System/StageCardUI.hpp"
+        "System/StageSelectUI.hpp"
 
         "System/PlayerData.hpp"
         "System/CollisionSystem.hpp"

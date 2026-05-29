@@ -31,7 +31,11 @@ void App::Start() {
     }
     Mix_AllocateChannels(64);
     LoadStartScene();
-    // StartHomeScene();
+    LOG_DEBUG(
+    "Unlocked Stage = {}",
+    PlayerData::GetInstance()
+        ->GetMaxUnlockedStage()
+);
 }
 
 void App::LoadStartScene() {
@@ -194,19 +198,23 @@ void App::StartLevelSelectScene()
             ->SetOnStageSelected(
             [this](int stageId)
             {
-                if (m_MenuBGM) {
+                if (m_MenuBGM)
+                {
                     m_MenuBGM->FadeOut(500);
                     m_MenuBGM.reset();
                 }
+
                 Util::SFX(
-                RESOURCE_DIR "/music/StartBattle.mp3"
+                    RESOURCE_DIR "/music/StartBattle.mp3"
                 ).Play();
 
                 SDL_Delay(4000);
+
                 StartBattleScene(stageId);
             }
         );
     }
+
 }
 void App::StartRareGachaScene() {
     m_CurrentState = State::RARE_GACHA;
@@ -291,6 +299,9 @@ void App::StartLevelUpgradeScene() {
     }
 }
 void App::StartBattleScene(int stageIdx){
+    m_CurrentStageID =
+    STAGES[stageIdx].stageID;
+
     m_CurrentState = State::BATTLE;
 
     m_BattleBGM = std::make_shared<Util::BGM>(RESOURCE_DIR "/music/battle_1.mp3");
@@ -373,12 +384,50 @@ void App::Update() {
                 m_GameScene->Update(dt);
             }
             else {
-                if (m_BattleBGM) {
+
+                static bool rewardGiven = false;
+
+                if (!rewardGiven)
+                {
+                    if (m_GameScene->IsPlayerWin())
+                    {
+                        PlayerData::GetInstance()
+                            ->ClearStage(
+                                m_CurrentStageID
+                            );
+
+                        PlayerData::GetInstance()
+                            ->SaveToFile();
+
+                        LOG_DEBUG(
+                            "Stage {} cleared!",
+                            m_CurrentStageID
+                        );
+
+                        LOG_DEBUG(
+                            "Unlocked Stage = {}",
+                            PlayerData::GetInstance()
+                                ->GetMaxUnlockedStage()
+                        );
+                    }
+
+                    rewardGiven = true;
+                }
+
+                if (m_BattleBGM)
+                {
                     m_BattleBGM->FadeOut(1500);
                     m_BattleBGM.reset();
                 }
-                if (Util::Input::IsKeyUp(Util::Keycode::RETURN)) {
-                    Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+
+                if (Util::Input::IsKeyUp(
+                    Util::Keycode::RETURN))
+                {
+                    rewardGiven = false;
+
+                    Util::SFX(
+                        RESOURCE_DIR "/music/clickbtn.mp3"
+                    ).Play();
 
                     StartHomeScene();
                 }

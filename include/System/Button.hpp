@@ -101,6 +101,19 @@ public:
     // void SetImage(const std::string& img_path) {
     //     SetDrawable(std::make_shared<Util::Image>(img_path));
     // }
+    void SetTextPosition(
+    float x,
+    float y
+)
+    {
+        if (m_TextGO)
+        {
+            m_TextGO->SetPosition(
+                x,
+                y
+            );
+        }
+    }
     void SetImage(const std::string& img_path) {
 
         auto img = std::make_shared<Util::Image>(img_path);
