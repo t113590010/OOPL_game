@@ -17,6 +17,7 @@
 #include "PauseMenu.hpp"
 #include "SureMenu.hpp"
 #include "StageConfig.hpp"
+#include "NumberSystem.hpp"
 class GameScene {
 public:
     GameScene(
@@ -47,7 +48,8 @@ private:
     std::vector<std::shared_ptr<Entity>> m_Entities;
     std::shared_ptr<Base> m_PlayerBase;
     std::shared_ptr<Base> m_EnemyBase;
-    std::shared_ptr<UIText> m_MoneyText;
+    std::shared_ptr<NumberSystem> m_CurrentMoneyNumber;
+    std::shared_ptr<NumberSystem> m_MaxMoneyNumber;
 
 
     // 攝影機目前的 X 座標 (預設停在最左邊的貓咪基地)
@@ -64,8 +66,8 @@ private:
     std::vector<UnitID> m_EquippedDeck;
     UISystem m_UISystem;
     BattleSystem m_BattleSystem;
-    std::shared_ptr<UIText> m_WinText;
-    std::shared_ptr<UIText> m_LoseText;
+    std::shared_ptr<Button> m_WinImage;  // 使用 Button 單純為了方便 DrawRect
+    std::shared_ptr<Button> m_LoseImage;
     std::shared_ptr<Button> pauseBtn;
     std::vector<std::shared_ptr<Button>> m_SlotButtons;
     bool m_IsPaused = false;

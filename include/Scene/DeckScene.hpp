@@ -26,6 +26,7 @@ public:
     void EquipCatToSlot(UnitID draggedCat, int targetSlotIndex);
 private:
     Util::GameObject m_Background;
+    std::shared_ptr<Util::GameObject> m_PopupBg;        // 🚀 新增：全螢幕黑底遮罩
 
     // 預留返回按鈕
     std::shared_ptr<Button> m_ReturnBtn;
@@ -49,7 +50,8 @@ private:
     int m_DraggedFromSlot = -1; // 🚀 新增：記錄是從哪一格抓起來的 (-1代表冰箱)
     UnitID m_DraggedUnitID = static_cast<UnitID>(0);
     std::shared_ptr<Util::GameObject> m_DragGhostIcon; // 跟著滑鼠跑的頭像
-
+    bool m_IsPopupActive = false;
+    std::shared_ptr<Util::GameObject> m_EmptyDeckPopup;
 
 };
 

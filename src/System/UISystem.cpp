@@ -1,132 +1,3 @@
-// #include "System/UISystem.hpp"
-// #include "Entity/UnitFactory.hpp"
-// #include "Entity/UnitData.hpp"
-// #include "Util/Text.hpp"
-// #include "Util/Color.hpp"
-// #include "Util/Image.hpp"
-// #include <string>
-//
-// UISystem::UISystem() {
-//     m_SlotBg = std::make_shared<Util::Image>(RESOURCE_DIR"/img/slot_bg.png");
-//     m_SlotFrame = std::make_shared<Util::Image>(RESOURCE_DIR"/img/slot_frame.png");
-//     m_Rank1Bg = std::make_shared<Util::Image>(RESOURCE_DIR"/img/rank1.png");
-//     m_Rank2Bg = std::make_shared<Util::Image>(RESOURCE_DIR"/img/rank2.png");
-//     m_Rank3Bg = std::make_shared<Util::Image>(RESOURCE_DIR"/img/rank3.png");
-//
-//     // 💡 ZIndex 層級設定
-//     m_BgRenderer.SetZIndex(10);    // 最底層
-//     m_MaskRenderer.SetZIndex(15);  // 灰色遮罩層
-//     m_RankRenderer.SetZIndex(20);  // 階級框
-//     m_IconRenderer.SetZIndex(30);  // 貓咪頭像
-//     m_FrameRenderer.SetZIndex(40); // 黑邊框
-//     m_TextRenderer.SetZIndex(50);  // 文字
-// }
-//
-// int UISystem::GetClickedSlot(const glm::vec2& mousePos) const {
-//     float halfSize = SLOT_SIZE / 2.0f;
-//
-//     // 💡 修正：Y 軸往上為正，所以第一排 (topY) 是加上間距
-//     const float SLOT_Y_SPACING = SLOT_SIZE-15.0f;
-//     float topY = UI_Y + SLOT_Y_SPACING;
-//     float bottomY = UI_Y;
-//
-//     // 擴充為 10 格
-//     for (int i = 0; i < 10; ++i) {
-//         int col = i % 5; // 求餘數 (0,1,2,3,4)：決定 X 座標
-//         int row = i / 5; // 求商數 (0 或 1)：決定 Y 座標 (0是上排，1是下排)
-//
-//         float currentX = SLOT_X_START + (static_cast<float>(col) * SLOT_SPACING);
-//         float currentY = (row == 0) ? topY : bottomY;
-//
-//         // 檢查游標是否落在這個格子的範圍內
-//         if (mousePos.x >= currentX - halfSize && mousePos.x <= currentX + halfSize &&
-//             mousePos.y >= currentY - halfSize && mousePos.y <= currentY + halfSize) {
-//             return i;
-//         }
-//     }
-//     return -1;
-// }
-//
-// void UISystem::Draw(const std::vector<UnitID>& deck, const float* cooldowns, float money) {
-//     const float ICON_SIZE = 70.0f;
-//     const float TEXT_Y_OFFSET = -25.0f;
-//     const float TEXT_X_OFFSET = 5.0f;
-//
-//     // 💡 修正：Y 軸往上為正，所以第一排 (topY) 是加上間距
-//     const float SLOT_Y_SPACING = SLOT_SIZE-15.0f;
-//     float topY = UI_Y + SLOT_Y_SPACING;
-//     float bottomY = UI_Y;
-//
-//     // 擴充為 10 格
-//     for (int i = 0; i < 10; ++i) {
-//         int col = i % 5;
-//         int row = i / 5;
-//
-//         float x = SLOT_X_START + (static_cast<float>(col) * SLOT_SPACING);
-//         float y = (row == 0) ? topY : bottomY;
-//
-//         // 1. 永遠繪製底座 (Z: 10)
-//         m_BgRenderer.SetDrawable(m_SlotBg);
-//         m_BgRenderer.m_Transform.translation = glm::vec2(x, y);
-//         m_BgRenderer.m_Transform.scale = glm::vec2(SLOT_SIZE / m_SlotBg->GetSize().x, SLOT_SIZE / m_SlotBg->GetSize().y);
-//         m_BgRenderer.Draw();
-//
-//         // 💡 防呆：如果 deck 裡面沒放滿 10 隻貓，就跳過後面的繪製
-//         if (i < (int)deck.size() && deck[i] != UnitID::NONE) {
-//             UnitID id = deck[i];
-//             const auto& stats = UnitData::Get(id);
-//             bool canAfford = (money >= static_cast<float>(stats.cost));
-//             bool isReady = (cooldowns[i] <= 0.0f);
-//
-//             // 2. 只有在「可用」時才畫彩色階級框 (Z: 20)
-//             if (canAfford && isReady) {
-//                 std::shared_ptr<Util::Image> rankImg = (stats.rank == 3) ? m_Rank3Bg : (stats.rank == 2 ? m_Rank2Bg : m_Rank1Bg);
-//                 m_RankRenderer.SetDrawable(rankImg);
-//                 m_RankRenderer.m_Transform.translation = glm::vec2(x, y);
-//                 m_RankRenderer.m_Transform.scale = glm::vec2(SLOT_SIZE / rankImg->GetSize().x, SLOT_SIZE / rankImg->GetSize().y);
-//                 m_RankRenderer.Draw();
-//             }
-//
-//             // 3. 繪製貓咪頭像 (Z: 30)
-//             if (m_IconCache.find(id) == m_IconCache.end()) {
-//                 m_IconCache[id] = std::make_shared<Util::Image>(UnitFactory::GetUnitIconPath(id));
-//             }
-//             auto icon = m_IconCache[id];
-//             if (icon && icon->GetSize().x > 0) {
-//                 m_IconRenderer.SetDrawable(icon);
-//                 m_IconRenderer.m_Transform.translation = glm::vec2(x, y);
-//                 float finalScale = (canAfford && isReady) ? ICON_SIZE : ICON_SIZE * 0.7f;
-//                 m_IconRenderer.m_Transform.scale = glm::vec2(finalScale / icon->GetSize().x, finalScale / icon->GetSize().y);
-//                 m_IconRenderer.Draw();
-//             }
-//
-//             // 4. 文字處理 (Z: 50)
-//             if (!isReady) {
-//                 auto cdText = std::make_shared<::Util::Text>(
-//                     RESOURCE_DIR"/Font/arial.ttf", 30, std::to_string((int)cooldowns[i] + 1), Util::Color(255, 255, 255, 255)
-//                 );
-//                 m_TextRenderer.SetDrawable(cdText);
-//                 m_TextRenderer.m_Transform.translation = glm::vec2(x, y);
-//                 m_TextRenderer.Draw();
-//             } else {
-//                 auto costColor = canAfford ? Util::Color(50, 50, 50, 255) : Util::Color(255, 0, 0, 255);
-//                 auto costText = std::make_shared<::Util::Text>(
-//                     RESOURCE_DIR"/Font/arial.ttf", 18, std::to_string(stats.cost), costColor
-//                 );
-//                 m_TextRenderer.SetDrawable(costText);
-//                 m_TextRenderer.m_Transform.translation = glm::vec2(x + TEXT_X_OFFSET, y + TEXT_Y_OFFSET);
-//                 m_TextRenderer.Draw();
-//             }
-//         }
-//
-//         // 5. 最外層黑邊框 (Z: 40)
-//         m_FrameRenderer.SetDrawable(m_SlotFrame);
-//         m_FrameRenderer.m_Transform.translation = glm::vec2(x, y);
-//         m_FrameRenderer.m_Transform.scale = glm::vec2(SLOT_SIZE / m_SlotFrame->GetSize().x, SLOT_SIZE / m_SlotFrame->GetSize().y);
-//         m_FrameRenderer.Draw();
-//     }
-// }
-
 
 #include "System/UISystem.hpp"
 #include "Entity/UnitFactory.hpp"
@@ -166,12 +37,12 @@ UISystem::UISystem() {
         wRatioX, wRatioY,
         160.0f, 130.0f,
         RESOURCE_DIR"/img/moneybag_noupg.png", // ⚠️ 記得準備一張錢包的圖片！
-        "Lv.UP",
+        " ",
         20,
         Util::Color(0, 0, 0, 255), // 黃色字體
         wTextRatioX, wTextRatioY
     );
-
+    m_WalletNumber = std::make_shared<NumberSystem>(wTextRatioX+0.045, wTextRatioY, 15.0f, 25.0f, RESOURCE_DIR"/img/moneyInfo.png");
     // 綁定錢包升級事件
     m_WalletBtn->SetOnClick([this]() {
         if (m_OnWalletUpgrade) m_OnWalletUpgrade();
@@ -189,12 +60,12 @@ UISystem::UISystem() {
         cRatioX, cRatioY,
         60.0f, 30.0f, // 貓咪砲按鈕可以稍微寬一點
         RESOURCE_DIR"/img/img002_tw.png", // ⚠️ 記得準備充能中的圖 片
-        "0%",
+        " ",
         25, // 字體大一點
         Util::Color(255, 0, 0, 255), // 紅色字體
         cTextRatioX, cTextRatioY
     );
-
+    m_CannonNumber = std::make_shared<NumberSystem>(cTextRatioX, cTextRatioY, 20.0f, 35.0f, RESOURCE_DIR"/img/moneyInfo.png");
     m_CannonBtn->SetClipRect(680, 230, 340, 230);
     // 綁定開砲事件
     m_CannonBtn->SetOnClick([this]() {
@@ -210,10 +81,12 @@ void UISystem::Init(const std::vector<UnitID>& deck) {
     const float SLOT_Y_SPACING = SLOT_SIZE - 15.0f;
     float topY = UI_Y + SLOT_Y_SPACING;
     float bottomY = UI_Y;
-
+    m_SlotButtons.clear();
+    m_SlotNumbers.clear(); // 🚀 清空數字陣列
     for (int i = 0; i < 10; ++i) {
         if (i >= deck.size() || deck[i] == UnitID::NONE) {
             m_SlotButtons.push_back(nullptr);
+            m_SlotNumbers.push_back(nullptr);
             continue;
         }
 
@@ -234,7 +107,7 @@ void UISystem::Init(const std::vector<UnitID>& deck) {
             ratioX, ratioY,
             SLOT_SIZE, SLOT_SIZE,
             RESOURCE_DIR"/img/slot_frame.png",
-            std::to_string(stats.cost),
+            " ",
             18,
             Util::Color(0, 0, 0, 255), // 黃色字體
 
@@ -246,6 +119,8 @@ void UISystem::Init(const std::vector<UnitID>& deck) {
          });
 
         m_SlotButtons.push_back(btn);
+        auto num = std::make_shared<NumberSystem>(textRatioX, textRatioY, 12.0f, 18.0f, RESOURCE_DIR"/img/moneyInfo.png");
+        m_SlotNumbers.push_back(num);
     }
 }
 
@@ -255,13 +130,14 @@ void UISystem::Update(const std::vector<UnitID>& deck, const float* cooldowns, f
         m_WalletBtn->Update();
 
         if (walletUpgradeCost == -1) {
-            m_WalletBtn->UpdateText("MAX");
-            // 💡 呼叫我們剛寫好的 SetImage 來換圖
+            m_WalletNumber->SetValue("M"); // 🚀 更新圖片數字
             m_WalletBtn->SetImage(RESOURCE_DIR"/img/moneybag_max.png");
-        } else {
-            m_WalletBtn->UpdateText("$" + std::to_string(walletUpgradeCost));
+            m_WalletNumber->SetScale({2.0f,1.0});
 
-            // 💡 將你的「買得起」換成實際的數值判斷：目前的錢 >= 升級花費
+        } else {
+            m_WalletNumber->SetValue(std::to_string(walletUpgradeCost)+'$'); // 🚀 更新圖片數字
+            m_WalletNumber->SetScale(1.0);
+
             if (money >= static_cast<float>(walletUpgradeCost)) {
                 m_WalletBtn->SetImage(RESOURCE_DIR"/img/moneybag_upg.png");
             } else {
@@ -275,13 +151,14 @@ void UISystem::Update(const std::vector<UnitID>& deck, const float* cooldowns, f
         m_CannonBtn->Update();
 
         if (isCannonReady) {
-            m_CannonBtn->UpdateText("FIRE!");
-           m_CannonBtn->SetClipRect(196, 123, 195, 255-123); // ⚠️ 充能完畢的圖片
+            m_CannonNumber->SetValue("M"); // 🚀 原本寫 FIRE，現在換成 MAX 圖片字
+            m_CannonBtn->SetClipRect(196, 123, 195, 255-123);
+            m_CannonNumber->SetScale({2.0f,1.0});
         } else {
-            // 把小數點進度換算成整數百分比 (0 ~ 99)
             int percent = static_cast<int>(cannonProgress * 100.0f);
-            m_CannonBtn->UpdateText(std::to_string(percent) + "%");
+            m_CannonNumber->SetValue(percent); // 🚀 更新百分比圖片數字
             m_CannonBtn->SetClipRect(392, 123, 195, 255-123);
+            m_CannonNumber->SetScale(1.0f);
         }
     }
 
@@ -296,9 +173,9 @@ void UISystem::Update(const std::vector<UnitID>& deck, const float* cooldowns, f
         auto& stats = UnitData::Get(id);
 
         if (cd > 0.0f) {
-            btn->UpdateText(std::to_string((int)cd + 1));
+            m_SlotNumbers[i]->SetValue(static_cast<int>(cd) + 1);
         } else {
-            btn->UpdateText(std::to_string(stats.cost));
+            m_SlotNumbers[i]->SetValue(stats.cost);
         }
     }
 }
@@ -310,12 +187,14 @@ void UISystem::Draw(const std::vector<UnitID>& deck, const float* cooldowns, flo
     float bottomY = UI_Y;
     if (m_WalletBtn) {
         m_WalletBtn->Draw();
+        m_WalletNumber->Draw(); // 🚀 畫出錢包數字
     }
 
 
     // 🚀 畫出貓咪砲按鈕
     if (m_CannonBtn) {
         m_CannonBtn->Draw();
+        m_CannonNumber->Draw(); // 🚀 畫出大砲進度數字
     }
     for (int i = 0; i < 10; ++i) {
         int col = i % 5;
@@ -360,6 +239,7 @@ void UISystem::Draw(const std::vector<UnitID>& deck, const float* cooldowns, flo
             // 🚀 4. 最後將「邊框按鈕」蓋上去！它會畫出黑框、畫出文字、並吃下這格的點擊判定
             if (m_SlotButtons[i]) {
                 m_SlotButtons[i]->Draw();
+                m_SlotNumbers[i]->Draw(); // 🚀 畫出該格子的金錢/冷卻圖片數字
             }
         }
     }
