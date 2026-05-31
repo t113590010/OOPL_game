@@ -123,6 +123,17 @@ void App::StartHomeScene() {
             LOG_DEBUG("ready to click StartNormalGachaScene！");
             StartNormalGachaScene();
         });
+        // 7. 返回按鈕
+        m_HomeScene->SetOnReturnBtnClick(
+    [this]()
+    {
+        Util::SFX(
+            RESOURCE_DIR "/music/clickbtn.mp3"
+        ).Play();
+
+        LoadStartScene();
+    }
+);
     }
 }
 

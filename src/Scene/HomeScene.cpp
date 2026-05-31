@@ -1,5 +1,5 @@
 #include "HomeScene.hpp"
-
+#include "PlayerData.hpp"
 
 struct SpriteFrame { int x, y, w, h; };
 namespace Cut {
@@ -16,8 +16,20 @@ namespace Cut {
 
 
 }
+namespace HomeCut {
+    const float RETURN_ICON_X = 423.0f;
+    const float RETURN_ICON_Y = 170.0f;
+    const float RETURN_ICON_W = 511.0f - RETURN_ICON_X;
+    const float RETURN_ICON_H = 232.0f - RETURN_ICON_Y;
+
+    const float RETURN_BASE_X = 256.0f;
+    const float RETURN_BASE_Y = 0.0f;
+    const float RETURN_BASE_W = 99.0f;
+    const float RETURN_BASE_H = 97.0f;
+}
 HomeScene::HomeScene() {
-    auto bgImage = std::make_shared<Util::Image>(RESOURCE_DIR"/img/homeBackground.png");
+
+    auto bgImage = std::make_shared<Util::Image>(RESOURCE_DIR"/img/homeSceneBG.png");
     m_Background.SetDrawable(bgImage);
     m_Background.SetZIndex(10); // 背景放最底下
 
@@ -50,6 +62,18 @@ HomeScene::HomeScene() {
         }
     });
 
+    // 3. 設定返回按鈕
+    float btnSize = 100.0f;
+    m_ReturnBtn = std::make_shared<Button>(
+        -0.875f, -0.87f, btnSize, btnSize,
+        RESOURCE_DIR"/img/img006_tw.png", " ", 30, Util::Color(255, 255, 255, 255)
+    );
+    m_ReturnBtn->SetZIndex(20);
+    m_ReturnBtn->SetOnClick([this]() {
+        if (m_OnReturn) m_OnReturn();
+    });
+
+
     const std::string atlasPath = RESOURCE_DIR"/img/img010_tw.png";
     const std::string gachaPath = RESOURCE_DIR"/img/img007_tw.png";
     // ⬆️ 升級按鈕
@@ -76,6 +100,40 @@ HomeScene::HomeScene() {
     m_NormalGachaBtn = std::make_shared<Button>(0.71, -0.65 , width, height, gachaPath, " ", 30, Util::Color(255, 255, 255, 255));
     m_NormalGachaBtn->SetZIndex(20);
     m_NormalGachaBtn->SetOnClick([this]() { if (m_OnNormalGachaBtnClick) m_OnNormalGachaBtnClick(); });
+
+    auto playerData = PlayerData::GetInstance();
+
+    m_XP =
+        playerData->GetXP();
+
+    m_CatFood =
+        playerData->GetCatFood();
+
+    m_CatFoodNumber =
+    std::make_shared<NumberSystem>(
+        0.84f,
+        -0.925f,
+        29.0f,
+        38.0f,
+        RESOURCE_DIR "/img/moneyInfo.png"
+    );
+
+    m_CatFoodNumber->SetValue(
+        m_CatFood
+    );
+
+    m_XPNumber =
+    std::make_shared<NumberSystem>(
+        0.84f,
+        0.9175f,
+        29.0f,
+        38.0f,
+        RESOURCE_DIR "/img/moneyInfo.png"
+    );
+
+    m_XPNumber->SetValue(
+        m_XP
+    );
 }
 
 void HomeScene::SetOnStartBtnClick(std::function<void()> callback) {
@@ -90,17 +148,107 @@ void HomeScene::Update() {
     if (m_StartBtn) {
         m_StartBtn->Update();
     }
+    if (m_ReturnBtn){
+        m_ReturnBtn->Update();
+    }
     if (m_UpgradeBtn) m_UpgradeBtn->Update();
     if (m_TeamBtn) m_TeamBtn->Update();
     if (m_StorageBtn) m_StorageBtn->Update();
     if (m_RareGachaBtn) m_RareGachaBtn->Update();
     if (m_NormalGachaBtn) m_NormalGachaBtn->Update();
-}
 
+    auto pData =
+    PlayerData::GetInstance();
+
+    if (m_XP != pData->GetXP()){
+        m_XP = pData->GetXP();
+        if (m_XPNumber) {
+            m_XPNumber->SetValue(m_XP);
+        }
+    }
+
+    if (m_CatFood != pData->GetCatFood()){
+        m_CatFood = pData->GetCatFood();
+
+        if (m_CatFoodNumber) {
+            m_CatFoodNumber -> SetValue(m_CatFood);
+        }
+    }
+}
+void HomeScene::SetOnReturnBtnClick(
+    std::function<void()> callback
+)
+{
+    m_OnReturn = callback;
+}
 void HomeScene::Draw() {
     m_Background.Draw();
 
     if (m_StartBtn) m_StartBtn->Draw();
+
+    // ==========================
+    // 返回按鈕
+    // ==========================
+    {
+        static auto returnAtlas =
+            std::make_shared<Util::Image>(
+                RESOURCE_DIR "/img/img006_tw.png"
+            );
+
+        glm::vec2 returnSheetSize =
+            returnAtlas->GetSize();
+
+        float returnIconBoost = 0.8f;
+        float returnBaseScale = 1.0f;
+
+        if (m_ReturnBtn)
+        {
+            m_ReturnBtn->m_Transform.scale =
+            {
+                ((float)HomeCut::RETURN_BASE_W / returnSheetSize.x) * returnBaseScale,
+                ((float)HomeCut::RETURN_BASE_H / returnSheetSize.y) * returnBaseScale
+            };
+
+            m_ReturnBtn->SetZIndex(21);
+
+            m_ReturnBtn->DrawRect(
+                HomeCut::RETURN_BASE_X,
+                HomeCut::RETURN_BASE_Y,
+                HomeCut::RETURN_BASE_W,
+                HomeCut::RETURN_BASE_H
+            );
+
+            glm::vec2 originalPos =
+                m_ReturnBtn->m_Transform.translation;
+
+            m_ReturnBtn->m_Transform.translation +=
+                glm::vec2(-0.2f, 0.0f);
+
+            m_ReturnBtn->m_Transform.scale =
+            {
+                ((float)HomeCut::RETURN_ICON_W / returnSheetSize.x)
+                    * returnBaseScale
+                    * returnIconBoost,
+
+                ((float)HomeCut::RETURN_ICON_H / returnSheetSize.y)
+                    * returnBaseScale
+                    * returnIconBoost
+            };
+
+            m_ReturnBtn->SetZIndex(22);
+
+            m_ReturnBtn->DrawRect(
+                HomeCut::RETURN_ICON_X,
+                HomeCut::RETURN_ICON_Y,
+                HomeCut::RETURN_ICON_W,
+                HomeCut::RETURN_ICON_H
+            );
+
+            m_ReturnBtn->m_Transform.translation =
+                originalPos;
+        }
+    }
+
     // 💡 取得合圖大小做比例抵銷 (照你的 Entity 邏輯)
     static auto uiAtlas = std::make_shared<Util::Image>(RESOURCE_DIR"/img/img010_tw.png");
     static auto gachaAtlas = std::make_shared<Util::Image>(RESOURCE_DIR"/img/img007_tw.png");
@@ -202,5 +350,14 @@ void HomeScene::Draw() {
         };
         m_NormalGachaBtn->SetZIndex(22);
         m_NormalGachaBtn->DrawRect(Cut::NORMAL_GACHA_X, Cut::NORMAL_GACHA_Y, Cut::NORMAL_GACHA_W, Cut::NORMAL_GACHA_H);
+    }
+    if (m_XPNumber)
+    {
+        m_XPNumber->Draw();
+    }
+
+    if (m_CatFoodNumber)
+    {
+        m_CatFoodNumber->Draw();
     }
 }
