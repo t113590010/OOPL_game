@@ -9,6 +9,7 @@
 #include <SDL_mixer.h>
 #include "PlayerData.hpp"
 #include <iostream>
+#include "PlayerData.hpp"
 namespace {
     int stageIdx = -1;
 }
@@ -310,8 +311,9 @@ void App::StartLevelUpgradeScene() {
     }
 }
 void App::StartBattleScene(int stageIdx){
+    ::stageIdx = stageIdx;
     m_CurrentStageID =
-    STAGES[stageIdx].stageID;
+            STAGES[stageIdx].stageID;
 
     m_CurrentState = State::BATTLE;
 
@@ -402,11 +404,25 @@ void App::Update() {
                 {
                     if (m_GameScene->IsPlayerWin())
                     {
+                        auto playerData = PlayerData::GetInstance();
                         PlayerData::GetInstance()
                             ->ClearStage(
                                 m_CurrentStageID
                             );
+                        int rewardXP = STAGES[stageIdx].rewardXP;
 
+                        playerData->AddXP(
+                            rewardXP
+                        );
+                        LOG_DEBUG(
+                            "Reward XP = {}",
+                            rewardXP
+                        );
+
+                        LOG_DEBUG(
+                            "XP After Reward = {}",
+                            playerData->GetXP()
+                        );
                         PlayerData::GetInstance()
                             ->SaveToFile();
 
