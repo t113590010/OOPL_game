@@ -219,7 +219,7 @@ void GameScene::Update(float dt) {
             pData->SaveToFile();
 
             if (m_RewardXPNumber) {
-                m_RewardXPNumber->SetValue("+" + std::to_string(m_RewardXP)); // 加個 + 號更有感覺
+                m_RewardXPNumber->SetValue(  std::to_string(m_RewardXP)); // 加個 + 號更有感覺
             }
 
             m_HasSettled = true;
