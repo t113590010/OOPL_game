@@ -215,6 +215,7 @@ void GameScene::Update(float dt) {
 
             auto pData = PlayerData::GetInstance();
             pData->AddXP(m_RewardXP);
+            pData->ClearStage(m_CurrentStageID);
             pData->SaveToFile();
 
             if (m_RewardXPNumber) {
