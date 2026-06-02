@@ -3,13 +3,10 @@
 
 #include <vector>
 #include <memory>
-#include "Entity/Cats/LongLegCat.hpp"
-#include "Entity/Enemies/Enemy.hpp"
 #include "Entity/Base.hpp"
 #include "GameConfig.hpp"
 #include "System/UIText.hpp"
 #include "System/Button.hpp"
-#include "Util/Text.hpp"
 #include "System/WorldText.hpp"
 #include "System/Background.hpp"
 #include "Entity/UnitID.hpp"

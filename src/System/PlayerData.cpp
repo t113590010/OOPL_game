@@ -101,6 +101,25 @@ std::vector<UnitID> PlayerData::GetUnlockedCatsList() const {
     return list;
 }
 
+// ================= 關卡進度 =================
+
+int PlayerData::GetMaxUnlockedStage() const {
+    return m_MaxUnlockedStage;
+}
+
+bool PlayerData::IsStageUnlocked(int stageID) const {
+    return stageID <= m_MaxUnlockedStage;
+}
+
+void PlayerData::ClearStage(int stageID) {
+
+    // 打完目前最高解鎖關卡
+    // 才解鎖下一關
+
+    if (stageID >= m_MaxUnlockedStage) {
+        m_MaxUnlockedStage = stageID + 1;
+    }
+}
 // ----------------- 存檔寫入 -----------------
 void PlayerData::SaveToFile() {
     std::string filePath = GetSaveFilePath();
@@ -134,10 +153,15 @@ void PlayerData::SaveToFile() {
 
     // 4. 存冰箱
     file << m_Fridge.size() << "\n";
+
     for (UnitID id : m_Fridge) {
         file << static_cast<int>(id) << " ";
     }
+
     file << "\n";
+
+    // 5. 存關卡進度
+    file << m_MaxUnlockedStage << "\n";
 
     file.close();
 }
@@ -182,6 +206,16 @@ bool PlayerData::LoadFromFile() {
         int idRaw;
         if (!(file >> idRaw)) return false;
         m_Fridge.push_back(static_cast<UnitID>(idRaw));
+    }
+    // ========================
+    // 關卡進度
+    // ========================
+
+    // 舊版存檔沒有這一行
+    // 所以讀不到時給預設值
+
+    if (!(file >> m_MaxUnlockedStage)) {
+        m_MaxUnlockedStage = 1;
     }
 
     file.close();

@@ -3,6 +3,7 @@
 #include "Core/Context.hpp"
 #include "Util/Color.hpp"
 #include "Util/Image.hpp"
+#include <PlayerData.hpp>
 namespace LevelSelectCut {
     const float RETURN_ICON_X = 423.0f;
     const float RETURN_ICON_Y = 170.0f;
@@ -15,7 +16,7 @@ namespace LevelSelectCut {
     const float RETURN_BASE_H = 97.0f;
 }
 LevelSelectScene::LevelSelectScene() {
-
+    LOG_DEBUG("LevelSelectScene Created");
     // ============================
     // 背景
     // ============================
@@ -67,56 +68,60 @@ LevelSelectScene::LevelSelectScene() {
             m_OnReturn();
         }
     });
-    float startY = 0.8f;
-    float spacingY = -0.4f;
 
-    for (size_t i = 0; i < STAGES.size(); i++) {
+    m_StageSelectUI =
+        std::make_shared<StageSelectUI>();
 
-        const auto& stage = STAGES[i];
+    std::vector<int> stageList;
 
-        auto displayIt =
-            STAGE_DISPLAY_DATA.find(
-                stage.stageID
-            );
+    int maxUnlocked =
+        PlayerData::GetInstance()
+            ->GetMaxUnlockedStage();
 
-        if (displayIt ==
-            STAGE_DISPLAY_DATA.end()) {
-            continue;
-            }
-
-        const auto& display =
-            displayIt->second;
-
-        auto btn =
-            std::make_shared<Button>(
-                0.0f,
-                startY + spacingY * i,
-                320.0f,
-                100.0f,
-                RESOURCE_DIR "/img/levelBTN.png",
-                display.stageName,
-                28,
-                Util::Color(0,0,0,255)
-            );
-
-        btn->SetOnClick(
-            [this, stage]() {
-
-                LOG_DEBUG(
-                    "Select Stage {}",
-                    stage.stageID
-                );
-
-                if (m_OnStageSelected) {
-                    m_OnStageSelected(
-                        stage.stageID
-                    );
-                }
-            }
-        );
-
-        m_StageButtons.push_back(btn);
+    for (int i = 1; i <= maxUnlocked; i++)
+    {
+        stageList.push_back(i);
     }
+
+    m_StageSelectUI->LoadStages(
+        stageList
+    );
+    m_StageSelectUI->SetOnStageSelected(
+    [this](int stageID)
+    {
+        if (m_OnStageSelected)
+        {
+            m_OnStageSelected(
+                stageID - 1
+            );
+            LOG_DEBUG("LevelSelectScene Created");
+        }
+    }
+);
+
+        m_StartBattleBtn =
+            std::make_shared<Button>(
+                0.45f,     // X
+                -0.82f,    // Y
+                260.0f,
+                110.0f,
+                RESOURCE_DIR "/img/battleStart.png",
+                " ",
+                30,
+                Util::Color(255,255,255,255)
+            );
+    m_StartBattleBtn->SetOnClick(
+    [this]()
+    {
+        if (m_OnStageSelected)
+        {
+            m_OnStageSelected(
+                m_SelectedStageID - 1
+            );
+        }
+    }
+);
+
 }
 
 void LevelSelectScene::Update() {
@@ -124,12 +129,13 @@ void LevelSelectScene::Update() {
     if (m_BackBtn) {
         m_BackBtn->Update();
     }
-
-    for (auto& btn : m_StageButtons) {
-
-        if (btn) {
-            btn->Update();
-        }
+    if (m_StageSelectUI)
+    {
+        m_StageSelectUI->Update();
+    }
+    if (m_StartBattleBtn)
+    {
+        m_StartBattleBtn->Update();
     }
 }
 
@@ -190,11 +196,13 @@ void LevelSelectScene::Draw() {
         m_BackBtn->m_Transform.translation =
             originalPos;
     }
-    for (auto& btn : m_StageButtons) {
-
-        if (btn) {
-            btn->Draw();
-        }
+    if (m_StageSelectUI)
+    {
+        m_StageSelectUI->Draw();
+    }
+    if (m_StartBattleBtn)
+    {
+        m_StartBattleBtn->Draw();
     }
 }
 
