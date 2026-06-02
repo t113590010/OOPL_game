@@ -9,6 +9,7 @@
 #include <SDL_mixer.h>
 #include "PlayerData.hpp"
 #include <iostream>
+#include "PlayerData.hpp"
 namespace {
     int stageIdx = -1;
 }
@@ -123,6 +124,17 @@ void App::StartHomeScene() {
             LOG_DEBUG("ready to click StartNormalGachaScene！");
             StartNormalGachaScene();
         });
+        // 7. 返回按鈕
+        m_HomeScene->SetOnReturnBtnClick(
+    [this]()
+    {
+        Util::SFX(
+            RESOURCE_DIR "/music/clickbtn.mp3"
+        ).Play();
+
+        LoadStartScene();
+    }
+);
     }
 }
 
