@@ -13,7 +13,8 @@ public:
     // 💡 定義你的字體種類
     enum class FontType {
         YELLOW_BIG,   // 原本的黃色大字
-        WHITE_SMALL   // 你新發現的白色字體 (儲藏庫用)
+        WHITE_SMALL,   // 你新發現的白色字體 (儲藏庫用)
+        WHITE_VERY_SMALL
     };
 
     NumberSystem(float pos_ratio_x, float pos_ratio_y, float char_width, float char_height, const std::string& img_path, FontType font_type = FontType::YELLOW_BIG)
@@ -101,6 +102,48 @@ public:
             currentX -= step;
         }
     }
+
+    void Draw(float cameraX) {
+        if (!m_Visible) return;
+
+        auto img = std::dynamic_pointer_cast<Util::Image>(m_Drawable);
+        if (!img) return;
+        glm::vec2 sheetSize = img->GetSize();
+
+        std::string numStr = m_CurrentValueStr;
+        if (numStr == "MAX" || numStr == "max") numStr = "M";
+
+        // 💡 關鍵：把 m_StartX 當作世界座標，扣掉相機的 X
+        float currentX = m_StartX - cameraX;
+
+        // 💡 將基準 Y 稍微往上抬，避免被主堡擋住
+        // 這裡的 m_StartY 現在代表世界 Y 座標，你可能需要在 GameScene 裡微調它
+        float drawY = m_StartY;
+
+        // 由右至左畫字元
+        for (size_t i = 0; i < numStr.length(); ++i) {
+            char c = numStr[numStr.length() - 1 - i];
+
+            float clipX = 0.0f, clipY = 0.0f, clipW = 50.0f, clipH = 50.0f;
+            GetClipInfo(c, clipX, clipY, clipW, clipH);
+
+            m_Transform.translation = { currentX, drawY };
+            m_Transform.scale = {
+                (clipW / sheetSize.x) * ((m_CharWidth * m_Scale.x) / clipW),
+                (clipH / sheetSize.y) * ((m_CharHeight * m_Scale.y) / clipH)
+            };
+
+            DrawRect(clipX, clipY, clipW, clipH);
+
+            float step = m_CharWidth * m_Scale.x * 0.91f;
+            if (i + 1 < numStr.length()) {
+                char nextChar = numStr[numStr.length() - 1 - (i + 1)];
+                if (nextChar == '1') step = m_CharWidth * m_Scale.x * 0.87f;
+                else if (nextChar == '+') step = m_CharWidth * m_Scale.x * 0.80f;
+            }
+            currentX -= step;
+        }
+    }
 private:
     glm::vec2 m_Scale = {1.0f, 1.0f};
     float m_StartX;
@@ -162,6 +205,40 @@ private:
             // 🚀 白色字體的特殊符號也寫在這裡
             else if (c == '+') {
                 // TODO
+            }
+        }
+        else if (m_FontType == FontType::WHITE_VERY_SMALL) {
+            float startX = 254.0f;
+            float startY = 88.0f;
+            w = 270.0f - startX;
+            h = 107.0f - startY;
+            float inf_offset_x = 472.0f-12*w-startX;
+            if (c >= '0' && c <= '9') {
+                int digit = c - '0';
+                x = startX + (digit * w);
+                y = startY;
+            }
+            // 🚀 白色字體的特殊符號也寫在這裡
+            else if (c == 'x') {
+                x = startX + (9 * w);
+                y = startY;
+            }
+            else if (c == '?') {
+                x = startX + (10 * w);
+                y = startY;
+            }
+            else if (c == 'i') {
+                x = startX + (11 * w);
+                w+=inf_offset_x;
+                y = startY;
+            }
+            else if (c == '/') {
+                x = startX + (12 * w)+inf_offset_x;
+                y = startY;
+            }
+            else if (c == ':') {
+                x = startX + (13 * w)+inf_offset_x;
+                y = startY;
             }
         }
     }

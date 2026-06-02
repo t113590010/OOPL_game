@@ -311,6 +311,7 @@ void App::StartBattleScene(int stageIdx){
     m_GameScene->SetOnQuitGame([this]() {
         m_PendingQuit = true;
     });
+
 }
 
 void App::Update() {
@@ -362,27 +363,24 @@ void App::Update() {
         // if (m_DeckScene) m_DeckScene.reset();              // 👈 補上
     }
     else if (m_CurrentState == State::BATTLE) {
-        // 🚀 回到主迴圈安全的地方了，把前一個主畫面殺掉
         if (m_HomeScene) {
             m_HomeScene.reset();
         }
         if (m_StartScene) m_StartScene.reset();
 
         if (m_GameScene) {
-            if (!m_GameScene->IsGameOver()) {
-                m_GameScene->Update(dt);
-            }
-            else {
+            // 1. ⚠️ 關鍵：無條件執行 Update！讓 GameScene 自己決定要凍結誰、要更新誰
+            m_GameScene->Update(dt);
+
+            // 2. 如果遊戲結束了，我們只需要負責把戰鬥音樂淡出就好
+            if (m_GameScene->IsGameOver()) {
                 if (m_BattleBGM) {
-                    m_BattleBGM->FadeOut(1500);
+                    m_BattleBGM->FadeOut(0.1);
                     m_BattleBGM.reset();
                 }
-                if (Util::Input::IsKeyUp(Util::Keycode::RETURN)) {
-                    Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
-
-                    StartHomeScene();
-                }
             }
+
+            // 3. 畫出畫面
             m_GameScene->Draw();
         }
     }else if (m_CurrentState == State::STORAGE) {

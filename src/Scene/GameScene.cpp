@@ -6,6 +6,8 @@
 #include <algorithm>
 #include "Entity/UnitFactory.hpp"
 #include "Util/SFX.hpp"
+#include "PlayerData.hpp"
+
 
 GameScene::GameScene(
     const std::vector<UnitID>& playerDeck,
@@ -16,7 +18,9 @@ GameScene::GameScene(
       m_EquippedDeck(playerDeck),
       m_SpawnSystem(stage.waves){
     m_CameraX = GameConfig::CAMERA_MAX_X;
-
+    auto context = Core::Context::GetInstance();
+    float windowWidth = (float)context->GetWindowWidth();
+    float windowHeight = (float)context->GetWindowHeight();
     m_PlayerBase = std::make_shared<Base>(Vector2{GameConfig::PLAYER_BASE_X, GameConfig::BASE_Y}, GameConfig::BASE_HP);
     m_PlayerBase->SetImage(RESOURCE_DIR "/img/catBase.png");
     m_PlayerBase->SetSize(GameConfig::BASE_SIZE_X,GameConfig::BASE_SIZE_Y);
@@ -60,16 +64,25 @@ GameScene::GameScene(
     );
 
     // 血量文字保留
-    m_BaseNameText = std::make_shared<WorldText>(
-        GameConfig::PLAYER_BASE_X,
-        GameConfig::BASE_Y + GameConfig::BASE_SIZE_Y+20,
-        " "
-    );
-    m_EnemyBaseText = std::make_shared<WorldText>(
-          GameConfig::ENEMY_BASE_X,
-          GameConfig::BASE_Y + GameConfig::BASE_SIZE_Y+20,
-          " "
-      );
+    // m_BaseNameText = std::make_shared<NumberSystem>(
+    //     GameConfig::PLAYER_BASE_X,
+    //     GameConfig::BASE_Y + GameConfig::BASE_SIZE_Y+20,
+    //     " "
+    // );
+    // m_EnemyBaseText = std::make_shared<NumberSystem>(
+    //       GameConfig::ENEMY_BASE_X,
+    //       GameConfig::BASE_Y + GameConfig::BASE_SIZE_Y+20,
+    //       " "
+    //   );
+
+    m_BaseNameText = std::make_shared<NumberSystem>(0.0f, 0.0f, 10.0f, 15.0f, RESOURCE_DIR"/img/moneyInfo.png", NumberSystem::FontType::WHITE_VERY_SMALL);
+    // 強制把它的起始座標設為世界座標 (X: 玩家基地 X, Y: 基地上方)
+    m_BaseNameText->SetPosition(GameConfig::PLAYER_BASE_X + 40.0f, GameConfig::BASE_Y + GameConfig::BASE_SIZE_Y +20.0f);
+    m_BaseNameText->SetZIndex(60);
+
+    m_EnemyBaseText = std::make_shared<NumberSystem>(0.0f, 0.0f, 10.0f, 15.0f, RESOURCE_DIR"/img/moneyInfo.png", NumberSystem::FontType::WHITE_VERY_SMALL);
+    m_EnemyBaseText->SetPosition(GameConfig::ENEMY_BASE_X + 40.0f, GameConfig::BASE_Y + GameConfig::BASE_SIZE_Y +20.0f);
+    m_EnemyBaseText->SetZIndex(60);
 
     pauseBtn = std::make_shared<Button>(
         GameConfig::PAUSE_BUTTON_RATIO_X, GameConfig::PAUSE_BUTTON_RATIO_Y,
@@ -130,16 +143,97 @@ GameScene::GameScene(
         m_PauseMenu->SetBgZindex(49);
         m_SureMenu.reset();
     });
+
+    // 💡 設定獎勵數量 (測試用，實際可讀取關卡設定)
+    m_RewardXP = stage.enemyBaseHP / 10;
+    // 🚀 1. 建立「獲得經驗值!!」文字 (放在稍微偏左上一點)
+    m_RewardTextGet = std::make_shared<Button>(
+        0.0f, 0.05f, windowWidth, 32.0f,
+        RESOURCE_DIR"/img/GetXP.png", " ", 100, Util::Color(0,0,0,0)
+    );
+
+
+
+    // 🚀 3. 建立 XP 數字 (放在文字的更右邊)
+    m_RewardXPNumber = std::make_shared<NumberSystem>(
+        0.09f, 0.05f, 25.0f, 35.0f,
+        RESOURCE_DIR"/img/moneyInfo.png",
+        NumberSystem::FontType::YELLOW_BIG
+    );
+    m_RewardXPNumber->SetZIndex(90);
+    m_OkBtn = std::make_shared<Button>(
+        0.0f, -0.7f, 200.0f, 80.0f,
+        RESOURCE_DIR"/img/OKBtn.png", // 拿原本的黃色按鈕當底
+        " ", 35, Util::Color(255, 255, 255, 255)
+    );
+    m_OkBtn->SetZIndex(90);
+    m_OkBtn->SetOnClick([this]() {
+        Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+        // 點擊 OK 後，觸發退出遊戲的 callback (回到主選單或關卡選擇)
+        if (m_OnQuitGame) m_OnQuitGame();
+
+    });
 }
 
 void GameScene::Update(float dt) {
     m_StageTimer += dt;
+
+    // ==========================================
+    // 1. 暫停邏輯
+    // ==========================================
     if (pauseBtn) pauseBtn->Update();
     if (m_IsPaused) {
         if (m_SureMenu) m_SureMenu->Update();
         else if (m_PauseMenu) m_PauseMenu->Update();
         return;
     }
+
+    // ==========================================
+    // 🚀 2. 遊戲結束攔截器 (搬到這裡來！)
+    // ==========================================
+    if (!m_PlayerBase->IsAlive()) {
+        if (m_BaseNameText) m_BaseNameText->SetValue(std::to_string(0)+'/'+std::to_string(m_PlayerBase->GetMaxHp()));
+
+        if (!m_HasSettled) {
+            std::cout << "🚨 [Game Over] 玩家主堡被摧毀，你輸了！\n";
+            Util::SFX(RESOURCE_DIR "/music/lose.mp3").Play();
+            m_HasSettled = true;
+        }
+
+        // 只有 OK 按鈕可以運作
+        if (m_OkBtn) m_OkBtn->Update();
+
+        // ⚠️ 關鍵：直接 return 結束，底下的貓咪跟隱形 UI 通通凍結！
+        return;
+    }
+    else if (!m_EnemyBase->IsAlive()) {
+        if (!m_HasSettled) {
+            std::cout << "🏆 [Victory] 敵方主堡被摧毀，你贏了！\n";
+            Util::SFX(RESOURCE_DIR "/music/win.mp3").Play();
+
+            auto pData = PlayerData::GetInstance();
+            pData->AddXP(m_RewardXP);
+            pData->SaveToFile();
+
+            if (m_RewardXPNumber) {
+                m_RewardXPNumber->SetValue("+" + std::to_string(m_RewardXP)); // 加個 + 號更有感覺
+            }
+
+            m_HasSettled = true;
+        }
+
+        if (m_EnemyBaseText) m_EnemyBaseText->SetValue(std::to_string(0)+'/'+std::to_string(m_EnemyBase->GetMaxHp()));
+
+        // 只有 OK 按鈕可以運作
+        if (m_OkBtn) m_OkBtn->Update();
+
+        // ⚠️ 關鍵：直接 return 結束，底下的貓咪跟隱形 UI 通通凍結！
+        return;
+    }
+
+    // ==========================================
+    // 3. 正常的遊戲迴圈 (如果上面沒 return，代表遊戲還在進行)
+    // ==========================================
     m_CurrentMoney += GameConfig::MONEY_GROWTH_SPEED * dt;
     if (m_CurrentMoney > m_CurrentMaxMoney) {
         m_CurrentMoney = m_CurrentMaxMoney;
@@ -150,12 +244,10 @@ void GameScene::Update(float dt) {
     if (m_CameraX < GameConfig::CAMERA_MIN_X) m_CameraX = GameConfig::CAMERA_MIN_X;
     if (m_CameraX > GameConfig::CAMERA_MAX_X) m_CameraX = GameConfig::CAMERA_MAX_X;
 
-    m_UISystem.Update(m_EquippedDeck, m_SpawnSystem.GetCooldownTimers(), m_CurrentMoney, m_WalletUpgradeCost,m_PlayerBase->GetCannonProgress(),m_PlayerBase->IsCannonReady());
+    m_UISystem.Update(m_EquippedDeck, m_SpawnSystem.GetCooldownTimers(), m_CurrentMoney, m_WalletUpgradeCost, m_PlayerBase->GetCannonProgress(), m_PlayerBase->IsCannonReady());
     int clickedSlot = m_UISystem.GetClickedSlot();
 
-    m_SpawnSystem.Update(
-        dt, m_StageTimer, m_Stage, m_Entities, m_CurrentMoney, m_PlayerBase, m_EnemyBase, m_EquippedDeck, clickedSlot
-    );
+    m_SpawnSystem.Update(dt, m_StageTimer, m_Stage, m_Entities, m_CurrentMoney, m_PlayerBase, m_EnemyBase, m_EquippedDeck, clickedSlot);
     m_UISystem.ResetClick();
 
     for (auto& entity : m_Entities) {
@@ -166,27 +258,13 @@ void GameScene::Update(float dt) {
     m_BattleSystem.Update(dt, m_Entities);
     RemoveDeadEntities();
 
-    if (!m_PlayerBase->IsAlive()) {
-        std::cout << "🚨 [Game Over] 玩家主堡被摧毀，你輸了！\n";
-        if (m_BaseNameText) m_BaseNameText->UpdateText(std::to_string(0));
-        Util::SFX(RESOURCE_DIR "/music/lose.mp3").Play();
-        return;
-    }
-    else if (!m_EnemyBase->IsAlive()) {
-        std::cout << "🏆 [Victory] 敵方主堡被摧毀，你贏了！\n";
-        Util::SFX(RESOURCE_DIR "/music/win.mp3").Play();
-        if (m_EnemyBaseText) m_EnemyBaseText->UpdateText(std::to_string(0));
-        return;
-    }
-
-    // 🚀 更新金錢數字 (只更新，不拼接字串了！)
+    // 🚀 更新血量與金錢數字
     if (m_CurrentMoneyNumber) m_CurrentMoneyNumber->SetValue(static_cast<int>(m_CurrentMoney));
     if (m_MaxMoneyNumber) m_MaxMoneyNumber->SetValue(std::to_string(static_cast<int>(m_CurrentMoney))+'/'+std::to_string(static_cast<int>(m_CurrentMaxMoney))+'$') ;
 
-    if (m_BaseNameText) m_BaseNameText->UpdateText(std::to_string(m_PlayerBase->GetHP()));
-    if (m_EnemyBaseText) m_EnemyBaseText->UpdateText(std::to_string(m_EnemyBase->GetHP()));
+    if (m_BaseNameText) m_BaseNameText->SetValue(std::to_string(m_PlayerBase->GetHP())+'/'+std::to_string(m_PlayerBase->GetMaxHp()));
+    if (m_EnemyBaseText) m_EnemyBaseText->SetValue(std::to_string(m_EnemyBase->GetHP())+'/'+std::to_string(m_EnemyBase->GetMaxHp()));
 }
-
 void GameScene::RemoveDeadEntities() {
     m_Entities.erase(
         std::remove_if(m_Entities.begin(), m_Entities.end(),
@@ -208,18 +286,35 @@ void GameScene::Draw() {
     // if (m_CurrentMoneyNumber) m_CurrentMoneyNumber->Draw();
     if (m_MaxMoneyNumber) m_MaxMoneyNumber->Draw();
 
-    m_UISystem.Draw(m_EquippedDeck, m_SpawnSystem.GetCooldownTimers(), m_CurrentMoney);
 
+    bool isGameOver = !m_PlayerBase->IsAlive() || !m_EnemyBase->IsAlive();
+    // 🚀 如果遊戲【還沒結束】，才畫出下方的格子、錢包、大砲與暫停按鈕
+    if (!isGameOver) {
+        m_UISystem.Draw(m_EquippedDeck, m_SpawnSystem.GetCooldownTimers(), m_CurrentMoney);
+        if (pauseBtn) pauseBtn->Draw();
+    }
     // 🚀 替換勝利與失敗的畫面，使用 img004_tw.png 切圖
     if (!m_PlayerBase->IsAlive()) {
-        // 抓取 img004_tw.png 裡面 "慘敗..." 的大概座標
-        if (m_WinImage) m_WinImage->DrawRect(0, 110, 309, 110);
+        if (m_LoseImage) m_LoseImage->DrawRect(0, 110, 309, 110);
 
+        // 畫出 OK 按鈕
+        if (m_OkBtn) {
+            m_OkBtn->Draw();
+        };
     }
     else if (!m_EnemyBase->IsAlive()) {
-        // 抓取 img004_tw.png 裡面 "大獲全勝!!" 的大概座標
-        if (m_LoseImage) m_LoseImage->DrawRect(0, 0, 512, 110);
+        if (m_WinImage) m_WinImage->DrawRect(0, 0, 512, 110);
 
+        if (m_RewardTextGet) {
+            m_RewardTextGet->Draw();
+        }
+
+        if (m_RewardXPNumber) {
+            m_RewardXPNumber->Draw();
+        }
+
+        // 畫出 OK 按鈕
+        if (m_OkBtn) m_OkBtn->Draw();
     }
 
     if (pauseBtn) pauseBtn->Draw();

@@ -61,8 +61,8 @@ private:
     // 攝影機移動的速度
     float m_CameraSpeed = 500.0f;
     float m_CurrentMoney = GameConfig::INITIAL_MONEY;
-    std::shared_ptr<WorldText> m_BaseNameText;
-    std::shared_ptr<WorldText> m_EnemyBaseText;
+    std::shared_ptr<NumberSystem> m_BaseNameText;
+    std::shared_ptr<NumberSystem> m_EnemyBaseText;
     std::shared_ptr<Background> m_Background;
     SpawnSystem m_SpawnSystem;
     CollisionSystem m_CollisionSystem;
@@ -83,6 +83,13 @@ private:
     float m_CurrentMaxMoney = GameConfig::MAX_MONEY_LEVEL_1;
     std::function<void()> m_OnQuitGame;
     std::shared_ptr<SureMenu> m_SureMenu;
+
+    bool m_HasSettled = false;                      // 確保獎勵只加一次的防重複鎖
+    int m_RewardXP = 0;                             // 本關卡掉落的 XP 數量
+    std::shared_ptr<Button> m_RewardTextGet;        // 🚀 新增：「獲得」的切圖
+    std::shared_ptr<Button> m_OkBtn;
+
+    std::shared_ptr<NumberSystem> m_RewardXPNumber; // 顯示獲得多少 XP 的數字系統
 };
 
 #endif
