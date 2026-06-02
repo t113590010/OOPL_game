@@ -219,6 +219,7 @@ public:
 
     const Vector2& GetPosition() const { return m_Position; }
     int GetHP() const { return m_HP; }
+    int GetMaxHp() const { return m_MaxHP; }
     int GetDamage() const { return m_AttackDamage; }
     float GetAttackRange() const { return m_AttackRange; }
     int GetUnitCost() const { return m_UnitCost; }

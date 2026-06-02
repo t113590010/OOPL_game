@@ -322,6 +322,7 @@ void App::StartBattleScene(int stageIdx){
     m_GameScene->SetOnQuitGame([this]() {
         m_PendingQuit = true;
     });
+
 }
 
 void App::Update() {
@@ -372,68 +373,49 @@ void App::Update() {
         // if (m_LevelUpgradeScene) m_LevelUpgradeScene.reset(); // 👈 補上
         // if (m_DeckScene) m_DeckScene.reset();              // 👈 補上
     }
-    else if (m_CurrentState == State::BATTLE) {
-        // 🚀 回到主迴圈安全的地方了，把前一個主畫面殺掉
+   else if (m_CurrentState == State::BATTLE) {
         if (m_HomeScene) {
             m_HomeScene.reset();
         }
         if (m_StartScene) m_StartScene.reset();
 
         if (m_GameScene) {
-            if (!m_GameScene->IsGameOver()) {
-                m_GameScene->Update(dt);
-            }
-            else {
+            // 1. ⚠️ 關鍵：無條件執行 Update！讓 GameScene 自己決定要凍結誰、要更新誰 (保留你 test 分支的邏輯)
+            m_GameScene->Update(dt);
 
+            // 2. 如果遊戲結束了，處理結算與音樂 (融合 main 分支的存檔邏輯)
+            if (m_GameScene->IsGameOver()) {
+                
                 static bool rewardGiven = false;
 
-                if (!rewardGiven)
-                {
-                    if (m_GameScene->IsPlayerWin())
-                    {
-                        PlayerData::GetInstance()
-                            ->ClearStage(
-                                m_CurrentStageID
-                            );
+                if (!rewardGiven) {
+                    if (m_GameScene->IsPlayerWin()) {
+                        PlayerData::GetInstance()->ClearStage(m_CurrentStageID);
+                        PlayerData::GetInstance()->SaveToFile();
 
-                        PlayerData::GetInstance()
-                            ->SaveToFile();
-
-                        LOG_DEBUG(
-                            "Stage {} cleared!",
-                            m_CurrentStageID
-                        );
-
-                        LOG_DEBUG(
-                            "Unlocked Stage = {}",
-                            PlayerData::GetInstance()
-                                ->GetMaxUnlockedStage()
-                        );
+                        LOG_DEBUG("Stage {} cleared!", m_CurrentStageID);
+                        LOG_DEBUG("Unlocked Stage = {}", PlayerData::GetInstance()->GetMaxUnlockedStage());
                     }
-
                     rewardGiven = true;
                 }
 
-                if (m_BattleBGM)
-                {
-                    m_BattleBGM->FadeOut(1500);
+                if (m_BattleBGM) {
+                    m_BattleBGM->FadeOut(1500); // 建議用 main 的 1500 毫秒，0.1 毫秒可能會無效
                     m_BattleBGM.reset();
                 }
 
-                if (Util::Input::IsKeyUp(
-                    Util::Keycode::RETURN))
-                {
+                // 允許玩家按 Enter 回到主畫面
+                if (Util::Input::IsKeyUp(Util::Keycode::RETURN)) {
                     rewardGiven = false;
-
-                    Util::SFX(
-                        RESOURCE_DIR "/music/clickbtn.mp3"
-                    ).Play();
-
+                    Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
                     StartHomeScene();
                 }
             }
+
+            // 3. 畫出畫面
             m_GameScene->Draw();
         }
+    }
     }else if (m_CurrentState == State::STORAGE) {
 
         if (m_StartScene) m_StartScene.reset();
