@@ -17,6 +17,8 @@ GameScene::GameScene(
       m_Stage(stage),
       m_EquippedDeck(playerDeck),
       m_SpawnSystem(stage.waves){
+    m_CurrentStageID = stage.stageID;
+
     m_CameraX = GameConfig::CAMERA_MAX_X;
     auto context = Core::Context::GetInstance();
     float windowWidth = (float)context->GetWindowWidth();
@@ -145,7 +147,7 @@ GameScene::GameScene(
     });
 
     // 💡 設定獎勵數量 (測試用，實際可讀取關卡設定)
-    m_RewardXP = stage.enemyBaseHP / 10;
+    m_RewardXP = stage.rewardXP;
     // 🚀 1. 建立「獲得經驗值!!」文字 (放在稍微偏左上一點)
     m_RewardTextGet = std::make_shared<Button>(
         0.0f, 0.05f, windowWidth, 32.0f,

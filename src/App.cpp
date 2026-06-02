@@ -299,8 +299,7 @@ void App::StartLevelUpgradeScene() {
     }
 }
 void App::StartBattleScene(int stageIdx){
-    m_CurrentStageID =
-    STAGES[stageIdx].stageID;
+    m_CurrentStageID =    STAGES[stageIdx].stageID;
 
     m_CurrentState = State::BATTLE;
 
@@ -385,28 +384,15 @@ void App::Update() {
 
             // 2. 如果遊戲結束了，處理結算與音樂 (融合 main 分支的存檔邏輯)
             if (m_GameScene->IsGameOver()) {
-                
-                static bool rewardGiven = false;
-
-                if (!rewardGiven) {
-                    if (m_GameScene->IsPlayerWin()) {
-                        PlayerData::GetInstance()->ClearStage(m_CurrentStageID);
-                        PlayerData::GetInstance()->SaveToFile();
-
-                        LOG_DEBUG("Stage {} cleared!", m_CurrentStageID);
-                        LOG_DEBUG("Unlocked Stage = {}", PlayerData::GetInstance()->GetMaxUnlockedStage());
-                    }
-                    rewardGiven = true;
-                }
 
                 if (m_BattleBGM) {
-                    m_BattleBGM->FadeOut(1500); // 建議用 main 的 1500 毫秒，0.1 毫秒可能會無效
+                    m_BattleBGM->FadeOut(500); // 建議用 main 的 1500 毫秒，0.1 毫秒可能會無效
                     m_BattleBGM.reset();
                 }
 
                 // 允許玩家按 Enter 回到主畫面
                 if (Util::Input::IsKeyUp(Util::Keycode::RETURN)) {
-                    rewardGiven = false;
+
                     Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
                     StartHomeScene();
                 }
@@ -415,7 +401,7 @@ void App::Update() {
             // 3. 畫出畫面
             m_GameScene->Draw();
         }
-    }
+
     }else if (m_CurrentState == State::STORAGE) {
 
         if (m_StartScene) m_StartScene.reset();

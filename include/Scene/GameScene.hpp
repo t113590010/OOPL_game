@@ -85,7 +85,7 @@ private:
     int m_RewardXP = 0;                             // 本關卡掉落的 XP 數量
     std::shared_ptr<Button> m_RewardTextGet;        // 🚀 新增：「獲得」的切圖
     std::shared_ptr<Button> m_OkBtn;
-
+    int m_CurrentStageID ;
     std::shared_ptr<NumberSystem> m_RewardXPNumber; // 顯示獲得多少 XP 的數字系統
 };
 
