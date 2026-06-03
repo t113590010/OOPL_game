@@ -120,6 +120,15 @@ GameScene::GameScene(
     });
 
     m_PauseMenu = std::make_shared<PauseMenu>();
+    m_PauseMenu->SetOnClose([this]() {
+        Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+        m_IsPaused = false;
+        m_SureMenu.reset();
+    });
+
+    m_PauseMenu->SetOnHelp([this]() {
+        LOG_DEBUG("Pause Help / Debug Menu clicked");
+    });
     m_PauseMenu->SetOnQuit([this]() {
         std::cout << "come back start scene\n";
         Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();

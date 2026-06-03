@@ -189,25 +189,25 @@ void App::StartDeckScene() {
     }
 
 }
+
 void App::StartLevelSelectScene()
 {
     m_CurrentState = State::LEVEL_SELECT;
 
-    if (!m_LevelSelectScene)
-    {
-        m_LevelSelectScene =
-            std::make_shared<LevelSelectScene>();
+    // 重新建立，確保會重新讀取 PlayerData 的最新解鎖關卡
+    m_LevelSelectScene =
+        std::make_shared<LevelSelectScene>();
 
-        m_LevelSelectScene
-            ->SetOnReturnBtnClick(
+    m_LevelSelectScene
+        ->SetOnReturnBtnClick(
             [this]()
             {
                 m_CurrentState = State::HOME;
             }
         );
 
-        m_LevelSelectScene
-            ->SetOnStageSelected(
+    m_LevelSelectScene
+        ->SetOnStageSelected(
             [this](int stageId)
             {
                 if (m_MenuBGM)
@@ -225,8 +225,6 @@ void App::StartLevelSelectScene()
                 StartBattleScene(stageId);
             }
         );
-    }
-
 }
 void App::StartRareGachaScene() {
     m_CurrentState = State::RARE_GACHA;
@@ -311,6 +309,10 @@ void App::StartLevelUpgradeScene() {
     }
 }
 void App::StartBattleScene(int stageIdx){
+    LOG_DEBUG(
+    "StartBattleScene received stageIdx={}",
+    stageIdx
+);
     m_CurrentStageID =    STAGES[stageIdx].stageID;
 
     m_CurrentState = State::BATTLE;

@@ -42,17 +42,6 @@ void StageSelectUI::LoadStages(
                 baseYRatio
             );
 
-        card->SetOnClick(
-            [this](int selectedStageID) {
-
-                if (!m_IsDragging && m_OnStageSelected) {
-                    m_OnStageSelected(
-                        selectedStageID - 1
-                    );
-                }
-            }
-        );
-
         m_Cards.push_back(card);
     }
 }
@@ -256,6 +245,15 @@ void StageSelectUI::Update()
             RESOURCE_DIR
             "/music/choose.mp3"
         ).Play();
+
+        if (m_OnStageSelected)
+        {
+            m_OnStageSelected(
+                m_Cards[
+                    m_CurrentCenterIndex
+                ]->GetStageID()
+            );
+        }
     }
     int stageID =
             m_Cards[

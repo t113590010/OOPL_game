@@ -450,5 +450,27 @@ UnitData::s_Stats = {
             RESOURCE_DIR "/img/redPig.png",
             ""
         }
+    },
+
+{
+    UnitID::hippo,
+
+    {
+        1000,
+        200.0f,
+        1000,
+        30.0f,
+        10.0f,
+        0,
+        0.0f,
+        1,
+        1,
+        true,
+        UnitCategory::ENEMY,
+        LevelType::NONE,
+
+        RESOURCE_DIR "/img/hippo.png",
+        ""
     }
+},
 };

@@ -24,6 +24,7 @@ enum class UnitID {
     p3 = 104,
     bighead = 105,
     redPig = 106,
+    hippo = 107,
 };
 
 #endif

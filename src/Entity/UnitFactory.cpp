@@ -18,6 +18,8 @@
 #include "Entity/Enemies/p3.hpp" // 💡 記得補上
 #include "Entity/Enemies/bighead.hpp" // 💡 記得補上
 #include "Entity/Enemies/redPig.hpp" // 💡 記得補上
+#include "Entity/Enemies/hippo.hpp" // 💡 記得補上
+
 #include "Entity/UnitData.hpp"     // 💡 核心：引入神級資料庫
 #include <filesystem> // 💡 核心：引入檔案系統，讓 C++ 能檢查硬碟裡的檔案存不存在！
 #include <fstream>
@@ -101,6 +103,7 @@ UnitFactory::CreateUnit(
         case UnitID::Peashooter:       newUnit = std::make_shared<Peashooter>(Vector2{x, y}); break;
         case UnitID::Queen:       newUnit = std::make_shared<Queen>(Vector2{x, y}); break;
         case UnitID::redPig:       newUnit = std::make_shared<redPig>(Vector2{x, y}); break;
+        case UnitID::hippo:       newUnit = std::make_shared<hippo>(Vector2{x, y}); break;
 
         default: return nullptr;
     }

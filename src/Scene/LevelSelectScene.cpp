@@ -20,7 +20,7 @@ LevelSelectScene::LevelSelectScene() {
     // ============================
     // 背景
     // ============================
-
+    m_SelectedStageID = 1;
     auto bgImage =
         std::make_shared<Util::Image>(
             RESOURCE_DIR "/img/homeBackground.png"
@@ -87,17 +87,16 @@ LevelSelectScene::LevelSelectScene() {
         stageList
     );
     m_StageSelectUI->SetOnStageSelected(
-    [this](int stageID)
-    {
-        if (m_OnStageSelected)
+        [this](int stageID)
         {
-            m_OnStageSelected(
-                stageID - 1
+            m_SelectedStageID = stageID;
+
+            LOG_DEBUG(
+                "Selected Stage: {}",
+                stageID
             );
-            LOG_DEBUG("LevelSelectScene Created");
         }
-    }
-);
+    );
 
         m_StartBattleBtn =
             std::make_shared<Button>(
@@ -111,15 +110,20 @@ LevelSelectScene::LevelSelectScene() {
                 Util::Color(255,255,255,255)
             );
     m_StartBattleBtn->SetOnClick(
-    [this]()
-    {
-        if (m_OnStageSelected)
+        [this]()
         {
-            m_OnStageSelected(
-                m_SelectedStageID - 1
-            );
+            if (m_OnStageSelected)
+            {
+                LOG_DEBUG(
+                    "Start Battle Clicked, Selected Stage = {}",
+                    m_SelectedStageID
+                );
+
+                m_OnStageSelected(
+                    m_SelectedStageID - 1
+                );
+            }
         }
-    }
 );
 
 }
