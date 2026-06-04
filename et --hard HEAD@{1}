@@ -1,0 +1,72 @@
+[33mf88a0a3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mtest[m[33m, [m[1;31morigin/gui[m[33m)[m HEAD@{0}: reset: moving to origin/gui
+[33mc6b9d5f[m HEAD@{1}: reset: moving to HEAD
+[33mc6b9d5f[m HEAD@{2}: checkout: moving from gui to test
+[33m0b9b68c[m[33m ([m[1;32mgui[m[33m)[m HEAD@{3}: checkout: moving from main to gui
+[33m8b3766e[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{4}: commit: fix bug
+[33mcfe414d[m HEAD@{5}: pull: Fast-forward
+[33mccd6c9e[m HEAD@{6}: commit: fix marge 2......
+[33mc156b30[m HEAD@{7}: commit: fix marge 1
+[33m3830ae6[m HEAD@{8}: pull: Fast-forward
+[33m15b0857[m HEAD@{9}: checkout: moving from test to main
+[33mc6b9d5f[m HEAD@{10}: reset: moving to HEAD
+[33mc6b9d5f[m HEAD@{11}: commit: update battle ui
+[33m6913d45[m HEAD@{12}: reset: moving to HEAD
+[33m6913d45[m HEAD@{13}: commit: update battle ui
+[33mae937bb[m HEAD@{14}: commit: upd gamescene img
+[33mb49320a[m HEAD@{15}: merge origin/main: Fast-forward
+[33m78baa78[m HEAD@{16}: commit: done upgrade scene
+[33m1ec4027[m HEAD@{17}: commit: fix img and slot img
+[33m21b8faf[m HEAD@{18}: commit: done deck
+[33mf709672[m HEAD@{19}: commit: new Card system
+[33m15b0857[m HEAD@{20}: merge origin/main: Fast-forward
+[33m2dfdd2a[m HEAD@{21}: checkout: moving from main to test
+[33m15b0857[m HEAD@{22}: pull: Fast-forward
+[33mf874190[m HEAD@{23}: checkout: moving from test to main
+[33m2dfdd2a[m HEAD@{24}: commit: Finish gacha spin, storage logic, and playerData memory handling
+[33m94d3034[m HEAD@{25}: commit: done normal spin
+[33m6740509[m HEAD@{26}: commit: finish half spin
+[33m9156f34[m HEAD@{27}: commit: finish storage function
+[33m12c1e5c[m HEAD@{28}: commit: done storage and two span ui and some function
+[33mf874190[m HEAD@{29}: merge main: Fast-forward
+[33mfa0ce68[m HEAD@{30}: checkout: moving from main to test
+[33mf874190[m HEAD@{31}: pull: Fast-forward
+[33m282ada5[m HEAD@{32}: checkout: moving from gui to main
+[33m0b9b68c[m[33m ([m[1;32mgui[m[33m)[m HEAD@{33}: checkout: moving from main to gui
+[33m282ada5[m HEAD@{34}: pull: Fast-forward
+[33mfa0ce68[m HEAD@{35}: checkout: moving from test to main
+[33mfa0ce68[m HEAD@{36}: checkout: moving from main to test
+[33mfa0ce68[m HEAD@{37}: commit: fix scale
+[33m5b9f311[m HEAD@{38}: commit: fix some button problem and insert three scene
+[33m6f50845[m HEAD@{39}: commit: add three button
+[33m9dce2ef[m HEAD@{40}: commit: try fix cmake
+[33m7df6d62[m HEAD@{41}: commit: restore cmake fix1
+[33m7305a37[m HEAD@{42}: commit: fix cmake 2
+[33m0b92104[m HEAD@{43}: commit: fix cmakelist
+[33m3521e11[m HEAD@{44}: commit: fix lf transfor crlf problem
+[33me076aab[m HEAD@{45}: commit: fix uiZindex
+[33m235ca49[m HEAD@{46}: commit: add queen unit
+[33me10f3ed[m HEAD@{47}: commit: add new base atk btn and function .it waste my 6 hours ...... ,and fix 8 bugs
+[33m431d880[m HEAD@{48}: commit: add Peashooter unit
+[33mc265998[m HEAD@{49}: commit: add dogdoin unit
+[33me129b9e[m HEAD@{50}: commit: add gaintCat unit
+[33md933b29[m HEAD@{51}: commit: insert unit for flycat ,fishcat and dinocat
+[33ma3815e5[m HEAD@{52}: commit: insert two unit.CatCow and LongCat
+[33m962f3ea[m HEAD@{53}: commit: upd readme
+[33mcc0faab[m HEAD@{54}: commit: romove xl
+[33md94db72[m HEAD@{55}: commit: fix gitgnore again
+[33m8e1ad23[m HEAD@{56}: commit: demo002
+[33m69b50a0[m HEAD@{57}: reset: moving to origin/main
+[33m30b505e[m HEAD@{58}: commit: demo001
+[33m93c4d37[m HEAD@{59}: commit: demo001
+[33m69b50a0[m HEAD@{60}: commit: upd UI in BattleScene
+[33ma6e440b[m HEAD@{61}: commit: add upg money function and change scene function .next step i need material to change some img
+[33m3a8028f[m HEAD@{62}: commit: test_ptsd
+[33ma9ea8b2[m HEAD@{63}: commit: fix ptsd upd
+[33m593f510[m HEAD@{64}: commit: 大更新 動畫&音效&微改PTSD
+[33m63f5dc0[m HEAD@{65}: commit: 增加切換攻擊多名敵人邏輯 以及 擊退系統
+[33m6b29959[m HEAD@{66}: commit: done ui_1
+[33m9ccb743[m HEAD@{67}: commit: 增加結束畫面、調整ui
+[33ma9e6a02[m HEAD@{68}: commit: 調整gui 改寫工廠、生成、攻擊判定等架構
+[33m3b0a5c2[m HEAD@{69}: commit: 多單位+slot gui
+[33mc76b1ab[m HEAD@{70}: commit: firstGame
+[33m7e5fb7a[m HEAD@{71}: clone: from https://github.com/ntut-open-source-club/ptsd-template.git

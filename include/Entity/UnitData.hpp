@@ -73,6 +73,8 @@ struct UnitStats {
 
     std::string iconPath; // UI 專用方形頭像
     std::string ediPath;
+    float spawnOffsetX = 0.0f;
+    float spawnOffsetY = 0.0f;
 };
 
 // ========================================================
@@ -83,55 +85,60 @@ class UnitData {
 public:
 
     static const UnitStats& Get(UnitID id) {
-
+        auto it = s_Stats.find(id);
+        if (it != s_Stats.end()) {
+            return it->second; // 找到了，直接回傳
+        }
         // ============================================
         // 防呆 fallback
         // ============================================
 
-        if (s_Stats.find(id) == s_Stats.end()) {
 
-            static const UnitStats defaultStats = {
 
-                // =========================
-                // Base Stats
-                // =========================
+        static const UnitStats defaultStats = {
 
-                1,          // hp
-                0.0f,       // speed
-                0,          // damage
-                0.0f,       // attackRange
-                1.0f,       // attackCd
-                9999,       // cost
-                99.0f,      // spawnCd
-                1,          // rank
-                3,          // kb
-                false,      // isAoE
+            // =========================
+            // Base Stats
+            // =========================
 
-                // =========================
-                // Category
-                // =========================
+            1,          // hp
+            0.0f,       // speed
+            0,          // damage
+            0.0f,       // attackRange
+            1.0f,       // attackCd
+            9999,       // cost
+            99.0f,      // spawnCd
+            1,          // rank
+            3,          // kb
+            false,      // isAoE
 
-                UnitCategory::ENEMY,
+            // =========================
+            // Category
+            // =========================
 
-                // =========================
-                // Level Type
-                // =========================
+            UnitCategory::ENEMY,
 
-                LevelType::NONE,
+            // =========================
+            // Level Type
+            // =========================
 
-                // =========================
-                // Resources
-                // =========================
+            LevelType::NONE,
 
-                "",
-                "",
-                RESOURCE_DIR "/img/edi_f.png"
-            };
+            // =========================
+            // Resources
+            // =========================
 
-            return defaultStats;
-        }
+            "",
+            "",
+            RESOURCE_DIR "/img/edi_f.png",
+            0.0f,
+            50.f
+        };
 
-        return s_Stats.at(id);
+
+
+
+        return defaultStats;
     }
 
 private:

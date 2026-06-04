@@ -71,6 +71,7 @@ public:
         m_ImagePath = imgPath;
         m_Image = std::make_shared<Util::Image>(m_ImagePath);
         m_MaxKBCount = kb;
+
     }
 
     virtual ~Entity() = default;
@@ -115,7 +116,8 @@ public:
         }
 
         m_AnimationTimer += dt;
-        float frameInterval = 1.0f / m_FPS;
+        float activeFPS = (m_CurrentState == EntityState::DEATH) ? m_DeathFPS : m_FPS;
+        float frameInterval = 1.0f / activeFPS;
 
         if (m_AnimationTimer >= frameInterval) {
             m_AnimationTimer = 0.0f;
@@ -124,12 +126,17 @@ public:
                 Util::SFX(m_AttackSoundPath).Play();
             }
             if (m_CurrentFrameIndex >= currentFrames.size()) {
-                if (m_CurrentState == EntityState::WALK || m_CurrentState == EntityState::IDLE) {
-                    m_CurrentFrameIndex = 0; // 無限循環
-                } else if (m_CurrentState == EntityState::DEATH) {
-                    m_CurrentFrameIndex = currentFrames.size() - 1; // 死亡停在最後一張
-                } else {
-                    SetState(EntityState::WALK); // 攻擊、擊退播完切回走路
+                if (m_CurrentFrameIndex >= currentFrames.size()) {
+                    if (m_CurrentState == EntityState::WALK || m_CurrentState == EntityState::IDLE) {
+                        m_CurrentFrameIndex = 0; // 無限循環
+                    } else if (m_CurrentState == EntityState::DEATH) {
+                        m_CurrentFrameIndex = currentFrames.size() - 1; // 死亡停在最後一張
+                    } else if (m_CurrentState == EntityState::KNOCKBACK && m_HP <= 0) {
+                        // 🚀 新增這行：致命擊退播到最後一張就定格，不准切回 WALK！
+                        m_CurrentFrameIndex = currentFrames.size() - 1;
+                    } else {
+                        SetState(EntityState::WALK); // 一般攻擊、擊退播完切回走路
+                    }
                 }
             }
         }
@@ -148,7 +155,7 @@ public:
         m_HP = std::max(0, m_HP - dmg);
         if (m_HP <= 0) {
             m_KnockbackTimer = m_KnockbackDuration;
-            SetState(EntityState::DEATH);
+            SetState(EntityState::KNOCKBACK);
             // 🎵 播放死亡音效
             Util::SFX(m_DeadSoundPath).Play();
             return;
@@ -177,8 +184,19 @@ public:
             m_KnockbackTimer -= dt;
             float kbDir = m_IsPlayerTeam ? 1.0f : -1.0f;
             m_Position.x += kbDir * m_KnockbackSpeed * dt;
+
+            // 🚀 新增：當擊退結束的瞬間，如果沒血了，就進入死亡靈魂狀態！
+            if (m_KnockbackTimer <= 0.0f && m_HP <= 0) {
+                SetState(EntityState::DEATH);
+            }
+            return true; // 擊退中，攔截後續邏輯
+        }
+
+        // 🚀 新增防呆：如果是靈魂狀態，也要攔截，不能讓它跑去執行走路！
+        if (m_CurrentState == EntityState::DEATH) {
             return true;
         }
+
         return false;
     }
 
@@ -232,9 +250,22 @@ public:
     void SetSize(const Vector2& size) { m_Size = size; }
     void SetSize(float w, float h) { m_Size.x = w; m_Size.y = h; }
     void SetScale(float scale) { m_Scale = scale; }
-    bool CanBeDeleted() const { return m_HP <= 0 && m_KnockbackTimer <= 0.0f; }
+    bool CanBeDeleted() const {
+        // 還活著絕對不能刪
+        if (m_HP > 0) return false;
+
+        // 🚀 修正：如果是靈魂狀態，檢查動畫是不是播到最後一張了
+        if (m_CurrentState == EntityState::DEATH) {
+            const auto& frames = GetCurrentFrames();
+            // 如果沒圖，或者播到最後一張，就回傳 true 讓 GameScene 刪掉它
+            return frames.empty() || m_CurrentFrameIndex >= frames.size() - 1;
+        }
+
+        return false;
+    }
     bool IsProjectileUnit() const { return m_IsProjectileUnit; }
     void SetProjectileUnit(bool isProj) { m_IsProjectileUnit = isProj; }
+    void SetDeathSpriteSheet(std::shared_ptr<Util::Image> sheet) { m_DeathSpriteSheet = sheet; }
     // 💡 向下相容邏輯：如果子類別沒特別寫，就當作普通單圖貓，自動轉成無偏移的 AnimFrame
     virtual void InitAnimation(const std::vector<SpriteFrame>& allFrames) {
         if (allFrames.size() >= 3) {
@@ -262,8 +293,17 @@ public:
 
             if (!currentFrames.empty() && m_CurrentFrameIndex < currentFrames.size()) {
                 const AnimFrame& frame = currentFrames[m_CurrentFrameIndex];
-                m_Renderer.SetDrawable(m_SpriteSheet);
-                auto sheetSize = m_SpriteSheet->GetSize();
+                std::shared_ptr<Util::Image> currentSheet = m_SpriteSheet;
+
+                // 如果現在是死亡狀態，而且你有塞死亡專屬圖給它，就換圖！
+                if (m_CurrentState == EntityState::DEATH && m_DeathSpriteSheet) {
+                    currentSheet = m_DeathSpriteSheet;
+                }
+
+                // 🚀 修正：把它們改成 currentSheet
+                m_Renderer.SetDrawable(currentSheet);
+
+                auto sheetSize = currentSheet   ->GetSize();
 
                 if (sheetSize.x > 0 && sheetSize.y > 0) {
                     // 💡 核心：跑迴圈，把這瞬間的所有零件全部疊加上去畫出來！
@@ -304,6 +344,9 @@ public:
             m_Renderer.Draw();
         }
     }
+    float get_soul_offsetY() {
+        return soul_offsetY;
+    }
 
 protected:
     Vector2 m_Position;
@@ -335,7 +378,7 @@ protected:
     int m_CurrentFrameIndex = 0;
     float m_AnimationTimer = 0.0f;
     float m_FPS = 12.0f;
-
+    float m_DeathFPS = 6.0f;
     std::shared_ptr<Util::Image> m_SpriteSheet;
     std::string m_AttackSoundPath = RESOURCE_DIR "/music/atk.mp3";
     std::string m_HitSoundPath    = RESOURCE_DIR "/music/gethit.mp3";
@@ -347,7 +390,10 @@ protected:
     std::vector<AnimFrame> m_AttackFrames;
     std::vector<AnimFrame> m_KnockbackFrames;
     std::vector<AnimFrame> m_DeathFrames;
+    std::shared_ptr<Util::Image> m_DeathSpriteSheet;
     float m_Scale = 1.0f;
+    float soul_offsetY = 30.0f;
+
     bool m_IsProjectileUnit = false;
 private:
     const std::vector<AnimFrame>& GetCurrentFrames() const {

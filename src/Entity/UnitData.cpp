@@ -31,7 +31,9 @@ UnitData::s_Stats = {
 
             RESOURCE_DIR "/img/cat_1.png",
             RESOURCE_DIR "/img/cat_1_icon.png",
-            RESOURCE_DIR "/img/cat/edi_f.png"
+            RESOURCE_DIR "/img/cat/edi_f.png",
+            0.0f,
+            0.0f
 
         }
     },
@@ -286,7 +288,9 @@ UnitData::s_Stats = {
 
             RESOURCE_DIR "/img/Peashooter.png",
             RESOURCE_DIR "/img/PeashooterIdel.png",
-            RESOURCE_DIR "/img/edi_f.png"
+            RESOURCE_DIR "/img/edi_f.png",
+            0.0f,
+            0.0f
         }
     },
 

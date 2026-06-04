@@ -3,7 +3,7 @@
 #include "Util/Input.hpp"
 #include "GameConfig.hpp"
 #include <iostream>
-
+#include "Entity/UnitData.hpp"
 SpawnSystem::SpawnSystem(const std::vector<EnemyWave>& waves)
     : m_EnemyWaves(waves) {
 }
@@ -151,13 +151,13 @@ void SpawnSystem::Update(
 
         if (keyTriggered || buttonTriggered) {
             if (m_CooldownTimers[i] <= 0.0f) {
-                int cost = UnitData::Get(targetId).cost;
+                const auto& catStats = UnitData::Get(targetId);
+                int cost = catStats.cost;
 
                 if (currentMoney >= cost) {
-                    float spawnX = playerBase->GetPosition().x + GameConfig::SPAWN_OFFSET_X;
+                    float spawnX = playerBase->GetPosition().x + GameConfig::SPAWN_OFFSET_X+catStats.spawnOffsetX;
                     float spawnY = GameConfig::BASE_Y + GameConfig::SPAWN_OFFSET_Y
-                                 + (static_cast<float>(rand()) / RAND_MAX * 2.0f - 1.0f)
-                                 * GameConfig::RANDOM_SPAWN_OFFSET_Y_MAX;
+                                 + catStats.spawnOffsetY;
                     UnitLevelData debugLevel;
 
                     debugLevel.baseLevel = 20;

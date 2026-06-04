@@ -169,6 +169,41 @@ UnitFactory::CreateUnit(
                     // 🚀 重頭戲：呼叫該實體的專屬邏輯去切圖！
                     newUnit->InitAnimation(allFrames);
                 }
+                // 假設死亡圖檔名為 filename + "_dead"
+                std::string deadImgPath = directory + "/" +"soul.png";
+                std::string deadImgcutPath = baseDir + "/imgcut/" +  "soul.imgcut";
+
+                // 如果真的有這張死亡圖片，且也有死亡專用的切圖檔
+                if (std::filesystem::exists(deadImgPath) && std::filesystem::exists(deadImgcutPath)) {
+
+                    // 1. 載入死亡圖片並設定給 Entity
+                    std::shared_ptr<Util::Image> deadSheet = std::make_shared<Util::Image>(deadImgPath);
+                    newUnit->SetDeathSpriteSheet(deadSheet);
+
+                    // 2. 讀取死亡切圖座標
+                    auto deadFramesData = ParseImgCut(deadImgcutPath);
+
+                    // 3. 把切圖座標轉成 AnimFrame 陣列
+                    std::vector<AnimFrame> deathAnimList;
+                    float currentOffsetY = 0.0f;
+                    // 每一幀要往上飄的距離 (請依據你的畫面微調數字)
+                    // 💡 注意：如果你的遊戲 Y 軸是往上為正，就用正數 (如 5.0f)
+                    //          如果 Y 軸是往下為正，請改成負數 (如 -5.0f)
+                    float floatUpStep = newUnit->get_soul_offsetY();
+                    for (const auto& rect : deadFramesData) {
+                        AnimFrame frame;
+
+                        // 🚀 修正：把 currentOffsetY 塞進第三個參數 (part.offsetY)
+                        frame.parts.push_back({rect, 0.0f, currentOffsetY});
+                        deathAnimList.push_back(frame);
+
+                        // 準備下一張圖的偏移量，讓它疊加越來越高
+                        currentOffsetY += floatUpStep;
+                    }
+
+                    // 4. 利用你原本寫好的 SetDeathFrames 寫入！
+                    newUnit->SetDeathFrames(deathAnimList);
+                }
             }
         }
 
