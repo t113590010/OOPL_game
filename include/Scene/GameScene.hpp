@@ -18,6 +18,7 @@
 #include "SureMenu.hpp"
 #include "StageConfig.hpp"
 #include "NumberSystem.hpp"
+#include <functional>
 class GameScene {
 public:
     GameScene(
@@ -38,7 +39,12 @@ public:
     void SetOnQuitGame(std::function<void()> callback) {
         m_OnQuitGame = callback;
     }
-
+    void SetOnBgmVolumeChanged(
+        std::function<void(int)> callback
+    )
+    {
+        m_OnBgmVolumeChanged = callback;
+    }
 private:
 
     void RemoveDeadEntities();      // 刪除死亡單位
@@ -72,6 +78,7 @@ private:
     std::vector<std::shared_ptr<Button>> m_SlotButtons;
     bool m_IsPaused = false;
     std::shared_ptr<PauseMenu> m_PauseMenu;
+
     int m_WalletLevel = 1;
     // 🚀 初始花費直接吃 GameConfig
     int m_WalletUpgradeCost = GameConfig::WALLET_UPGRADE_INITIAL_COST;
@@ -87,6 +94,8 @@ private:
     std::shared_ptr<Button> m_OkBtn;
     int m_CurrentStageID ;
     std::shared_ptr<NumberSystem> m_RewardXPNumber; // 顯示獲得多少 XP 的數字系統
+
+    std::function<void(int)> m_OnBgmVolumeChanged;
 };
 
 #endif

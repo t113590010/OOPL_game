@@ -7,7 +7,7 @@
 #include "Entity/UnitFactory.hpp"
 #include "Util/SFX.hpp"
 #include "PlayerData.hpp"
-
+#include "PauseMenu.hpp"
 
 GameScene::GameScene(
     const std::vector<UnitID>& playerDeck,
@@ -120,6 +120,16 @@ GameScene::GameScene(
     });
 
     m_PauseMenu = std::make_shared<PauseMenu>();
+
+    m_PauseMenu->SetOnBgmVolumeChanged(
+        [this](int level)
+        {
+            if (m_OnBgmVolumeChanged)
+            {
+                m_OnBgmVolumeChanged(level);
+            }
+        }
+    );
     m_PauseMenu->SetOnClose([this]() {
         Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
         m_IsPaused = false;
@@ -331,8 +341,20 @@ void GameScene::Draw() {
 
     if (pauseBtn) pauseBtn->Draw();
 
-    if (m_IsPaused) {
-        if (m_PauseMenu) m_PauseMenu->Draw();
-        if (m_SureMenu) m_SureMenu->Draw();
+    if (m_IsPaused)
+    {
+        if (m_SureMenu)
+        {
+            if (m_PauseMenu)
+            {
+                m_PauseMenu->DrawBackgroundOnly();
+            }
+
+            m_SureMenu->Draw();
+        }
+        else if (m_PauseMenu)
+        {
+            m_PauseMenu->Draw();
+        }
     }
 }

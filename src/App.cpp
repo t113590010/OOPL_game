@@ -332,6 +332,32 @@ void App::StartBattleScene(int stageIdx){
         realPlayerDeck,
         STAGES[stageIdx]
     );
+    m_GameScene->SetOnBgmVolumeChanged(
+    [this](int level)
+    {
+        int volume = 0;
+
+        if (level == 0)
+            volume = 0;
+        else if (level == 1)
+            volume = 40;
+        else if (level == 2)
+            volume = 80;
+        else if (level == 3)
+            volume = 128;
+
+        if (m_BattleBGM)
+        {
+            m_BattleBGM->SetVolume(volume);
+        }
+
+        LOG_DEBUG(
+            "Battle BGM Volume Level = {}, Volume = {}",
+            level,
+            volume
+        );
+    }
+);
     m_GameScene->SetOnQuitGame([this]() {
         m_PendingQuit = true;
     });

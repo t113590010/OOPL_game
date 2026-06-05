@@ -5,6 +5,27 @@
 #include "Util/Color.hpp"
 #include "Util/SFX.hpp"
 
+#include <string>
+
+namespace
+{
+    std::string GetBgmVolumeImagePath(int level)
+    {
+        return std::string(RESOURCE_DIR)
+            + "/img/bgmVolume"
+            + std::to_string(level)
+            + ".png";
+    }
+
+    std::string GetSfxVolumeImagePath(int level)
+    {
+        return std::string(RESOURCE_DIR)
+            + "/img/sfxVolume"
+            + std::to_string(level)
+            + ".png";
+    }
+}
+
 PauseMenu::PauseMenu()
 {
     auto context =
@@ -39,42 +60,22 @@ PauseMenu::PauseMenu()
     m_Background.SetZIndex(49);
 
     // =========================
-    // 中央主面板
-    // 先用 black.png 當底，之後可以換成真正的 pause panel 圖
+    // 整張暫停選單背景
     // =========================
 
-    m_PanelBg =
+    m_MenuBg =
         std::make_shared<Button>(
             0.0f,
             0.0f,
             620.0f,
-            420.0f,
-            RESOURCE_DIR "/img/black.png",
+            430.0f,
+            RESOURCE_DIR "/img/pauseMenuBg.png",
             " ",
             30,
             Util::Color(255, 255, 255, 255)
         );
 
-    m_PanelBg->SetZIndex(50);
-
-    // =========================
-    // 標題列：選項
-    // 先用 escapeBattle.png 當黃色按鈕底
-    // =========================
-
-    m_TitleBar =
-        std::make_shared<Button>(
-            0.0f,
-            0.37f,
-            420.0f,
-            80.0f,
-            RESOURCE_DIR "/img/escapeBattle.png",
-            "選項",
-            42,
-            Util::Color(255, 255, 255, 255)
-        );
-
-    m_TitleBar->SetZIndex(52);
+    m_MenuBg->SetZIndex(50);
 
     // =========================
     // 右上角 X 關閉
@@ -82,16 +83,15 @@ PauseMenu::PauseMenu()
 
     m_CloseBtn =
         std::make_shared<Button>(
-            0.36f,
-            0.37f,
-            90.0f,
-            90.0f,
+            0.43f,
+            0.56f,
+            92.0f,
+            92.0f,
             RESOURCE_DIR "/img/closebtn.png",
-            "X",
-            50,
+            " ",
+            30,
             Util::Color(255, 255, 255, 255)
         );
-
     m_CloseBtn->SetZIndex(55);
 
     m_CloseBtn->SetOnClick(
@@ -105,18 +105,18 @@ PauseMenu::PauseMenu()
     );
 
     // =========================
-    // 幫助 / Debug Menu 按鈕
+    // 幫助 / Debug Menu
     // =========================
 
     m_HelpBtn =
         std::make_shared<Button>(
-            -0.18f,
-            0.13f,
-            230.0f,
+            -0.20f,
+            0.10f,
+            210.0f,
             70.0f,
             RESOURCE_DIR "/img/helpbtn.png",
-            "幫助",
-            34,
+            " ",
+            30,
             Util::Color(255, 255, 255, 255)
         );
 
@@ -133,114 +133,113 @@ PauseMenu::PauseMenu()
     );
 
     // =========================
-    // BGM 音量滑桿：目前是假 UI
+    // BGM 音量按鈕
     // =========================
 
-    m_BgmLabel =
+    m_BgmVolumeLevel = 3;
+
+    m_BgmVolumeBtn =
         std::make_shared<Button>(
-            -0.25f,
-            -0.03f,
-            140.0f,
-            55.0f,
-            RESOURCE_DIR "/img/black.png",
-            "BGM",
+            0.16f,
+            0.12f,
+            75.0f,
+            75.0f,
+            GetBgmVolumeImagePath(m_BgmVolumeLevel),
+            " ",
             30,
             Util::Color(255, 255, 255, 255)
         );
 
-    m_BgmLabel->SetZIndex(55);
+    m_BgmVolumeBtn->SetZIndex(55);
 
-    m_BgmBar =
-        std::make_shared<Button>(
-            0.07f,
-            -0.03f,
-            330.0f,
-            35.0f,
-            RESOURCE_DIR "/img/escapeBattle.png",
-            " ",
-            20,
-            Util::Color(255, 255, 255, 255)
-        );
+    m_BgmVolumeBtn->SetOnClick(
+        [this]()
+        {
+            m_BgmVolumeLevel =
+                (m_BgmVolumeLevel + 1) % 4;
 
-    m_BgmBar->SetZIndex(54);
+            m_BgmVolumeBtn->SetImage(
+                GetBgmVolumeImagePath(
+                    m_BgmVolumeLevel
+                )
+            );
 
-    m_BgmKnob =
+            if (m_OnBgmVolumeChanged)
+            {
+                m_OnBgmVolumeChanged(
+                    m_BgmVolumeLevel
+                );
+            }
+        }
+    );
+
+    // =========================
+    // SFX 音量按鈕
+    // =========================
+
+    m_SfxVolumeLevel = 3;
+
+    m_SfxVolumeBtn =
         std::make_shared<Button>(
             0.16f,
-            -0.03f,
-            45.0f,
-            45.0f,
-            RESOURCE_DIR "/img/OKBtn.png",
+            -0.08f,
+            75.0f,
+            75.0f,
+            GetSfxVolumeImagePath(m_SfxVolumeLevel),
             " ",
-            20,
-            Util::Color(255, 255, 255, 255)
-        );
-
-    m_BgmKnob->SetZIndex(56);
-
-    // =========================
-    // SFX 音量滑桿：目前是假 UI
-    // =========================
-
-    m_SfxLabel =
-        std::make_shared<Button>(
-            -0.25f,
-            -0.18f,
-            140.0f,
-            55.0f,
-            RESOURCE_DIR "/img/black.png",
-            "SFX",
             30,
             Util::Color(255, 255, 255, 255)
         );
 
-    m_SfxLabel->SetZIndex(55);
+    m_SfxVolumeBtn->SetZIndex(55);
 
-    m_SfxBar =
-        std::make_shared<Button>(
-            0.07f,
-            -0.18f,
-            330.0f,
-            35.0f,
-            RESOURCE_DIR "/img/escapeBattle.png",
-            " ",
-            20,
-            Util::Color(255, 255, 255, 255)
-        );
+    m_SfxVolumeBtn->SetOnClick(
+     [this]()
+     {
+         m_SfxVolumeLevel =
+             (m_SfxVolumeLevel + 1) % 4;
 
-    m_SfxBar->SetZIndex(54);
+         m_SfxVolumeBtn->SetImage(
+             GetSfxVolumeImagePath(
+                 m_SfxVolumeLevel
+             )
+         );
 
-    m_SfxKnob =
-        std::make_shared<Button>(
-            0.16f,
-            -0.18f,
-            45.0f,
-            45.0f,
-            RESOURCE_DIR "/img/OKBtn.png",
-            " ",
-            20,
-            Util::Color(255, 255, 255, 255)
-        );
-
-    m_SfxKnob->SetZIndex(56);
+         if (m_OnSfxVolumeChanged)
+         {
+             m_OnSfxVolumeChanged(
+                 m_SfxVolumeLevel
+             );
+         }
+     }
+ );
 
     // =========================
-    // 脫離戰鬥
+    // 脫離戰鬥透明點擊區
     // =========================
+    // 注意：
+    // 因為 pauseMenuBg.png 裡已經有「脫離戰鬥」外觀，
+    // 這顆按鈕只負責接收點擊。
+    // Draw() 裡不要畫它。
 
     m_QuitBtn =
         std::make_shared<Button>(
             0.0f,
-            -0.42f,
+            -0.43f,
             430.0f,
             90.0f,
-            RESOURCE_DIR "/img/escapeBattle.png",
-            "脫離戰鬥",
-            40,
-            Util::Color(255, 255, 255, 255)
+            RESOURCE_DIR "/img/black.png",
+            " ",
+            30,
+            Util::Color(0, 0, 0, 0)
         );
 
-    m_QuitBtn->SetZIndex(55);
+    m_QuitBtn->SetImage(
+        RESOURCE_DIR "/img/black.png"
+    );
+
+    m_QuitBtn->SetZIndex(56);
+
 
     m_QuitBtn->SetOnClick(
         [this]()
@@ -265,37 +264,43 @@ void PauseMenu::Update()
         m_HelpBtn->Update();
     }
 
+    if (m_BgmVolumeBtn)
+    {
+        m_BgmVolumeBtn->Update();
+    }
+
+    if (m_SfxVolumeBtn)
+    {
+        m_SfxVolumeBtn->Update();
+    }
+
     if (m_QuitBtn)
     {
         m_QuitBtn->Update();
     }
-
-    // 目前滑桿只是顯示，不處理拖曳
 }
-
+void PauseMenu::DrawBackgroundOnly()
+{
+    m_Background.DrawRect(
+        0.0f,
+        0.0f,
+        10.0f,
+        10.0f
+    );
+}
 void PauseMenu::Draw()
 {
-    float cutX = 0.0f;
-    float cutY = 0.0f;
-    float cutW = 10.0f;
-    float cutH = 10.0f;
-
     // 黑色遮罩
     m_Background.DrawRect(
-        cutX,
-        cutY,
-        cutW,
-        cutH
+        0.0f,
+        0.0f,
+        10.0f,
+        10.0f
     );
 
-    if (m_PanelBg)
+    if (m_MenuBg)
     {
-        m_PanelBg->Draw();
-    }
-
-    if (m_TitleBar)
-    {
-        m_TitleBar->Draw();
+        m_MenuBg->Draw();
     }
 
     if (m_CloseBtn)
@@ -308,38 +313,14 @@ void PauseMenu::Draw()
         m_HelpBtn->Draw();
     }
 
-    if (m_BgmLabel)
+    if (m_BgmVolumeBtn)
     {
-        m_BgmLabel->Draw();
+        m_BgmVolumeBtn->Draw();
     }
 
-    if (m_BgmBar)
+    if (m_SfxVolumeBtn)
     {
-        m_BgmBar->Draw();
+        m_SfxVolumeBtn->Draw();
     }
 
-    if (m_BgmKnob)
-    {
-        m_BgmKnob->Draw();
-    }
-
-    if (m_SfxLabel)
-    {
-        m_SfxLabel->Draw();
-    }
-
-    if (m_SfxBar)
-    {
-        m_SfxBar->Draw();
-    }
-
-    if (m_SfxKnob)
-    {
-        m_SfxKnob->Draw();
-    }
-
-    if (m_QuitBtn)
-    {
-        m_QuitBtn->Draw();
-    }
 }
