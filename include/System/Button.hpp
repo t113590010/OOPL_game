@@ -44,15 +44,19 @@ public:
         }
 
         // 🚀 關鍵改動：這裡餵給 UIText 的是新傳入的 text_pos_ratio 參數
-        m_TextGO = std::make_shared<UIText>(
-            text_pos_ratio_x,
-            text_pos_ratio_y,
-            text_content,
-            font_size,
-            text_color
-        );
+        if (!text_content.empty() && text_content != " ")
+        {
+            m_TextGO =
+                std::make_shared<UIText>(
+                    text_pos_ratio_x,
+                    text_pos_ratio_y,
+                    text_content,
+                    font_size,
+                    text_color
+                );
 
-        m_TextGO->SetZIndex(35);
+            m_TextGO->SetZIndex(35);
+        }
 
         m_CurrentContent = text_content;
         m_Visible = true;

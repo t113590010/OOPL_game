@@ -16,7 +16,7 @@ public:
 
     void Update();
     void Draw();
-
+    void RefreshData();
     // 🚀 滑動時只需傳入偏移量 (ScrollX)，不破壞原始排版
     void ApplyScroll(float scrollX);
 

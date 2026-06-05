@@ -57,6 +57,7 @@ LevelUpgradeScene::LevelUpgradeScene() {
     );
     m_ReturnBtn->SetZIndex(20);
     m_ReturnBtn->SetOnClick([this]() {
+        Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
         if (m_OnReturn) m_OnReturn();
     });
     m_UpgradeBtn = std::make_shared<Button>(
@@ -86,19 +87,41 @@ LevelUpgradeScene::LevelUpgradeScene() {
 
         // 3. 判斷 XP 夠不夠並扣款
         if (pData->SpendXP(costXP)) {
-            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play(); // 播放升級成功音效
+            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
             LOG_DEBUG("升級成功！花費 XP: " + std::to_string(costXP));
 
             // 4. 提升基礎等級並存檔！
             pData->UpgradeCatBaseLevel(m_SelectedCatID);
             pData->SaveToFile();
 
-            // 5. 更新畫面資源顯示
-            m_XP = pData->GetXP();
-            m_XPNumber->SetValue(m_XP);
+            // 5. 更新 XP / 貓罐頭顯示
+            m_XP =
+                pData->GetXP();
 
-            // 6. 重新載入下方冰箱，讓卡片上的 XP 需求數字更新！
-            Refresh();
+            if (m_XPNumber)
+            {
+                m_XPNumber->SetValue(
+                    m_XP
+                );
+            }
+
+            m_CatFood =
+                pData->GetCatFood();
+
+            if (m_CatFoodNumber)
+            {
+                m_CatFoodNumber->SetValue(
+                    m_CatFood
+                );
+            }
+
+            // 6. 輕量更新下方卡片資料
+            // 不要 LoadCats，不要 Refresh，不要重建卡片
+            if (m_DeckUI)
+            {
+                m_DeckUI->RefreshCards();
+            }
+
         } else {
             LOG_DEBUG("XP 不足，無法升級！");
             Util::SFX(RESOURCE_DIR "/music/fail_summon_cat.mp3").Play();
@@ -128,56 +151,49 @@ LevelUpgradeScene::LevelUpgradeScene() {
 
          m_SelectedCatID = selectedId;
 
-         // 呼叫刷新！
-         // RefreshSelectedCatInfo();
      });
 }
-// 🚀 實作輔助函式：切換上方顯示的大貓咪
-// void LevelUpgradeScene::RefreshSelectedCatInfo() {
-//     if (static_cast<int>(m_SelectedCatID) == 0) {
-//         m_SelectedCatIcon = nullptr;
-//         return;
-//     }
-//
-//     const UnitStats& stats = UnitData::Get(m_SelectedCatID);
-//
-//     // 根據是否為自製角色，決定要讀取哪張圖
-//     if (m_SelectedCatID == UnitID::DogDoin || m_SelectedCatID == UnitID::Peashooter || m_SelectedCatID == UnitID::Queen) {
-//         m_SelectedCatIcon = std::make_shared<Util::GameObject>(std::make_unique<Util::Image>(stats.iconPath), 25);
-//     } else {
-//         m_SelectedCatIcon = std::make_shared<Util::GameObject>(std::make_unique<Util::Image>(stats.ediPath), 25);
-//     }
-//
-//     // 💡 設定大圖的位置在畫面上半部 (左側)
-//     m_SelectedCatIcon->m_Transform.translation = { -200.0f, 150.0f };
-//
-//     // 放大！讓它看起來很有氣勢
-//     m_SelectedCatIcon->m_Transform.scale = { 4.0f, 4.0f };
-// }
-void LevelUpgradeScene::Refresh() {
-    auto pData = PlayerData::GetInstance();
-    std::vector<UnitID> realCatList = pData->GetUnlockedCatsList();
 
-    // ==========================================
-    // 🚀 核心修復：更新貓咪卡片時，記住目前的滑動位置，不要彈回第一隻！
-    // ==========================================
-    float currentScroll = 0.0f;
-    if (m_DeckUI) {
-        currentScroll = m_DeckUI->GetScrollX(); // 先記住現在滑到哪
+void LevelUpgradeScene::Refresh()
+{
+    auto pData =
+        PlayerData::GetInstance();
+
+    m_XP =
+        pData->GetXP();
+
+    m_CatFood =
+        pData->GetCatFood();
+
+    if (m_XPNumber)
+    {
+        m_XPNumber->SetValue(
+            m_XP
+        );
     }
 
-    m_DeckUI->LoadCats(realCatList); // 重新載入最新 XP 需求的卡片
-
-    if (m_DeckUI) {
-        m_DeckUI->SetScrollX(currentScroll); // 把滑動位置塞回去！
+    if (m_CatFoodNumber)
+    {
+        m_CatFoodNumber->SetValue(
+            m_CatFood
+        );
     }
 
-    // 防呆機制
-    if (static_cast<int>(m_SelectedCatID) == 0 && !realCatList.empty()) {
-        m_SelectedCatID = realCatList[0];
+    if (static_cast<int>(m_SelectedCatID) == 0)
+    {
+        std::vector<UnitID> realCatList =
+            pData->GetUnlockedCatsList();
+
+        if (!realCatList.empty())
+        {
+            m_SelectedCatID =
+                realCatList[0];
+        }
     }
 
-    LOG_DEBUG("LevelUpgradeScene 冰箱資料已重新整理，且保留了滑動位置！");
+    LOG_DEBUG(
+        "LevelUpgradeScene Refresh: only resource numbers updated."
+    );
 }
 void LevelUpgradeScene::SetOnReturnBtnClick(std::function<void()> callback) {
     m_OnReturn = callback;

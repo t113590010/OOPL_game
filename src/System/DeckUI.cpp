@@ -7,7 +7,16 @@
 
 DeckUI::DeckUI() {
 }
-
+void DeckUI::RefreshCards()
+{
+    for (auto& card : m_Cards)
+    {
+        if (card)
+        {
+            card->RefreshData();
+        }
+    }
+}
 void DeckUI::LoadCats(const std::vector<UnitID>& catList) {
     m_Cards.clear();
     m_ScrollX = 0.0f;

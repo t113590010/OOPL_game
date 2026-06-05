@@ -4,6 +4,7 @@
 #include "Util/Color.hpp"
 #include "Util/Image.hpp"
 #include <PlayerData.hpp>
+#include "Util/SFX.hpp"
 namespace LevelSelectCut {
     const float RETURN_ICON_X = 423.0f;
     const float RETURN_ICON_Y = 170.0f;
@@ -63,6 +64,7 @@ LevelSelectScene::LevelSelectScene() {
     );
 
     m_BackBtn->SetOnClick([this]() {
+        Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
 
         if (m_OnReturn) {
             m_OnReturn();

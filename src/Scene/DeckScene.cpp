@@ -98,6 +98,7 @@ DeckScene::DeckScene() {
     );
     m_ReturnBtn->SetZIndex(20);
     m_ReturnBtn->SetOnClick([this]() {
+        Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
          // 🚀 1. 檢查目前上陣的貓咪數量
          int equippedCount = 0;
          for (int i = 0; i < 10; ++i) {

@@ -26,8 +26,7 @@ namespace
     }
 }
 
-PauseMenu::PauseMenu()
-{
+PauseMenu::PauseMenu() {
     auto context =
         Core::Context::GetInstance();
 
@@ -194,24 +193,58 @@ PauseMenu::PauseMenu()
     m_SfxVolumeBtn->SetZIndex(55);
 
     m_SfxVolumeBtn->SetOnClick(
-     [this]()
-     {
-         m_SfxVolumeLevel =
-             (m_SfxVolumeLevel + 1) % 4;
+        [this]()
+        {
+            m_SfxVolumeLevel =
+                (m_SfxVolumeLevel + 1) % 4;
 
-         m_SfxVolumeBtn->SetImage(
-             GetSfxVolumeImagePath(
-                 m_SfxVolumeLevel
-             )
-         );
+            m_SfxVolumeBtn->SetImage(
+                GetSfxVolumeImagePath(
+                    m_SfxVolumeLevel
+                )
+            );
 
-         if (m_OnSfxVolumeChanged)
-         {
-             m_OnSfxVolumeChanged(
-                 m_SfxVolumeLevel
-             );
-         }
-     }
+            int volume = 0;
+
+            if (m_SfxVolumeLevel == 0)
+            {
+                volume = 0;
+            }
+            else if (m_SfxVolumeLevel == 1)
+            {
+                volume = 40;
+            }
+            else if (m_SfxVolumeLevel == 2)
+            {
+                volume = 80;
+            }
+            else if (m_SfxVolumeLevel == 3)
+            {
+                volume = 128;
+            }
+
+            Util::SFX::SetGlobalVolume(
+                volume
+            );
+
+            LOG_DEBUG(
+                "SFX Volume Level = {}, Volume = {}",
+                m_SfxVolumeLevel,
+                volume
+            );
+
+            // 播放測試音效，讓玩家立刻聽到目前音量
+            Util::SFX(
+                RESOURCE_DIR "/music/clickbtn.mp3"
+            ).Play();
+
+            if (m_OnSfxVolumeChanged)
+            {
+                m_OnSfxVolumeChanged(
+                    m_SfxVolumeLevel
+                );
+            }
+        }
  );
 
     // =========================

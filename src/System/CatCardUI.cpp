@@ -148,7 +148,50 @@ CatCardUI::CatCardUI(UnitID id, float pos_ratio_x, float pos_ratio_y, bool isUpg
     m_BgBaseScale = m_BackgroundBtn->m_Transform.scale;
     m_SwapBaseScale = m_SwapBtn->m_Transform.scale;
 }
+void CatCardUI::RefreshData()
+{
+    auto pData =
+        PlayerData::GetInstance();
 
+    PlayerData::CatLevel catLvl =
+        pData->GetCatLevel(
+            m_UnitID
+        );
+
+    // 更新主等級
+    if (m_LevelNumber)
+    {
+        m_LevelNumber->SetValue(
+            catLvl.base
+        );
+    }
+
+    // 更新 +值
+    if (m_ExtraLevelNumber)
+    {
+        m_ExtraLevelNumber->SetValue(
+            catLvl.plus
+        );
+    }
+
+    // 判斷是否滿等
+    m_IsMaxLevel =
+        catLvl.base >= 20;
+
+    // 升級模式才需要更新 XP 花費
+    if (m_IsUpgradeMode)
+    {
+        int costXP =
+            catLvl.base * 200;
+
+        if (m_CostNumber)
+        {
+            m_CostNumber->SetValue(
+                costXP
+            );
+        }
+    }
+}
 void CatCardUI::ApplyTransform(float finalX, float scale) {
     float cx = finalX;
     m_IsSelected = (scale > 0.99f);

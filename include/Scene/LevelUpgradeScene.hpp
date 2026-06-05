@@ -50,7 +50,8 @@ private:
 
     // 🚀 新增：輔助函式，用來刷新上半部的大圖與按鈕狀態
     // void RefreshSelectedCatInfo();
-
+    void RefreshResourceNumbers();
+    void RefreshUpgradeCost();
     std::shared_ptr<NumberSystem> m_UpgradeCostXP;   // 顯示升級需要花費多少 XP
 
     // TODO: 之後你可以在這裡加上顯示「選中貓咪」的放大圖、名稱、等級數字等 UI 元件
