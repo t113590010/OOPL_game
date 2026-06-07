@@ -10,12 +10,50 @@
 #include "PlayerData.hpp"
 #include <iostream>
 #include "PlayerData.hpp"
-namespace {
+
+namespace
+{
     int stageIdx = -1;
+    int VolumeLevelToMixerVolume(int level)
+    {
+        if (level <= 0)
+            return 0;
+
+        if (level == 1)
+            return 40;
+
+        if (level == 2)
+            return 80;
+
+        return 128;
+    }
 }
 void App::Start() {
     LOG_TRACE("Start");
     PlayerData::GetInstance()->LoadFromFile();
+
+    int sfxLevel =
+    PlayerData::GetInstance()
+        ->GetSfxVolumeLevel();
+
+    int sfxVolume = 128;
+
+    if (sfxLevel == 0) {
+        sfxVolume = 0;
+    }
+    else if (sfxLevel == 1) {
+        sfxVolume = 40;
+    }
+    else if (sfxLevel == 2) {
+        sfxVolume = 80;
+    }
+    else if (sfxLevel == 3) {
+        sfxVolume = 128;
+    }
+
+    Util::SFX::SetGlobalVolume(
+        sfxVolume
+    );
     SDL_StopTextInput();
 
 
@@ -45,7 +83,13 @@ void App::LoadStartScene() {
 
     // m_MenuBGM = std::make_shared<Util::BGM>(RESOURCE_DIR "/music/【貓咪大戰爭】6週年電視廣告 - 貓咪大戰爭中文版官方YouTube (youtube).mp3");
 
-    m_MenuBGM->SetVolume(100);
+    int bgmLevel =
+        PlayerData::GetInstance()
+            ->GetBgmVolumeLevel();
+
+    m_MenuBGM->SetVolume(
+        VolumeLevelToMixerVolume(bgmLevel)
+    );
     m_MenuBGM->Play(-1);
     m_StartScene = std::make_shared<StartScene>();
 
@@ -70,7 +114,13 @@ void App::StartHomeScene() {
         m_MenuBGM->FadeOut(500); // 快速淡出舊的
     }
     m_MenuBGM = std::make_shared<Util::BGM>(RESOURCE_DIR "/music/homebgm.mp3");
-    m_MenuBGM->SetVolume(100);
+    int bgmLevel =
+        PlayerData::GetInstance()
+            ->GetBgmVolumeLevel();
+
+    m_MenuBGM->SetVolume(
+        VolumeLevelToMixerVolume(bgmLevel)
+    );
     m_MenuBGM->Play(-1);
 
     // 🚨 絕對不能在這裡 reset GameScene！交給 Update 去做！
@@ -326,7 +376,13 @@ void App::StartBattleScene(int stageIdx){
     m_CurrentState = State::BATTLE;
 
     m_BattleBGM = std::make_shared<Util::BGM>(RESOURCE_DIR "/music/battle_1.mp3");
-    m_BattleBGM->SetVolume(128);
+    int bgmLevel =
+        PlayerData::GetInstance()
+            ->GetBgmVolumeLevel();
+
+    m_BattleBGM->SetVolume(
+        VolumeLevelToMixerVolume(bgmLevel)
+    );
     m_BattleBGM->Play(-1);
 
     // 🚨 絕對不能在這裡 reset HomeScene！交給 Update 去做！
@@ -341,31 +397,34 @@ void App::StartBattleScene(int stageIdx){
         STAGES[stageIdx]
     );
     m_GameScene->SetOnBgmVolumeChanged(
-    [this](int level)
-    {
-        int volume = 0;
-
-        if (level == 0)
-            volume = 0;
-        else if (level == 1)
-            volume = 40;
-        else if (level == 2)
-            volume = 80;
-        else if (level == 3)
-            volume = 128;
-
-        if (m_BattleBGM)
+        [this](int level)
         {
-            m_BattleBGM->SetVolume(volume);
-        }
+            auto playerData =
+                PlayerData::GetInstance();
 
-        LOG_DEBUG(
-            "Battle BGM Volume Level = {}, Volume = {}",
-            level,
-            volume
-        );
-    }
-);
+            playerData->SetBgmVolumeLevel(level);
+            playerData->SaveToFile();
+
+            int volume =
+                VolumeLevelToMixerVolume(level);
+
+            if (m_BattleBGM)
+            {
+                m_BattleBGM->SetVolume(volume);
+            }
+
+            if (m_MenuBGM)
+            {
+                m_MenuBGM->SetVolume(volume);
+            }
+
+            LOG_DEBUG(
+                "BGM Volume Level = {}, Volume = {}",
+                level,
+                volume
+            );
+        }
+    );
     m_GameScene->SetOnQuitGame([this]() {
         m_PendingQuit = true;
     });

@@ -56,6 +56,10 @@ add_executable(${PROJECT_NAME}
         src/System/LevelSystem.cpp
         include/Scene/LevelSelectScene.hpp
         src/Scene/LevelSelectScene.cpp
+        include/System/DebugMenu.hpp
+        src/System/DebugMenu.cpp
+        include/System/DebugCheat.hpp
+        src/System/DebugCheat.cpp
         # 修正：配合 files.cmake 的變數名稱
 )
 

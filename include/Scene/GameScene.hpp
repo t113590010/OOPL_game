@@ -19,6 +19,7 @@
 #include "StageConfig.hpp"
 #include "NumberSystem.hpp"
 #include <functional>
+#include "DebugMenu.hpp"
 class GameScene {
 public:
     GameScene(
@@ -96,6 +97,20 @@ private:
     std::shared_ptr<NumberSystem> m_RewardXPNumber; // 顯示獲得多少 XP 的數字系統
 
     std::function<void(int)> m_OnBgmVolumeChanged;
+
+    std::shared_ptr<UIText> m_StageNameTextShadow;
+    std::shared_ptr<UIText> m_StageNameText;
+
+    std::shared_ptr<DebugMenu> m_DebugMenu;
+
+    // Debug 狀態
+    bool m_DebugCatAttackBoost = false;
+    bool m_DebugCatSpeedBoost = false;
+    bool m_DebugCooldownHalf = false;
+    bool m_DebugMaxMoney = false;
+    int m_DebugMoneyBeforeMax = 0;
+
+
 };
 
 #endif

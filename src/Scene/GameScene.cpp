@@ -8,7 +8,7 @@
 #include "Util/SFX.hpp"
 #include "PlayerData.hpp"
 #include "PauseMenu.hpp"
-
+#include "System/DebugCheat.hpp"
 GameScene::GameScene(
     const std::vector<UnitID>& playerDeck,
     const StageData& stage
@@ -18,7 +18,41 @@ GameScene::GameScene(
       m_EquippedDeck(playerDeck),
       m_SpawnSystem(stage.waves){
     m_CurrentStageID = stage.stageID;
+    std::string stageName =
+    "Stage " + std::to_string(stage.stageID);
 
+    auto displayIt =
+        STAGE_DISPLAY_DATA.find(stage.stageID);
+
+    if (displayIt != STAGE_DISPLAY_DATA.end())
+    {
+        stageName =
+            displayIt->second.stageName;
+    }
+
+    // 黑色描邊底層
+    m_StageNameTextShadow =
+        std::make_shared<UIText>(
+            -0.805f,
+            0.885f,
+            stageName,
+            40,
+            Util::Color(0, 0, 0, 255)
+        );
+
+    m_StageNameTextShadow->SetZIndex(89);
+
+    // 黃色文字上層
+    m_StageNameText =
+        std::make_shared<UIText>(
+            -0.815f,
+            0.895f,
+            stageName,
+            40,
+            Util::Color(255, 230, 0, 255)
+        );
+
+    m_StageNameText->SetZIndex(90);
     m_CameraX = GameConfig::CAMERA_MAX_X;
     auto context = Core::Context::GetInstance();
     float windowWidth = (float)context->GetWindowWidth();
@@ -136,9 +170,160 @@ GameScene::GameScene(
         m_SureMenu.reset();
     });
 
-    m_PauseMenu->SetOnHelp([this]() {
-        LOG_DEBUG("Pause Help / Debug Menu clicked");
-    });
+m_PauseMenu->SetOnHelp(
+    [this]()
+    {
+        Util::SFX(
+            RESOURCE_DIR "/music/clickbtn.mp3"
+        ).Play();
+
+        m_DebugMenu =
+            std::make_shared<DebugMenu>();
+
+        // +10000 XP
+        m_DebugMenu->SetOnAddXP(
+            [this]()
+            {
+                auto playerData =
+                    PlayerData::GetInstance();
+
+                playerData->AddXP(
+                    10000
+                );
+
+                playerData->SaveToFile();
+
+                LOG_DEBUG(
+                    "DebugMenu: Add 10000 XP. Current XP = {}",
+                    playerData->GetXP()
+                );
+            }
+        );
+
+        // 戰鬥金錢加滿
+        m_DebugMenu->SetOnMaxMoney(
+            [this]()
+            {
+                m_DebugMaxMoney =
+                    !m_DebugMaxMoney;
+
+                if (m_DebugMaxMoney)
+                {
+                    m_DebugMoneyBeforeMax =
+                        m_CurrentMoney;
+
+                    m_CurrentMoney =
+                        m_CurrentMaxMoney;
+
+                    LOG_DEBUG(
+                        "DebugMenu: Max Money ON"
+                    );
+                }
+                else
+                {
+                    m_CurrentMoney =
+                        m_DebugMoneyBeforeMax;
+
+                    if (m_CurrentMoney > m_CurrentMaxMoney)
+                    {
+                        m_CurrentMoney =
+                            m_CurrentMaxMoney;
+                    }
+
+                    LOG_DEBUG(
+                        "DebugMenu: Max Money OFF"
+                    );
+                }
+            }
+        );
+
+        // 貓咪攻擊力 x2 開關
+        m_DebugMenu->SetOnToggleCatAttack(
+            []()
+            {
+                DebugCheat::CatAttackBoost =
+                    !DebugCheat::CatAttackBoost;
+
+                LOG_DEBUG(
+                    "DebugMenu: Cat Attack x2 = {}",
+                    DebugCheat::CatAttackBoost ? "ON" : "OFF"
+                );
+            }
+        );
+
+        // 貓咪跑速 x2 開關
+        m_DebugMenu->SetOnToggleCatSpeed(
+            [this]()
+            {
+                DebugCheat::CatSpeedBoost =
+                    !DebugCheat::CatSpeedBoost;
+
+                float speedScale =
+                    DebugCheat::CatSpeedBoost
+                        ? 2.0f
+                        : 0.5f;
+
+                for (auto& entity : m_Entities)
+                {
+                    if (
+                        entity &&
+                        entity->IsPlayerTeam()
+                    )
+                    {
+                        entity->SetSpeed(
+                            entity->GetSpeed() *
+                            speedScale
+                        );
+                    }
+                }
+
+                LOG_DEBUG(
+                    "DebugMenu: Cat Speed x2 = {}",
+                    DebugCheat::CatSpeedBoost
+                        ? "ON"
+                        : "OFF"
+                );
+            }
+        );
+
+
+        // 立即勝利
+        m_DebugMenu->SetOnInstantWin(
+            [this]()
+            {
+                LOG_DEBUG(
+                    "DebugMenu: Instant Win."
+                );
+
+                if (m_EnemyBase)
+                {
+                    m_EnemyBase->TakeDamage(
+                        m_EnemyBase->GetHP()
+                    );
+                }
+
+                // 關掉 DebugMenu / SureMenu
+                m_DebugMenu.reset();
+                m_SureMenu.reset();
+
+                // 解除暫停，讓下一幀 GameScene::Update() 可以進入勝利結算
+                m_IsPaused = false;
+            }
+        );
+
+        // 返回 PauseMenu
+        m_DebugMenu->SetOnBack(
+            [this]()
+            {
+                Util::SFX(
+                    RESOURCE_DIR "/music/clickbtn.mp3"
+                ).Play();
+
+                m_DebugMenu.reset();
+            }
+        );
+    }
+);
     m_PauseMenu->SetOnQuit([this]() {
         std::cout << "come back start scene\n";
         Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
@@ -203,9 +388,21 @@ void GameScene::Update(float dt) {
     // 1. 暫停邏輯
     // ==========================================
     if (pauseBtn) pauseBtn->Update();
-    if (m_IsPaused) {
-        if (m_SureMenu) m_SureMenu->Update();
-        else if (m_PauseMenu) m_PauseMenu->Update();
+    if (m_IsPaused)
+    {
+        if (m_SureMenu)
+        {
+            m_SureMenu->Update();
+        }
+        else if (m_DebugMenu)
+        {
+            m_DebugMenu->Update();
+        }
+        else if (m_PauseMenu)
+        {
+            m_PauseMenu->Update();
+        }
+
         return;
     }
 
@@ -259,6 +456,11 @@ void GameScene::Update(float dt) {
     m_CurrentMoney += GameConfig::MONEY_GROWTH_SPEED * dt;
     if (m_CurrentMoney > m_CurrentMaxMoney) {
         m_CurrentMoney = m_CurrentMaxMoney;
+    }
+    if (m_DebugMaxMoney)
+    {
+        m_CurrentMoney =
+            m_CurrentMaxMoney;
     }
 
     if (Util::Input::IsKeyPressed(Util::Keycode::RIGHT) || Util::Input::IsKeyPressed(Util::Keycode::D)) m_CameraX += m_CameraSpeed * dt;
@@ -345,16 +547,26 @@ void GameScene::Draw() {
     {
         if (m_SureMenu)
         {
-            if (m_PauseMenu)
-            {
-                m_PauseMenu->DrawBackgroundOnly();
-            }
-
+            m_PauseMenu->DrawBackgroundOnly();
             m_SureMenu->Draw();
+        }
+        else if (m_DebugMenu)
+        {
+            m_PauseMenu->DrawBackgroundOnly();
+            m_DebugMenu->Draw();
         }
         else if (m_PauseMenu)
         {
             m_PauseMenu->Draw();
         }
     }
+    if (m_StageNameTextShadow)
+    {
+        m_StageNameTextShadow->Draw();
+    }
+
+    /*if (m_StageNameText)
+    {
+        m_StageNameText->Draw();
+    }*/
 }

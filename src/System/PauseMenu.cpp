@@ -6,7 +6,7 @@
 #include "Util/SFX.hpp"
 
 #include <string>
-
+#include "PlayerData.hpp"
 namespace
 {
     std::string GetBgmVolumeImagePath(int level)
@@ -135,12 +135,13 @@ PauseMenu::PauseMenu() {
     // BGM 音量按鈕
     // =========================
 
-    m_BgmVolumeLevel = 3;
-
+    m_BgmVolumeLevel =
+        PlayerData::GetInstance()
+            ->GetBgmVolumeLevel();
     m_BgmVolumeBtn =
         std::make_shared<Button>(
             0.16f,
-            0.12f,
+            0.10f,
             75.0f,
             75.0f,
             GetBgmVolumeImagePath(m_BgmVolumeLevel),
@@ -163,6 +164,14 @@ PauseMenu::PauseMenu() {
                 )
             );
 
+            auto playerData =
+                PlayerData::GetInstance();
+
+            playerData->SetBgmVolumeLevel(
+                m_BgmVolumeLevel
+            );
+
+            playerData->SaveToFile();
             if (m_OnBgmVolumeChanged)
             {
                 m_OnBgmVolumeChanged(
@@ -176,12 +185,14 @@ PauseMenu::PauseMenu() {
     // SFX 音量按鈕
     // =========================
 
-    m_SfxVolumeLevel = 3;
+    m_SfxVolumeLevel =
+        PlayerData::GetInstance()
+            ->GetSfxVolumeLevel();
 
     m_SfxVolumeBtn =
         std::make_shared<Button>(
             0.16f,
-            -0.08f,
+            -0.1f,
             75.0f,
             75.0f,
             GetSfxVolumeImagePath(m_SfxVolumeLevel),
@@ -203,7 +214,14 @@ PauseMenu::PauseMenu() {
                     m_SfxVolumeLevel
                 )
             );
+            auto playerData =
+                PlayerData::GetInstance();
 
+            playerData->SetSfxVolumeLevel(
+                m_SfxVolumeLevel
+            );
+
+            playerData->SaveToFile();
             int volume = 0;
 
             if (m_SfxVolumeLevel == 0)

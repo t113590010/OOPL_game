@@ -66,6 +66,13 @@ public:
     bool IsStageUnlocked(int stageID) const;
 
     void ClearStage(int stageID);
+
+    // ================= 音量設定 =================
+    int GetBgmVolumeLevel() const { return m_BgmVolumeLevel; }
+    int GetSfxVolumeLevel() const { return m_SfxVolumeLevel; }
+
+    void SetBgmVolumeLevel(int level);
+    void SetSfxVolumeLevel(int level);
 private:
     PlayerData(); // 隱藏建構子
     ~PlayerData() = default;
@@ -87,6 +94,9 @@ private:
     // 世界篇進度
     int m_MaxUnlockedStage = 1;
 
+    // 音量等級
+    int m_BgmVolumeLevel = 3;
+    int m_SfxVolumeLevel = 3;
 };
 
 #endif

@@ -11,6 +11,8 @@
 #include "Entity/UnitData.hpp"
 #include <iostream>
 #include "Util/SFX.hpp"
+#include "System/DebugCheat.hpp"
+
 // 簡單的向量運算
 struct Vector2 {
     float x = 0;
@@ -216,11 +218,45 @@ public:
     void UpdateCooldown(float dt) {
         if (m_AttackTimer > 0.0f) m_AttackTimer -= dt;
     }
-
+    void SetBattleStats(
+        int hp,
+        int damage
+    )
+    {
+        m_HP = hp;
+        m_MaxHP = hp;
+        m_AttackDamage = damage;
+    }
     const Vector2& GetPosition() const { return m_Position; }
     int GetHP() const { return m_HP; }
     int GetMaxHp() const { return m_MaxHP; }
-    int GetDamage() const { return m_AttackDamage; }
+    int GetDamage() const
+    {
+        int damage =
+            m_AttackDamage;
+
+        if (m_IsPlayerTeam)
+        {
+            damage =
+                static_cast<int>(
+                    damage *
+                    DebugCheat::GetCatAttackMultiplier()
+                );
+        }
+
+        return damage;
+    }
+
+    float GetSpeed() const
+    {
+        return m_Speed;
+    }
+
+    void SetSpeed(float speed)
+    {
+        m_Speed = speed;
+    }
+
     float GetAttackRange() const { return m_AttackRange; }
     int GetUnitCost() const { return m_UnitCost; }
     void SetMoving(bool moving) { m_IsMoving = moving; }

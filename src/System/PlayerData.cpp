@@ -19,6 +19,9 @@ PlayerData::PlayerData() {
     m_NormalTickets = 100;
     m_RareTickets = 50;
 
+    m_BgmVolumeLevel = 3;
+    m_SfxVolumeLevel = 3;
+
     m_Deck.resize(10, UnitID::NONE);
 
     // 🚀 新手預設解鎖基礎貓：基礎 1 等，加值 +0
@@ -120,6 +123,30 @@ void PlayerData::ClearStage(int stageID) {
         m_MaxUnlockedStage = stageID + 1;
     }
 }
+
+void PlayerData::SetBgmVolumeLevel(int level) {
+    if (level < 0) {
+        level = 0;
+    }
+
+    if (level > 3) {
+        level = 3;
+    }
+
+    m_BgmVolumeLevel = level;
+}
+
+void PlayerData::SetSfxVolumeLevel(int level) {
+    if (level < 0) {
+        level = 0;
+    }
+
+    if (level > 3) {
+        level = 3;
+    }
+
+    m_SfxVolumeLevel = level;
+}
 // ----------------- 存檔寫入 -----------------
 void PlayerData::SaveToFile() {
     std::string filePath = GetSaveFilePath();
@@ -162,6 +189,9 @@ void PlayerData::SaveToFile() {
 
     // 5. 存關卡進度
     file << m_MaxUnlockedStage << "\n";
+
+    // 6. 存音量設定
+    file << m_BgmVolumeLevel << " " << m_SfxVolumeLevel << "\n";
 
     file.close();
 }
@@ -217,6 +247,17 @@ bool PlayerData::LoadFromFile() {
     if (!(file >> m_MaxUnlockedStage)) {
         m_MaxUnlockedStage = 1;
     }
+
+    // ========================
+    // 音量設定
+    // ========================
+    if (!(file >> m_BgmVolumeLevel >> m_SfxVolumeLevel)) {
+        m_BgmVolumeLevel = 3;
+        m_SfxVolumeLevel = 3;
+    }
+
+    SetBgmVolumeLevel(m_BgmVolumeLevel);
+    SetSfxVolumeLevel(m_SfxVolumeLevel);
 
     file.close();
     return true;
