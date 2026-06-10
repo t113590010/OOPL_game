@@ -92,7 +92,23 @@ void App::LoadStartScene() {
     );
     m_MenuBGM->Play(-1);
     m_StartScene = std::make_shared<StartScene>();
+    m_StartScene->SetOnBgmVolumeChanged(
+        [this](int level)
+        {
+            int volume =
+                VolumeLevelToMixerVolume(level);
 
+            if (m_MenuBGM)
+            {
+                m_MenuBGM->SetVolume(volume);
+            }
+
+            if (m_BattleBGM)
+            {
+                m_BattleBGM->SetVolume(volume);
+            }
+        }
+    );
     // 綁定按鈕：當玩家在 StartScene 按下 "START GAME" 時要做什麼？
     m_StartScene->SetOnStartGame([this]() {
         Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();

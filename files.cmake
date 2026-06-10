@@ -59,6 +59,7 @@ set(SRC_FILES
         "System/LevelSystem.cpp"
         "System/DebugMenu.cpp"
         "System/DebugCheat.cpp"
+        "System/StartOptionMenu.cpp"
 
 
 )
@@ -126,6 +127,8 @@ set(INCLUDE_FILES
         "System/LevelSystem.hpp"
         "System/DebugMenu.hpp"
         "System/DebugCheat.hpp"
+        "System/StartOptionMenu.hpp"
+
 )
 set(TEST_FILES
 )

@@ -330,11 +330,23 @@ m_PauseMenu->SetOnHelp(
         m_PauseMenu->SetBgZindex(51);
         m_SureMenu = std::make_shared<SureMenu>();
 
-       m_SureMenu->SetOnConfirm([this]() {
-           Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
-           m_SureMenu.reset();
-           if (m_OnQuitGame) m_OnQuitGame();
-       });
+        m_SureMenu->SetOnConfirm(
+            [this]()
+            {
+                Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+
+                m_SureMenu.reset();
+                m_PauseMenu.reset();
+                m_DebugMenu.reset();
+
+                m_IsPaused = false;
+
+                if (m_OnQuitGame)
+                {
+                    m_OnQuitGame();
+                }
+            }
+        );
 
        m_SureMenu->SetOnCancel([this]() {
            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
@@ -547,12 +559,20 @@ void GameScene::Draw() {
     {
         if (m_SureMenu)
         {
-            m_PauseMenu->DrawBackgroundOnly();
+            if (m_PauseMenu)
+            {
+                m_PauseMenu->DrawBackgroundOnly();
+            }
+
             m_SureMenu->Draw();
         }
         else if (m_DebugMenu)
         {
-            m_PauseMenu->DrawBackgroundOnly();
+            if (m_PauseMenu)
+            {
+                m_PauseMenu->DrawBackgroundOnly();
+            }
+
             m_DebugMenu->Draw();
         }
         else if (m_PauseMenu)
