@@ -204,6 +204,8 @@ m_PauseMenu->SetOnHelp(
         m_DebugMenu->SetOnMaxMoney(
             [this]()
             {
+                LOG_DEBUG("MAX MONEY CALLBACK TRIGGERED");
+
                 m_DebugMaxMoney =
                     !m_DebugMaxMoney;
 

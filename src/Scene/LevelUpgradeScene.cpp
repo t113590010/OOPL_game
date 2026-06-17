@@ -167,32 +167,47 @@ void LevelUpgradeScene::Refresh()
 
     if (m_XPNumber)
     {
-        m_XPNumber->SetValue(
-            m_XP
-        );
+        m_XPNumber->SetValue(m_XP);
     }
 
     if (m_CatFoodNumber)
     {
-        m_CatFoodNumber->SetValue(
-            m_CatFood
-        );
+        m_CatFoodNumber->SetValue(m_CatFood);
     }
 
-    if (static_cast<int>(m_SelectedCatID) == 0)
-    {
-        std::vector<UnitID> realCatList =
-            pData->GetUnlockedCatsList();
+    std::vector<UnitID> realCatList =
+        pData->GetUnlockedCatsList();
 
-        if (!realCatList.empty())
+    if (m_DeckUI)
+    {
+        // 每次進入場景才重建一次，不是每幀重建
+        // 可以同步新解鎖角色與最新加值
+        m_DeckUI->LoadCats(realCatList);
+    }
+
+    if (!realCatList.empty())
+    {
+        bool selectedCatStillExists =
+            std::find(
+                realCatList.begin(),
+                realCatList.end(),
+                m_SelectedCatID
+            ) != realCatList.end();
+
+        if (!selectedCatStillExists)
         {
             m_SelectedCatID =
-                realCatList[0];
+                realCatList.front();
         }
+    }
+    else
+    {
+        m_SelectedCatID =
+            static_cast<UnitID>(0);
     }
 
     LOG_DEBUG(
-        "LevelUpgradeScene Refresh: only resource numbers updated."
+        "LevelUpgradeScene Refresh: cat list and card data updated."
     );
 }
 void LevelUpgradeScene::SetOnReturnBtnClick(std::function<void()> callback) {

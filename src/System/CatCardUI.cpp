@@ -154,31 +154,47 @@ void CatCardUI::RefreshData()
         PlayerData::GetInstance();
 
     PlayerData::CatLevel catLvl =
-        pData->GetCatLevel(
-            m_UnitID
-        );
+        pData->GetCatLevel(m_UnitID);
 
-    // 更新主等級
+    // 更新基礎等級
     if (m_LevelNumber)
     {
-        m_LevelNumber->SetValue(
-            catLvl.base
-        );
+        m_LevelNumber->SetValue(catLvl.base);
     }
 
-    // 更新 +值
-    if (m_ExtraLevelNumber)
+    // 更新加值等級
+    if (catLvl.plus > 0)
     {
+        // 原本是 +0，沒有建立物件；現在需要補建
+        if (!m_ExtraLevelNumber)
+        {
+            m_ExtraLevelNumber =
+                std::make_shared<NumberSystem>(
+                    0.0f,
+                    0.0f,
+                    15.0f,
+                    20.0f,
+                    RESOURCE_DIR "/img/moneyInfo.png"
+                );
+
+            m_ExtraLevelNumber->SetZIndex(35);
+        }
+
         m_ExtraLevelNumber->SetValue(
-            catLvl.plus
+            "+" + std::to_string(catLvl.plus)
         );
     }
+    else
+    {
+        // 加值為 0 時不顯示
+        m_ExtraLevelNumber.reset();
+    }
 
-    // 判斷是否滿等
+    // 更新 MAX 狀態
     m_IsMaxLevel =
         catLvl.base >= 20;
 
-    // 升級模式才需要更新 XP 花費
+    // 升級模式才更新升級費用
     if (m_IsUpgradeMode)
     {
         int costXP =
@@ -186,9 +202,7 @@ void CatCardUI::RefreshData()
 
         if (m_CostNumber)
         {
-            m_CostNumber->SetValue(
-                costXP
-            );
+            m_CostNumber->SetValue(costXP);
         }
     }
 }

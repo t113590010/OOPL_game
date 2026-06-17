@@ -281,12 +281,6 @@ void App::StartLevelSelectScene()
                     m_MenuBGM.reset();
                 }
 
-                Util::SFX(
-                    RESOURCE_DIR "/music/StartBattle.mp3"
-                ).Play();
-
-                SDL_Delay(4000);
-
                 StartBattleScene(stageId);
             }
         );
