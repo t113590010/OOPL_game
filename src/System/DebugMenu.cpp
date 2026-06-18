@@ -1,5 +1,5 @@
 #include "System/DebugMenu.hpp"
-
+#include "System/DebugCheat.hpp"
 #include "GameConfig.hpp"
 #include "Util/Color.hpp"
 #include "Util/SFX.hpp"
@@ -18,7 +18,11 @@ DebugMenu::DebugMenu()
     // =========================
     // 背景面板
     // =========================
+    m_CatAttackBoostEnabled =
+        DebugCheat::CatAttackBoost;
 
+    m_CatSpeedBoostEnabled =
+        DebugCheat::CatSpeedBoost;
     m_PanelBg =
         std::make_shared<Button>(
             0.0f,
@@ -130,7 +134,9 @@ DebugMenu::DebugMenu()
             DebugCut::buttonWeight,
             DebugCut::buttonHeight,
             RESOURCE_DIR "/img/img010_tw.png",
-            "CAT ATK x2 OFF",
+            m_CatAttackBoostEnabled
+                ? "CAT ATK x2 ON"
+                : "CAT ATK x2 OFF",
             28,
             Util::Color(255, 255, 255, 255)
         );
@@ -178,7 +184,9 @@ DebugMenu::DebugMenu()
             DebugCut::buttonWeight,
             DebugCut::buttonHeight,
             RESOURCE_DIR "/img/img010_tw.png",
-            "CAT SPEED x2 OFF",
+            m_CatSpeedBoostEnabled
+                ? "CAT SPEED x2 ON"
+                : "CAT SPEED x2 OFF",
             28,
             Util::Color(255, 255, 255, 255)
         );

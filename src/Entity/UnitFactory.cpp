@@ -137,13 +137,11 @@ UnitFactory::CreateUnit(
             finalHP,
             finalDamage
         );
-        if (isPlayer && DebugCheat::CatSpeedBoost)
-        {
+        float speedMultiplier = ((isPlayer && DebugCheat::CatSpeedBoost) ? DebugCheat::GetCatSpeedMultiplier()  : 1.f) * GameConfig::UNIT_MOVE_SPEED_MULTIPLIER;;
             newUnit->SetSpeed(
                 newUnit->GetSpeed() *
-                DebugCheat::GetCatSpeedMultiplier()
+                speedMultiplier
             );
-        }
         std::cout
     << "[LevelSystem] "
     << "UnitID = "

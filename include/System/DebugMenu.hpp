@@ -8,14 +8,14 @@
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 
-class DebugMenu {
+class DebugMenu
+{
 public:
     DebugMenu();
 
     void Update();
     void Draw();
 
-    // 給 GameScene 接功能用
     void SetOnAddXP(std::function<void()> callback);
     void SetOnMaxMoney(std::function<void()> callback);
     void SetOnToggleCatAttack(std::function<void()> callback);
@@ -25,10 +25,8 @@ public:
     void SetOnBack(std::function<void()> callback);
 
 private:
-    // 背景面板
     std::shared_ptr<Button> m_PanelBg;
 
-    // Debug 按鈕
     std::shared_ptr<Button> m_AddXPBtn;
     std::shared_ptr<Button> m_MaxMoneyBtn;
     std::shared_ptr<Button> m_ToggleCatAttackBtn;
@@ -37,7 +35,6 @@ private:
     std::shared_ptr<Button> m_InstantWinBtn;
     std::shared_ptr<Button> m_BackBtn;
 
-    // callback
     std::function<void()> m_OnAddXP;
     std::function<void()> m_OnMaxMoney;
     std::function<void()> m_OnToggleCatAttack;
