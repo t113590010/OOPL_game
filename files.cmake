@@ -60,8 +60,7 @@ set(SRC_FILES
         "System/DebugMenu.cpp"
         "System/DebugCheat.cpp"
         "System/StartOptionMenu.cpp"
-
-
+        "System/StartDebugMenu.cpp"
 )
 
 set(INCLUDE_FILES
@@ -128,7 +127,7 @@ set(INCLUDE_FILES
         "System/DebugMenu.hpp"
         "System/DebugCheat.hpp"
         "System/StartOptionMenu.hpp"
-
+        "System/StartDebugMenu.hpp"
 )
 set(TEST_FILES
 )

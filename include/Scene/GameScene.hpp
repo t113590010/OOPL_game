@@ -47,7 +47,6 @@ public:
         m_OnBgmVolumeChanged = callback;
     }
 private:
-
     void RemoveDeadEntities();      // 刪除死亡單位
     StageData m_Stage;
 
@@ -91,6 +90,21 @@ private:
 
     bool m_HasSettled = false;                      // 確保獎勵只加一次的防重複鎖
     int m_RewardXP = 0;                             // 本關卡掉落的 XP 數量
+    int m_RewardCatFood = 0;
+    int m_RewardNormalTicket = 0;
+    int m_RewardRareTicket = 0;
+    void GiveStageClearRewards();
+
+    std::shared_ptr<Button> m_RewardNotifyBar;
+    bool m_ShowRewardNotify = false;
+
+    std::shared_ptr<UIText> m_RewardNotifyTitle;
+    std::shared_ptr<UIText> m_RewardNotifyLine1;
+    std::shared_ptr<UIText> m_RewardNotifyLine2;
+    std::shared_ptr<UIText> m_RewardNotifyLine3;
+
+    void UpdateRewardNotifyText();
+
     std::shared_ptr<Button> m_RewardTextGet;        // 🚀 新增：「獲得」的切圖
     std::shared_ptr<Button> m_OkBtn;
     int m_CurrentStageID ;

@@ -242,7 +242,62 @@ NormalGachaScene::NormalGachaScene() {
 
     UpdateGachaButtons();
 }
+void NormalGachaScene::RefreshResourceDisplay()
+{
+    auto playerData =
+        PlayerData::GetInstance();
 
+    int currentXP =
+        playerData->GetXP();
+
+    int currentCatFood =
+        playerData->GetCatFood();
+
+    int currentTickets =
+        playerData->GetNormalTickets();
+
+    bool resourceChanged =
+        currentXP != m_XP ||
+        currentCatFood != m_CatFood ||
+        currentTickets != m_Tickets;
+
+    if (!resourceChanged)
+    {
+        return;
+    }
+
+    m_XP =
+        currentXP;
+
+    m_CatFood =
+        currentCatFood;
+
+    m_Tickets =
+        currentTickets;
+
+    if (m_XPNumber)
+    {
+        m_XPNumber->SetValue(
+            m_XP
+        );
+    }
+
+    if (m_CatFoodNumber)
+    {
+        m_CatFoodNumber->SetValue(
+            m_CatFood
+        );
+    }
+
+    if (m_TicketNumber)
+    {
+        m_TicketNumber->SetValue(
+            m_Tickets
+        );
+    }
+
+    UpdateGachaButtons();
+}
 void NormalGachaScene::ShowNextResultCat() {
     if (m_CurrentResultIndex < m_PulledCats.size()) {
         Util::SFX(RESOURCE_DIR "/music/get_unit_item.mp3").Play();
@@ -321,28 +376,71 @@ void NormalGachaScene::SetOnStorageBtnClick(std::function<void()> callback) { m_
 void NormalGachaScene::SetOnspanClick(std::function<void()> callback) { m_Onspan = callback; }
 void NormalGachaScene::SetOn_muti_spanClick(std::function<void()> callback) { m_On_muti_span = callback; }
 
-void NormalGachaScene::Update() {
-    if (m_State == GachaState::IDLE) {
-        if (m_ReturnBtn) m_ReturnBtn->Update();
-        if (m_StorageBtn) m_StorageBtn->Update();
-        if (m_span) m_span->Update();
-        if (m_muti_span) m_muti_span->Update();
-    }
-    else if (m_State == GachaState::ANIMATING) {
-        m_AnimTimer++;
-        int currentFrame = m_AnimTimer / animSpeed;
+void NormalGachaScene::Update()
+{
+    RefreshResourceDisplay();
 
-        if (currentFrame >= m_AnimFrames.size()) {
-            m_State = GachaState::RESULT;
-            m_CurrentResultIndex = 0;
+    if (m_State == GachaState::IDLE)
+    {
+        if (m_ReturnBtn)
+        {
+            m_ReturnBtn->Update();
+        }
+
+        if (m_StorageBtn)
+        {
+            m_StorageBtn->Update();
+        }
+
+        if (m_span)
+        {
+            m_span->Update();
+        }
+
+        if (m_muti_span)
+        {
+            m_muti_span->Update();
+        }
+    }
+    else if (m_State == GachaState::ANIMATING)
+    {
+        m_AnimTimer++;
+
+        int currentFrame =
+            m_AnimTimer / animSpeed;
+
+        if (
+            currentFrame >=
+            m_AnimFrames.size()
+        )
+        {
+            m_State =
+                GachaState::RESULT;
+
+            m_CurrentResultIndex =
+                0;
+
             ShowNextResultCat();
         }
     }
-    else if (m_State == GachaState::RESULT) {
-        if (m_IsPopupOpen) {
-            if (m_PopupUseBtn) m_PopupUseBtn->Update();
-            if (m_PopupXpBtn) m_PopupXpBtn->Update();
-            if (m_PopupCancelBtn) m_PopupCancelBtn->Update();
+    else if (m_State == GachaState::RESULT)
+    {
+        if (m_IsPopupOpen)
+        {
+            if (m_PopupUseBtn)
+            {
+                m_PopupUseBtn->Update();
+            }
+
+            if (m_PopupXpBtn)
+            {
+                m_PopupXpBtn->Update();
+            }
+
+            if (m_PopupCancelBtn)
+            {
+                m_PopupCancelBtn->Update();
+            }
         }
     }
 }

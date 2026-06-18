@@ -5,6 +5,7 @@
 #include "PlayerData.hpp"
 #include "DebugCheat.hpp"
 #include <utility>
+#include "StartDebugMenu.hpp"
 
 StartScene::StartScene()
 {
@@ -108,91 +109,24 @@ StartScene::StartScene()
                 }
             );
 
-m_OptionMenu->SetOnHelp(
+            m_OptionMenu->SetOnHelp(
     [this]()
     {
         Util::SFX(
             RESOURCE_DIR "/music/clickbtn.mp3"
         ).Play();
 
-        m_DebugMenu =
-            std::make_shared<DebugMenu>();
+        m_StartDebugMenu =
+            std::make_shared<StartDebugMenu>();
 
-        m_DebugMenu->SetOnAddXP(
-            []()
-            {
-                auto playerData =
-                    PlayerData::GetInstance();
-
-                playerData->AddXP(
-                    10000
-                );
-
-                playerData->SaveToFile();
-
-                LOG_DEBUG(
-                    "StartScene DebugMenu: Add 10000 XP"
-                );
-            }
-        );
-
-        m_DebugMenu->SetOnMaxMoney(
-            []()
-            {
-                LOG_DEBUG(
-                    "StartScene DebugMenu: MAX MONEY ignored because StartScene has no battle money"
-                );
-            }
-        );
-
-        m_DebugMenu->SetOnToggleCatAttack(
-            []()
-            {
-                DebugCheat::CatAttackBoost =
-                    !DebugCheat::CatAttackBoost;
-
-                LOG_DEBUG(
-                    "StartScene DebugMenu: Cat Attack x2 = {}",
-                    DebugCheat::CatAttackBoost
-                        ? "ON"
-                        : "OFF"
-                );
-            }
-        );
-
-        m_DebugMenu->SetOnToggleCatSpeed(
-            []()
-            {
-                DebugCheat::CatSpeedBoost =
-                    !DebugCheat::CatSpeedBoost;
-
-                LOG_DEBUG(
-                    "StartScene DebugMenu: Cat Speed x2 = {}",
-                    DebugCheat::CatSpeedBoost
-                        ? "ON"
-                        : "OFF"
-                );
-            }
-        );
-
-        m_DebugMenu->SetOnInstantWin(
-            []()
-            {
-                LOG_DEBUG(
-                    "StartScene DebugMenu: INSTANT WIN ignored because StartScene has no battle"
-                );
-            }
-        );
-
-        m_DebugMenu->SetOnBack(
+        m_StartDebugMenu->SetOnBack(
             [this]()
             {
-                m_DebugMenu.reset();
+                m_ShouldCloseStartDebugMenu = true;
             }
         );
     }
 );
-
             m_OptionMenu->SetOnBgmVolumeChanged(
                 [this](int level)
                 {
@@ -241,9 +175,18 @@ void StartScene::SetOnSfxVolumeChanged(
 }
 void StartScene::Update()
 {
-    if (m_DebugMenu)
+    if (m_StartDebugMenu)
     {
-        m_DebugMenu->Update();
+        m_StartDebugMenu->Update();
+
+        if (m_ShouldCloseStartDebugMenu)
+        {
+            m_StartDebugMenu.reset();
+
+            m_ShouldCloseStartDebugMenu =
+                false;
+        }
+
         return;
     }
 
@@ -272,14 +215,14 @@ void StartScene::Draw()
         m_StartBtn->Draw();
     }
 
-    if (m_DebugMenu)
+    if (m_StartDebugMenu)
     {
         if (m_OptionMenu)
         {
             m_OptionMenu->DrawBackgroundOnly();
         }
 
-        m_DebugMenu->Draw();
+        m_StartDebugMenu->Draw();
     }
     else if (m_OptionMenu)
     {

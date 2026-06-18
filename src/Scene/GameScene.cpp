@@ -9,6 +9,25 @@
 #include "PlayerData.hpp"
 #include "PauseMenu.hpp"
 #include "System/DebugCheat.hpp"
+#include <cstdlib>
+namespace StageReward
+{
+    const int CAT_FOOD_AMOUNT = 30;
+    const int NORMAL_TICKET_AMOUNT = 1;
+    const int RARE_TICKET_AMOUNT = 1;
+
+    const int CAT_FOOD_DROP_RATE = 100;
+    const int NORMAL_TICKET_DROP_RATE = 100;
+    const int RARE_TICKET_DROP_RATE = 100;
+}
+
+static bool RollPercent(
+    int percent
+)
+{
+    return std::rand() % 100 < percent;
+}
+
 GameScene::GameScene(
     const std::vector<UnitID>& playerDeck,
     const StageData& stage
@@ -29,7 +48,19 @@ GameScene::GameScene(
         stageName =
             displayIt->second.stageName;
     }
+    m_RewardNotifyBar =
+        std::make_shared<Button>(
+            0.0f,
+            -0.28f,
+            700.0f,
+            190.0f,
+            RESOURCE_DIR "/img/notifBar.png",
+            " ",
+            28,
+            Util::Color(255, 255, 255, 255)
+        );
 
+    m_RewardNotifyBar->SetZIndex(85);
     // 黑色描邊底層
     m_StageNameTextShadow =
         std::make_shared<UIText>(
@@ -89,10 +120,19 @@ GameScene::GameScene(
     // 🚀 新增：載入勝利/失敗的 img004_tw.png 切圖
     // ==========================================
     // 建立勝利圖 (放在正中央)
-    m_WinImage = std::make_shared<Button>(
-        0.0f, 0.3f, 200.0f, 100.0f,
-        RESOURCE_DIR"/img/img004_tw.png", " ", 100, Util::Color(0,0,0,0)
-    );
+    m_WinImage =
+        std::make_shared<Button>(
+            0.0f,
+            0.30f,
+            430.0f,
+            92.0f,
+            RESOURCE_DIR "/img/victoryFont.png",
+            " ",
+            100,
+            Util::Color(255, 255, 255, 255)
+        );
+
+    m_WinImage->SetZIndex(100);
     // 建立失敗圖 (放在正中央)
     m_LoseImage = std::make_shared<Button>(
     0.0f, 0.3f, 250.0f, 100.0f,
@@ -395,6 +435,185 @@ m_PauseMenu->SetOnHelp(
     });
 }
 
+void GameScene::UpdateRewardNotifyText()
+{
+    std::string title =
+        "破關獎勵 入手啦！！";
+
+    std::string rewardLine1;
+    std::string rewardLine2;
+
+    if (m_RewardCatFood > 0)
+    {
+        rewardLine1 +=
+            "罐頭 +" +
+            std::to_string(m_RewardCatFood);
+    }
+
+    if (m_RewardNormalTicket > 0)
+    {
+        if (!rewardLine1.empty())
+        {
+            rewardLine1 += "   ";
+        }
+
+        rewardLine1 +=
+            "銀券 +" +
+            std::to_string(m_RewardNormalTicket);
+    }
+
+    if (m_RewardRareTicket > 0)
+    {
+        rewardLine2 =
+            "金券 +" +
+            std::to_string(m_RewardRareTicket);
+    }
+
+    if (
+        rewardLine1.empty() &&
+        rewardLine2.empty()
+    )
+    {
+        rewardLine1 =
+            "本次沒有額外道具獎勵";
+    }
+
+    m_RewardNotifyTitle =
+        std::make_shared<UIText>(
+            -0.26f,
+            -0.18f,
+            title,
+            34,
+            Util::Color(255, 255, 255, 255)
+        );
+
+    m_RewardNotifyTitle->SetZIndex(90);
+
+    m_RewardNotifyLine1 =
+        std::make_shared<UIText>(
+            -0.20f,
+            -0.33f,
+            rewardLine1,
+            30,
+            Util::Color(220, 220, 220, 255)
+        );
+
+    m_RewardNotifyLine1->SetZIndex(90);
+
+    m_RewardNotifyLine2 =
+        std::make_shared<UIText>(
+            -0.10f,
+            -0.45f,
+            rewardLine2,
+            30,
+            Util::Color(220, 220, 220, 255)
+        );
+
+    m_RewardNotifyLine2->SetZIndex(90);
+
+    m_RewardNotifyLine3 =
+        nullptr;
+}
+
+void GameScene::GiveStageClearRewards()
+{
+    auto playerData =
+        PlayerData::GetInstance();
+
+    // 每次結算前先歸零本場掉落紀錄
+    m_RewardCatFood = 0;
+    m_RewardNormalTicket = 0;
+    m_RewardRareTicket = 0;
+
+    // =========================
+    // 100% 掉 XP
+    // =========================
+
+    playerData->AddXP(
+        m_RewardXP
+    );
+
+    LOG_DEBUG(
+        "Stage Reward: +{} XP",
+        m_RewardXP
+    );
+
+    // =========================
+    // 50% 掉貓罐頭
+    // =========================
+
+    if (
+        RollPercent(
+            StageReward::CAT_FOOD_DROP_RATE
+        )
+    )
+    {
+        m_RewardCatFood =
+            StageReward::CAT_FOOD_AMOUNT;
+
+        playerData->AddCatFood(
+            m_RewardCatFood
+        );
+
+        LOG_DEBUG(
+            "Stage Reward: +{} Cat Food",
+            m_RewardCatFood
+        );
+    }
+
+    // =========================
+    // 25% 掉銀券
+    // =========================
+
+    if (
+        RollPercent(
+            StageReward::NORMAL_TICKET_DROP_RATE
+        )
+    )
+    {
+        m_RewardNormalTicket =
+            StageReward::NORMAL_TICKET_AMOUNT;
+
+        playerData->AddNormalTickets(
+            m_RewardNormalTicket
+        );
+
+        LOG_DEBUG(
+            "Stage Reward: +{} Normal Ticket",
+            m_RewardNormalTicket
+        );
+    }
+
+    // =========================
+    // 15% 掉金券
+    // =========================
+
+    if (
+        RollPercent(
+            StageReward::RARE_TICKET_DROP_RATE
+        )
+    )
+    {
+        m_RewardRareTicket =
+            StageReward::RARE_TICKET_AMOUNT;
+
+        playerData->AddRareTickets(
+            m_RewardRareTicket
+        );
+
+        LOG_DEBUG(
+            "Stage Reward: +{} Rare Ticket",
+            m_RewardRareTicket
+        );
+    }
+
+    playerData->ClearStage(
+        m_CurrentStageID
+    );
+    UpdateRewardNotifyText();
+    playerData->SaveToFile();
+}
+
 void GameScene::Update(float dt) {
     m_StageTimer += dt;
 
@@ -443,10 +662,7 @@ void GameScene::Update(float dt) {
             std::cout << "🏆 [Victory] 敵方主堡被摧毀，你贏了！\n";
             Util::SFX(RESOURCE_DIR "/music/win.mp3").Play();
 
-            auto pData = PlayerData::GetInstance();
-            pData->AddXP(m_RewardXP);
-            pData->ClearStage(m_CurrentStageID);
-            pData->SaveToFile();
+            GiveStageClearRewards();
 
             if (m_RewardXPNumber) {
                 m_RewardXPNumber->SetValue(  std::to_string(m_RewardXP)); // 加個 + 號更有感覺
@@ -540,19 +756,52 @@ void GameScene::Draw() {
             m_OkBtn->Draw();
         };
     }
-    else if (!m_EnemyBase->IsAlive()) {
-        if (m_WinImage) m_WinImage->DrawRect(0, 0, 512, 110);
+    else if (!m_EnemyBase->IsAlive())
+    {
+        if (m_WinImage)
+        {
+            m_WinImage->Draw();
+        }
 
-        if (m_RewardTextGet) {
+        if (m_RewardTextGet)
+        {
             m_RewardTextGet->Draw();
         }
 
-        if (m_RewardXPNumber) {
+        if (m_RewardXPNumber)
+        {
             m_RewardXPNumber->Draw();
         }
 
-        // 畫出 OK 按鈕
-        if (m_OkBtn) m_OkBtn->Draw();
+        if (m_RewardNotifyBar)
+        {
+            m_RewardNotifyBar->Draw();
+        }
+
+        if (m_RewardNotifyTitle)
+        {
+            m_RewardNotifyTitle->Draw();
+        }
+
+        if (m_RewardNotifyLine1)
+        {
+            m_RewardNotifyLine1->Draw();
+        }
+
+        if (m_RewardNotifyLine2)
+        {
+            m_RewardNotifyLine2->Draw();
+        }
+
+        if (m_RewardNotifyLine3)
+        {
+            m_RewardNotifyLine3->Draw();
+        }
+
+        if (m_OkBtn)
+        {
+            m_OkBtn->Draw();
+        }
     }
 
     if (pauseBtn) pauseBtn->Draw();
@@ -581,6 +830,10 @@ void GameScene::Draw() {
         {
             m_PauseMenu->Draw();
         }
+    }
+    if (m_ShowRewardNotify && m_RewardNotifyBar)
+    {
+        m_RewardNotifyBar->Draw();
     }
     if (m_StageNameTextShadow)
     {

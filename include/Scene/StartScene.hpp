@@ -6,7 +6,7 @@
 #include <functional>
 #include <memory>
 #include "Util/SFX.hpp"
-#include "System/DebugMenu.hpp"
+#include "StartDebugMenu.hpp"
 
 class StartScene {
 public:
@@ -33,7 +33,8 @@ private:
     std::shared_ptr<Button> m_OptionHitBtn;
     std::function<void(int)> m_OnBgmVolumeChanged;
     std::function<void(int)> m_OnSfxVolumeChanged;
-    std::shared_ptr<DebugMenu> m_DebugMenu;
+    std::shared_ptr<StartDebugMenu> m_StartDebugMenu;
+    bool m_ShouldCloseStartDebugMenu = false;
 };
 
 #endif

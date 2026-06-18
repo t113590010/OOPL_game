@@ -62,6 +62,8 @@ add_executable(${PROJECT_NAME}
         src/System/DebugCheat.cpp
         include/System/StartOptionMenu.hpp
         src/System/StartOptionMenu.cpp
+        include/System/StartDebugMenu.hpp
+        src/System/StartDebugMenu.cpp
         # 修正：配合 files.cmake 的變數名稱
 )
 
