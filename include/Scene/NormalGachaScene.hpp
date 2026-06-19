@@ -81,7 +81,7 @@ private:
     // 彈窗內放大顯示巨神貓的 UI 部件 (如果 StorageItem 內部沒有接管繪製，我們在場景手動繪製防呆)
     std::shared_ptr<Button> m_PopupDisplayBody;
     std::shared_ptr<Button> m_PopupDisplayLegs;
-
+    void RefreshResourceDisplay();
     void ShowNextResultCat(); // 核心：載入下一隻抽到的貓
 
     bool m_IsPopupOpen = false;

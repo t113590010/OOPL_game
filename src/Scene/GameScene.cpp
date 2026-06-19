@@ -7,7 +7,26 @@
 #include "Entity/UnitFactory.hpp"
 #include "Util/SFX.hpp"
 #include "PlayerData.hpp"
+#include "PauseMenu.hpp"
+#include "System/DebugCheat.hpp"
+#include <cstdlib>
+namespace StageReward
+{
+    const int CAT_FOOD_AMOUNT = 30;
+    const int NORMAL_TICKET_AMOUNT = 1;
+    const int RARE_TICKET_AMOUNT = 1;
 
+    const int CAT_FOOD_DROP_RATE = 50;
+    const int NORMAL_TICKET_DROP_RATE = 25;
+    const int RARE_TICKET_DROP_RATE = 15;
+}
+
+static bool RollPercent(
+    int percent
+)
+{
+    return std::rand() % 100 < percent;
+}
 
 GameScene::GameScene(
     const std::vector<UnitID>& playerDeck,
@@ -18,7 +37,53 @@ GameScene::GameScene(
       m_EquippedDeck(playerDeck),
       m_SpawnSystem(stage.waves){
     m_CurrentStageID = stage.stageID;
+    std::string stageName =
+    "Stage " + std::to_string(stage.stageID);
 
+    auto displayIt =
+        STAGE_DISPLAY_DATA.find(stage.stageID);
+
+    if (displayIt != STAGE_DISPLAY_DATA.end())
+    {
+        stageName =
+            displayIt->second.stageName;
+    }
+    m_RewardNotifyBar =
+        std::make_shared<Button>(
+            0.0f,
+            -0.28f,
+            700.0f,
+            190.0f,
+            RESOURCE_DIR "/img/notifBar.png",
+            " ",
+            28,
+            Util::Color(255, 255, 255, 255)
+        );
+
+    m_RewardNotifyBar->SetZIndex(85);
+    // 黑色描邊底層
+    m_StageNameTextShadow =
+        std::make_shared<UIText>(
+            -0.805f,
+            0.885f,
+            stageName,
+            40,
+            Util::Color(0, 0, 0, 255)
+        );
+
+    m_StageNameTextShadow->SetZIndex(89);
+
+    // 黃色文字上層
+    m_StageNameText =
+        std::make_shared<UIText>(
+            -0.815f,
+            0.895f,
+            stageName,
+            40,
+            Util::Color(255, 230, 0, 255)
+        );
+
+    m_StageNameText->SetZIndex(90);
     m_CameraX = GameConfig::CAMERA_MAX_X;
     auto context = Core::Context::GetInstance();
     float windowWidth = (float)context->GetWindowWidth();
@@ -55,10 +120,19 @@ GameScene::GameScene(
     // 🚀 新增：載入勝利/失敗的 img004_tw.png 切圖
     // ==========================================
     // 建立勝利圖 (放在正中央)
-    m_WinImage = std::make_shared<Button>(
-        0.0f, 0.3f, 200.0f, 100.0f,
-        RESOURCE_DIR"/img/img004_tw.png", " ", 100, Util::Color(0,0,0,0)
-    );
+    m_WinImage =
+        std::make_shared<Button>(
+            0.0f,
+            0.30f,
+            430.0f,
+            92.0f,
+            RESOURCE_DIR "/img/victoryFont.png",
+            " ",
+            100,
+            Util::Color(255, 255, 255, 255)
+        );
+
+    m_WinImage->SetZIndex(100);
     // 建立失敗圖 (放在正中央)
     m_LoseImage = std::make_shared<Button>(
     0.0f, 0.3f, 250.0f, 100.0f,
@@ -120,26 +194,201 @@ GameScene::GameScene(
     });
 
     m_PauseMenu = std::make_shared<PauseMenu>();
+
+    m_PauseMenu->SetOnBgmVolumeChanged(
+        [this](int level)
+        {
+            if (m_OnBgmVolumeChanged)
+            {
+                m_OnBgmVolumeChanged(level);
+            }
+        }
+    );
     m_PauseMenu->SetOnClose([this]() {
         Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
         m_IsPaused = false;
         m_SureMenu.reset();
     });
 
-    m_PauseMenu->SetOnHelp([this]() {
-        LOG_DEBUG("Pause Help / Debug Menu clicked");
-    });
+m_PauseMenu->SetOnHelp(
+    [this]()
+    {
+        Util::SFX(
+            RESOURCE_DIR "/music/clickbtn.mp3"
+        ).Play();
+
+        m_DebugMenu =
+            std::make_shared<DebugMenu>();
+
+        // +10000 XP
+        m_DebugMenu->SetOnAddXP(
+            [this]()
+            {
+                auto playerData =
+                    PlayerData::GetInstance();
+
+                playerData->AddXP(
+                    10000
+                );
+
+                playerData->SaveToFile();
+
+                LOG_DEBUG(
+                    "DebugMenu: Add 10000 XP. Current XP = {}",
+                    playerData->GetXP()
+                );
+            }
+        );
+
+        // 戰鬥金錢加滿
+        m_DebugMenu->SetOnMaxMoney(
+            [this]()
+            {
+                LOG_DEBUG("MAX MONEY CALLBACK TRIGGERED");
+
+                m_DebugMaxMoney =
+                    !m_DebugMaxMoney;
+
+                if (m_DebugMaxMoney)
+                {
+                    m_DebugMoneyBeforeMax =
+                        m_CurrentMoney;
+
+                    m_CurrentMoney =
+                        m_CurrentMaxMoney;
+
+                    LOG_DEBUG(
+                        "DebugMenu: Max Money ON"
+                    );
+                }
+                else
+                {
+                    m_CurrentMoney =
+                        m_DebugMoneyBeforeMax;
+
+                    if (m_CurrentMoney > m_CurrentMaxMoney)
+                    {
+                        m_CurrentMoney =
+                            m_CurrentMaxMoney;
+                    }
+
+                    LOG_DEBUG(
+                        "DebugMenu: Max Money OFF"
+                    );
+                }
+            }
+        );
+
+        // 貓咪攻擊力 x2 開關
+        m_DebugMenu->SetOnToggleCatAttack(
+            []()
+            {
+                DebugCheat::CatAttackBoost =
+                    !DebugCheat::CatAttackBoost;
+
+                LOG_DEBUG(
+                    "DebugMenu: Cat Attack x2 = {}",
+                    DebugCheat::CatAttackBoost ? "ON" : "OFF"
+                );
+            }
+        );
+
+        // 貓咪跑速 x2 開關
+        m_DebugMenu->SetOnToggleCatSpeed(
+            [this]()
+            {
+                DebugCheat::CatSpeedBoost =
+                    !DebugCheat::CatSpeedBoost;
+
+                float speedScale =
+                    DebugCheat::CatSpeedBoost
+                        ? 2.0f
+                        : 0.5f;
+
+                for (auto& entity : m_Entities)
+                {
+                    if (
+                        entity &&
+                        entity->IsPlayerTeam()
+                    )
+                    {
+                        entity->SetSpeed(
+                            entity->GetSpeed() *
+                            speedScale
+                        );
+                    }
+                }
+
+                LOG_DEBUG(
+                    "DebugMenu: Cat Speed x2 = {}",
+                    DebugCheat::CatSpeedBoost
+                        ? "ON"
+                        : "OFF"
+                );
+            }
+        );
+
+
+        // 立即勝利
+        m_DebugMenu->SetOnInstantWin(
+            [this]()
+            {
+                LOG_DEBUG(
+                    "DebugMenu: Instant Win."
+                );
+
+                if (m_EnemyBase)
+                {
+                    m_EnemyBase->TakeDamage(
+                        m_EnemyBase->GetHP()
+                    );
+                }
+
+                // 關掉 DebugMenu / SureMenu
+                m_DebugMenu.reset();
+                m_SureMenu.reset();
+
+                // 解除暫停，讓下一幀 GameScene::Update() 可以進入勝利結算
+                m_IsPaused = false;
+            }
+        );
+
+        // 返回 PauseMenu
+        m_DebugMenu->SetOnBack(
+            [this]()
+            {
+                Util::SFX(
+                    RESOURCE_DIR "/music/clickbtn.mp3"
+                ).Play();
+
+                m_DebugMenu.reset();
+            }
+        );
+    }
+);
     m_PauseMenu->SetOnQuit([this]() {
         std::cout << "come back start scene\n";
         Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
         m_PauseMenu->SetBgZindex(51);
         m_SureMenu = std::make_shared<SureMenu>();
 
-       m_SureMenu->SetOnConfirm([this]() {
-           Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
-           m_SureMenu.reset();
-           if (m_OnQuitGame) m_OnQuitGame();
-       });
+        m_SureMenu->SetOnConfirm(
+            [this]()
+            {
+                Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
+
+                m_SureMenu.reset();
+                m_PauseMenu.reset();
+                m_DebugMenu.reset();
+
+                m_IsPaused = false;
+
+                if (m_OnQuitGame)
+                {
+                    m_OnQuitGame();
+                }
+            }
+        );
 
        m_SureMenu->SetOnCancel([this]() {
            Util::SFX(RESOURCE_DIR "/music/clickbtn.mp3").Play();
@@ -186,6 +435,185 @@ GameScene::GameScene(
     });
 }
 
+void GameScene::UpdateRewardNotifyText()
+{
+    std::string title =
+        "破關獎勵 入手啦！！";
+
+    std::string rewardLine1;
+    std::string rewardLine2;
+
+    if (m_RewardCatFood > 0)
+    {
+        rewardLine1 +=
+            "罐頭 +" +
+            std::to_string(m_RewardCatFood);
+    }
+
+    if (m_RewardNormalTicket > 0)
+    {
+        if (!rewardLine1.empty())
+        {
+            rewardLine1 += "   ";
+        }
+
+        rewardLine1 +=
+            "銀券 +" +
+            std::to_string(m_RewardNormalTicket);
+    }
+
+    if (m_RewardRareTicket > 0)
+    {
+        rewardLine2 =
+            "金券 +" +
+            std::to_string(m_RewardRareTicket);
+    }
+
+    if (
+        rewardLine1.empty() &&
+        rewardLine2.empty()
+    )
+    {
+        rewardLine1 =
+            "本次沒有額外道具獎勵";
+    }
+
+    m_RewardNotifyTitle =
+        std::make_shared<UIText>(
+            -0.26f,
+            -0.18f,
+            title,
+            34,
+            Util::Color(255, 255, 255, 255)
+        );
+
+    m_RewardNotifyTitle->SetZIndex(90);
+
+    m_RewardNotifyLine1 =
+        std::make_shared<UIText>(
+            -0.20f,
+            -0.33f,
+            rewardLine1,
+            30,
+            Util::Color(220, 220, 220, 255)
+        );
+
+    m_RewardNotifyLine1->SetZIndex(90);
+
+    m_RewardNotifyLine2 =
+        std::make_shared<UIText>(
+            -0.10f,
+            -0.45f,
+            rewardLine2,
+            30,
+            Util::Color(220, 220, 220, 255)
+        );
+
+    m_RewardNotifyLine2->SetZIndex(90);
+
+    m_RewardNotifyLine3 =
+        nullptr;
+}
+
+void GameScene::GiveStageClearRewards()
+{
+    auto playerData =
+        PlayerData::GetInstance();
+
+    // 每次結算前先歸零本場掉落紀錄
+    m_RewardCatFood = 0;
+    m_RewardNormalTicket = 0;
+    m_RewardRareTicket = 0;
+
+    // =========================
+    // 100% 掉 XP
+    // =========================
+
+    playerData->AddXP(
+        m_RewardXP
+    );
+
+    LOG_DEBUG(
+        "Stage Reward: +{} XP",
+        m_RewardXP
+    );
+
+    // =========================
+    // 50% 掉貓罐頭
+    // =========================
+
+    if (
+        RollPercent(
+            StageReward::CAT_FOOD_DROP_RATE
+        )
+    )
+    {
+        m_RewardCatFood =
+            StageReward::CAT_FOOD_AMOUNT;
+
+        playerData->AddCatFood(
+            m_RewardCatFood
+        );
+
+        LOG_DEBUG(
+            "Stage Reward: +{} Cat Food",
+            m_RewardCatFood
+        );
+    }
+
+    // =========================
+    // 25% 掉銀券
+    // =========================
+
+    if (
+        RollPercent(
+            StageReward::NORMAL_TICKET_DROP_RATE
+        )
+    )
+    {
+        m_RewardNormalTicket =
+            StageReward::NORMAL_TICKET_AMOUNT;
+
+        playerData->AddNormalTickets(
+            m_RewardNormalTicket
+        );
+
+        LOG_DEBUG(
+            "Stage Reward: +{} Normal Ticket",
+            m_RewardNormalTicket
+        );
+    }
+
+    // =========================
+    // 15% 掉金券
+    // =========================
+
+    if (
+        RollPercent(
+            StageReward::RARE_TICKET_DROP_RATE
+        )
+    )
+    {
+        m_RewardRareTicket =
+            StageReward::RARE_TICKET_AMOUNT;
+
+        playerData->AddRareTickets(
+            m_RewardRareTicket
+        );
+
+        LOG_DEBUG(
+            "Stage Reward: +{} Rare Ticket",
+            m_RewardRareTicket
+        );
+    }
+
+    playerData->ClearStage(
+        m_CurrentStageID
+    );
+    UpdateRewardNotifyText();
+    playerData->SaveToFile();
+}
+
 void GameScene::Update(float dt) {
     m_StageTimer += dt;
 
@@ -193,9 +621,21 @@ void GameScene::Update(float dt) {
     // 1. 暫停邏輯
     // ==========================================
     if (pauseBtn) pauseBtn->Update();
-    if (m_IsPaused) {
-        if (m_SureMenu) m_SureMenu->Update();
-        else if (m_PauseMenu) m_PauseMenu->Update();
+    if (m_IsPaused)
+    {
+        if (m_SureMenu)
+        {
+            m_SureMenu->Update();
+        }
+        else if (m_DebugMenu)
+        {
+            m_DebugMenu->Update();
+        }
+        else if (m_PauseMenu)
+        {
+            m_PauseMenu->Update();
+        }
+
         return;
     }
 
@@ -222,10 +662,7 @@ void GameScene::Update(float dt) {
             std::cout << "🏆 [Victory] 敵方主堡被摧毀，你贏了！\n";
             Util::SFX(RESOURCE_DIR "/music/win.mp3").Play();
 
-            auto pData = PlayerData::GetInstance();
-            pData->AddXP(m_RewardXP);
-            pData->ClearStage(m_CurrentStageID);
-            pData->SaveToFile();
+            GiveStageClearRewards();
 
             if (m_RewardXPNumber) {
                 m_RewardXPNumber->SetValue(  std::to_string(m_RewardXP)); // 加個 + 號更有感覺
@@ -249,6 +686,11 @@ void GameScene::Update(float dt) {
     m_CurrentMoney += GameConfig::MONEY_GROWTH_SPEED * dt;
     if (m_CurrentMoney > m_CurrentMaxMoney) {
         m_CurrentMoney = m_CurrentMaxMoney;
+    }
+    if (m_DebugMaxMoney)
+    {
+        m_CurrentMoney =
+            m_CurrentMaxMoney;
     }
 
     if (Util::Input::IsKeyPressed(Util::Keycode::RIGHT) || Util::Input::IsKeyPressed(Util::Keycode::D)) m_CameraX += m_CameraSpeed * dt;
@@ -314,25 +756,92 @@ void GameScene::Draw() {
             m_OkBtn->Draw();
         };
     }
-    else if (!m_EnemyBase->IsAlive()) {
-        if (m_WinImage) m_WinImage->DrawRect(0, 0, 512, 110);
+    else if (!m_EnemyBase->IsAlive())
+    {
+        if (m_WinImage)
+        {
+            m_WinImage->Draw();
+        }
 
-        if (m_RewardTextGet) {
+        if (m_RewardTextGet)
+        {
             m_RewardTextGet->Draw();
         }
 
-        if (m_RewardXPNumber) {
+        if (m_RewardXPNumber)
+        {
             m_RewardXPNumber->Draw();
         }
 
-        // 畫出 OK 按鈕
-        if (m_OkBtn) m_OkBtn->Draw();
+        if (m_RewardNotifyBar)
+        {
+            m_RewardNotifyBar->Draw();
+        }
+
+        if (m_RewardNotifyTitle)
+        {
+            m_RewardNotifyTitle->Draw();
+        }
+
+        if (m_RewardNotifyLine1)
+        {
+            m_RewardNotifyLine1->Draw();
+        }
+
+        if (m_RewardNotifyLine2)
+        {
+            m_RewardNotifyLine2->Draw();
+        }
+
+        if (m_RewardNotifyLine3)
+        {
+            m_RewardNotifyLine3->Draw();
+        }
+
+        if (m_OkBtn)
+        {
+            m_OkBtn->Draw();
+        }
     }
 
     if (pauseBtn) pauseBtn->Draw();
 
-    if (m_IsPaused) {
-        if (m_PauseMenu) m_PauseMenu->Draw();
-        if (m_SureMenu) m_SureMenu->Draw();
+    if (m_IsPaused)
+    {
+        if (m_SureMenu)
+        {
+            if (m_PauseMenu)
+            {
+                m_PauseMenu->DrawBackgroundOnly();
+            }
+
+            m_SureMenu->Draw();
+        }
+        else if (m_DebugMenu)
+        {
+            if (m_PauseMenu)
+            {
+                m_PauseMenu->DrawBackgroundOnly();
+            }
+
+            m_DebugMenu->Draw();
+        }
+        else if (m_PauseMenu)
+        {
+            m_PauseMenu->Draw();
+        }
     }
+    if (m_ShowRewardNotify && m_RewardNotifyBar)
+    {
+        m_RewardNotifyBar->Draw();
+    }
+    if (m_StageNameTextShadow)
+    {
+        m_StageNameTextShadow->Draw();
+    }
+
+    /*if (m_StageNameText)
+    {
+        m_StageNameText->Draw();
+    }*/
 }

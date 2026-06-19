@@ -44,63 +44,39 @@ public:
         }
 
         // 🚀 關鍵改動：這裡餵給 UIText 的是新傳入的 text_pos_ratio 參數
-        m_TextGO = std::make_shared<UIText>(
-            text_pos_ratio_x,
-            text_pos_ratio_y,
-            text_content,
-            font_size,
-            text_color
-        );
+        if (!text_content.empty() && text_content != " ")
+        {
+            m_TextGO =
+                std::make_shared<UIText>(
+                    text_pos_ratio_x,
+                    text_pos_ratio_y,
+                    text_content,
+                    font_size,
+                    text_color
+                );
 
-        m_TextGO->SetZIndex(35);
+            m_TextGO->SetZIndex(35);
+        }
 
         m_CurrentContent = text_content;
         m_Visible = true;
         m_IsPressed = false;
     }
-    // Button(float pos_ratio_x, float pos_ratio_y, float width, float height, const std::string& img_path, const std::string& text_content, int font_size, const Util::Color& text_color)
-    //     : GameObject(std::make_unique<Util::Image>(img_path), 100) {
-    //
-    //     auto context = Core::Context::GetInstance();
-    //     float halfW = context->GetWindowWidth() / 2.0f;
-    //     float halfH = context->GetWindowHeight() / 2.0f;
-    //
-    //     m_Transform.translation = { halfW * pos_ratio_x, halfH * pos_ratio_y };
-    //
-    //     m_Width = width;
-    //     m_Height = height;
-    //
-    //     auto tempImg = std::dynamic_pointer_cast<Util::Image>(m_Drawable);
-    //     if (tempImg) {
-    //         glm::vec2 originalSize = tempImg->GetSize();
-    //         float scaleX = m_Width / originalSize.x;
-    //         float scaleY = m_Height / originalSize.y;
-    //         float finalScale = std::max(scaleX, scaleY);
-    //         m_Transform.scale = { finalScale, finalScale };
-    //     }
-    //
-    //     // 🚀 降維打擊：直接呼叫你的 UIText！
-    //     // 把 Button 接到的 pos_ratio 直接餵給 UIText 的 scale
-    //     m_TextGO = std::make_shared<UIText>(
-    //         pos_ratio_x,
-    //         pos_ratio_y,
-    //         text_content,
-    //         font_size,
-    //         text_color
-    //     );
-    //
-    //     // 💡 關鍵防呆：UIText 預設是 100，我們強制拉高到 101，保證壓在按鈕底圖之上！
-    //     m_TextGO->SetZIndex(80);
-    //
-    //     m_CurrentContent = text_content;
-    //     m_Visible = true;
-    //     m_IsPressed = false;
-    // }
+    void SetHitBoxSize(float width, float height)
+    {
+        m_CustomHitBoxWidth = width;
+        m_CustomHitBoxHeight = height;
+        m_HasCustomHitBox = true;
+    }
+    void SetZIndex(int zIndex)
+    {
+        Util::GameObject::SetZIndex(zIndex);
 
-    // 🚀 新增一個可以動態換底圖的函數
-    // void SetImage(const std::string& img_path) {
-    //     SetDrawable(std::make_shared<Util::Image>(img_path));
-    // }
+        if (m_TextGO)
+        {
+            m_TextGO->SetZIndex(zIndex + 1);
+        }
+    }
     void SetTextPosition(
     float x,
     float y
@@ -205,7 +181,11 @@ public:
                 drawHeight = img->GetSize().y * m_Transform.scale.y;
             }
         }
-
+        if (m_HasCustomHitBox)
+        {
+            drawWidth = m_CustomHitBoxWidth;
+            drawHeight = m_CustomHitBoxHeight;
+        }
         float halfWidth = drawWidth / 2.0f;
         float halfHeight = drawHeight / 2.0f;
 
@@ -285,6 +265,9 @@ private:
     int m_ClipY = 0;
     int m_ClipW = 0;
     int m_ClipH = 0;
+    bool m_HasCustomHitBox = false;
+    float m_CustomHitBoxWidth = 0.0f;
+    float m_CustomHitBoxHeight = 0.0f;
 };
 
 #endif

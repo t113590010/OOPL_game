@@ -57,7 +57,10 @@ set(SRC_FILES
         "System/CollisionSystem.cpp"
         "System/UISystem.cpp"
         "System/LevelSystem.cpp"
-
+        "System/DebugMenu.cpp"
+        "System/DebugCheat.cpp"
+        "System/StartOptionMenu.cpp"
+        "System/StartDebugMenu.cpp"
 )
 
 set(INCLUDE_FILES
@@ -121,7 +124,10 @@ set(INCLUDE_FILES
         "System/WorldText.hpp"
         "System/UISystem.hpp"
         "System/LevelSystem.hpp"
-
+        "System/DebugMenu.hpp"
+        "System/DebugCheat.hpp"
+        "System/StartOptionMenu.hpp"
+        "System/StartDebugMenu.hpp"
 )
 set(TEST_FILES
 )

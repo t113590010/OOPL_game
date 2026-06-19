@@ -83,7 +83,7 @@ private:
     std::shared_ptr<Button> m_PopupDisplayLegs;
 
     void ShowNextResultCat(); // 核心：載入下一隻抽到的貓
-
+    void RefreshResourceDisplay();
     bool m_IsPopupOpen = false;
     std::shared_ptr<Button> m_PopupUseBtn;
     std::shared_ptr<Button> m_PopupXpBtn;

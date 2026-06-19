@@ -42,8 +42,8 @@ namespace GameConfig {
     // 💡 建議補上這兩個，讓經濟系統完全解耦
     constexpr int WALLET_UPGRADE_INITIAL_COST = 500;  // 第一次升級要多少錢
     constexpr int WALLET_UPGRADE_COST_INCREASE = 500; // 每次升級變貴多少
-
-    constexpr int MONEY_GROWTH_SPEED = 3300; // 每秒自動增加多少錢 (工作效率)
+    static constexpr float UNIT_MOVE_SPEED_MULTIPLIER = 3.0f;
+    constexpr int MONEY_GROWTH_SPEED = 200; // 每秒自動增加多少錢 (工作效率)
 
     // === 新增：兵種價格 ===
     constexpr float CAT_COST = 75.0f;           // 生一隻貓要 75 元

@@ -26,7 +26,7 @@
 #include <sstream>
 #include "LongCat.hpp"
 #include "ninja_cat.hpp"
-
+#include "DebugCheat.hpp"
 // ==========================================
 // 💡 只要加這一行「前置宣告」，下面的程式碼就完全不用搬家！
 // ==========================================
@@ -133,6 +133,15 @@ UnitFactory::CreateUnit(
                     levelData
                 );
         }
+        newUnit->SetBattleStats(
+            finalHP,
+            finalDamage
+        );
+        float speedMultiplier = ((isPlayer && DebugCheat::CatSpeedBoost) ? DebugCheat::GetCatSpeedMultiplier()  : 1.f) * GameConfig::UNIT_MOVE_SPEED_MULTIPLIER;;
+            newUnit->SetSpeed(
+                newUnit->GetSpeed() *
+                speedMultiplier
+            );
         std::cout
     << "[LevelSystem] "
     << "UnitID = "

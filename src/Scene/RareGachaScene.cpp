@@ -250,6 +250,63 @@ RareGachaScene::RareGachaScene() {
     UpdateGachaButtons();
 }
 
+void RareGachaScene::RefreshResourceDisplay()
+{
+    auto playerData =
+        PlayerData::GetInstance();
+
+    int currentXP =
+        playerData->GetXP();
+
+    int currentCatFood =
+        playerData->GetCatFood();
+
+    int currentTickets =
+        playerData->GetRareTickets();
+
+    bool resourceChanged =
+        currentXP != m_XP ||
+        currentCatFood != m_CatFood ||
+        currentTickets != m_Tickets;
+
+    if (!resourceChanged)
+    {
+        return;
+    }
+
+    m_XP =
+        currentXP;
+
+    m_CatFood =
+        currentCatFood;
+
+    m_Tickets =
+        currentTickets;
+
+    if (m_XPNumber)
+    {
+        m_XPNumber->SetValue(
+            m_XP
+        );
+    }
+
+    if (m_CatFoodNumber)
+    {
+        m_CatFoodNumber->SetValue(
+            m_CatFood
+        );
+    }
+
+    if (m_TicketNumber)
+    {
+        m_TicketNumber->SetValue(
+            m_Tickets
+        );
+    }
+
+    UpdateGachaButtons();
+}
+
 void RareGachaScene::ShowNextResultCat() {
     if (m_CurrentResultIndex < m_PulledCats.size()) {
         Util::SFX(RESOURCE_DIR "/music/get_unit_item.mp3").Play();
@@ -328,6 +385,7 @@ void RareGachaScene::SetOnspanClick(std::function<void()> callback) { m_Onspan =
 void RareGachaScene::SetOn_muti_spanClick(std::function<void()> callback) { m_On_muti_span = callback; }
 
 void RareGachaScene::Update() {
+    RefreshResourceDisplay();
     if (m_State == GachaState::IDLE) {
         if (m_ReturnBtn) m_ReturnBtn->Update();
         if (m_StorageBtn) m_StorageBtn->Update();

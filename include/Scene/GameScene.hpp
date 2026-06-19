@@ -18,6 +18,8 @@
 #include "SureMenu.hpp"
 #include "StageConfig.hpp"
 #include "NumberSystem.hpp"
+#include <functional>
+#include "DebugMenu.hpp"
 class GameScene {
 public:
     GameScene(
@@ -38,9 +40,13 @@ public:
     void SetOnQuitGame(std::function<void()> callback) {
         m_OnQuitGame = callback;
     }
-
+    void SetOnBgmVolumeChanged(
+        std::function<void(int)> callback
+    )
+    {
+        m_OnBgmVolumeChanged = callback;
+    }
 private:
-
     void RemoveDeadEntities();      // 刪除死亡單位
     StageData m_Stage;
 
@@ -72,6 +78,7 @@ private:
     std::vector<std::shared_ptr<Button>> m_SlotButtons;
     bool m_IsPaused = false;
     std::shared_ptr<PauseMenu> m_PauseMenu;
+
     int m_WalletLevel = 1;
     // 🚀 初始花費直接吃 GameConfig
     int m_WalletUpgradeCost = GameConfig::WALLET_UPGRADE_INITIAL_COST;
@@ -83,10 +90,41 @@ private:
 
     bool m_HasSettled = false;                      // 確保獎勵只加一次的防重複鎖
     int m_RewardXP = 0;                             // 本關卡掉落的 XP 數量
+    int m_RewardCatFood = 0;
+    int m_RewardNormalTicket = 0;
+    int m_RewardRareTicket = 0;
+    void GiveStageClearRewards();
+
+    std::shared_ptr<Button> m_RewardNotifyBar;
+    bool m_ShowRewardNotify = false;
+
+    std::shared_ptr<UIText> m_RewardNotifyTitle;
+    std::shared_ptr<UIText> m_RewardNotifyLine1;
+    std::shared_ptr<UIText> m_RewardNotifyLine2;
+    std::shared_ptr<UIText> m_RewardNotifyLine3;
+
+    void UpdateRewardNotifyText();
+
     std::shared_ptr<Button> m_RewardTextGet;        // 🚀 新增：「獲得」的切圖
     std::shared_ptr<Button> m_OkBtn;
     int m_CurrentStageID ;
     std::shared_ptr<NumberSystem> m_RewardXPNumber; // 顯示獲得多少 XP 的數字系統
+
+    std::function<void(int)> m_OnBgmVolumeChanged;
+
+    std::shared_ptr<UIText> m_StageNameTextShadow;
+    std::shared_ptr<UIText> m_StageNameText;
+
+    std::shared_ptr<DebugMenu> m_DebugMenu;
+
+    // Debug 狀態
+    bool m_DebugCatAttackBoost = false;
+    bool m_DebugCatSpeedBoost = false;
+    bool m_DebugCooldownHalf = false;
+    bool m_DebugMaxMoney = false;
+    int m_DebugMoneyBeforeMax = 0;
+
+
 };
 
 #endif

@@ -3,6 +3,7 @@
 #include "Util/Input.hpp"
 #include "GameConfig.hpp"
 #include <iostream>
+#include "PlayerData.hpp"
 
 SpawnSystem::SpawnSystem(const std::vector<EnemyWave>& waves)
     : m_EnemyWaves(waves) {
@@ -154,22 +155,52 @@ void SpawnSystem::Update(
                 int cost = UnitData::Get(targetId).cost;
 
                 if (currentMoney >= cost) {
-                    float spawnX = playerBase->GetPosition().x + GameConfig::SPAWN_OFFSET_X;
-                    float spawnY = GameConfig::BASE_Y + GameConfig::SPAWN_OFFSET_Y
-                                 + (static_cast<float>(rand()) / RAND_MAX * 2.0f - 1.0f)
-                                 * GameConfig::RANDOM_SPAWN_OFFSET_Y_MAX;
-                    UnitLevelData debugLevel;
+                    float spawnX =
+                        playerBase->GetPosition().x
+                        + GameConfig::SPAWN_OFFSET_X;
 
-                    debugLevel.baseLevel = 20;
-                    debugLevel.plusLevel = 0;
+                    float spawnY =
+                        GameConfig::BASE_Y
+                        + GameConfig::SPAWN_OFFSET_Y
+                        + (static_cast<float>(rand()) / RAND_MAX * 2.0f - 1.0f)
+                        * GameConfig::RANDOM_SPAWN_OFFSET_Y_MAX;
 
-                    auto newUnit = UnitFactory::CreateUnit(targetId, spawnX, spawnY, true, debugLevel);
+                    auto playerData =
+                        PlayerData::GetInstance();
+
+                    PlayerData::CatLevel catLevel =
+                        playerData->GetCatLevel(
+                            targetId
+                        );
+
+                    UnitLevelData levelData;
+
+                    levelData.baseLevel =
+                        catLevel.base;
+
+                    levelData.plusLevel =
+                        catLevel.plus;
+
+                    auto newUnit =
+                        UnitFactory::CreateUnit(
+                            targetId,
+                            spawnX,
+                            spawnY,
+                            true,
+                            levelData
+                        );
 
                     if (newUnit) {
                         currentMoney -= cost;
-                        m_CooldownTimers[i] = UnitData::Get(targetId).spawnCd;
+
+                        m_CooldownTimers[i] =
+                            UnitData::Get(targetId).spawnCd;
+
                         entities.push_back(newUnit);
-                        Util::SFX(RESOURCE_DIR "/music/succes_summon_cat.mp3").Play();
+
+                        Util::SFX(
+                            RESOURCE_DIR "/music/succes_summon_cat.mp3"
+                        ).Play();
                     }
                 } else {
                     Util::SFX(RESOURCE_DIR "/music/fail_summon_cat.mp3").Play();

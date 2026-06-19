@@ -13,7 +13,7 @@ public:
 
     void Update();
     void Draw();
-
+    void RefreshCards();
     void LoadCats(const std::vector<UnitID>& catList);
 
     // 💡 分開兩種點擊事件

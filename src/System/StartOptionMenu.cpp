@@ -1,32 +1,34 @@
-#include "System/PauseMenu.hpp"
+#include "System/StartOptionMenu.hpp"
 
 #include "Core/Context.hpp"
 #include "GameConfig.hpp"
+#include "PlayerData.hpp"
 #include "Util/Color.hpp"
+#include "Util/Image.hpp"
 #include "Util/SFX.hpp"
+#include "Util/Logger.hpp"
 
 #include <string>
-#include "PlayerData.hpp"
-namespace
+
+StartOptionMenu::StartOptionMenu()
 {
-    std::string GetBgmVolumeImagePath(int level)
-    {
-        return std::string(RESOURCE_DIR)
-            + "/img/bgmVolume"
-            + std::to_string(level)
-            + ".png";
-    }
+    // =========================
+    // 選項面板背景
+    // =========================
 
-    std::string GetSfxVolumeImagePath(int level)
-    {
-        return std::string(RESOURCE_DIR)
-            + "/img/sfxVolume"
-            + std::to_string(level)
-            + ".png";
-    }
-}
+    m_MenuBg =
+        std::make_shared<Button>(
+            0.0f,
+            0.0f,
+            620.0f,
+            430.0f,
+            RESOURCE_DIR "/img/optionMenuBg.png",
+            " ",
+            30,
+            Util::Color(255, 255, 255, 255)
+        );
 
-PauseMenu::PauseMenu() {
+    m_MenuBg->SetZIndex(50);
     auto context =
         Core::Context::GetInstance();
 
@@ -39,6 +41,19 @@ PauseMenu::PauseMenu() {
         static_cast<float>(
             context->GetWindowHeight()
         );
+
+    // =========================
+    // 讀取玩家音量設定
+    // =========================
+
+    auto playerData =
+        PlayerData::GetInstance();
+
+    m_BgmVolumeLevel =
+        playerData->GetBgmVolumeLevel();
+
+    m_SfxVolumeLevel =
+        playerData->GetSfxVolumeLevel();
 
     // =========================
     // 半透明黑底
@@ -59,24 +74,6 @@ PauseMenu::PauseMenu() {
     m_Background.SetZIndex(49);
 
     // =========================
-    // 整張暫停選單背景
-    // =========================
-
-    m_MenuBg =
-        std::make_shared<Button>(
-            0.0f,
-            0.0f,
-            620.0f,
-            430.0f,
-            RESOURCE_DIR "/img/pauseMenuBg.png",
-            " ",
-            30,
-            Util::Color(255, 255, 255, 255)
-        );
-
-    m_MenuBg->SetZIndex(50);
-
-    // =========================
     // 右上角 X 關閉
     // =========================
 
@@ -91,11 +88,16 @@ PauseMenu::PauseMenu() {
             30,
             Util::Color(255, 255, 255, 255)
         );
+
     m_CloseBtn->SetZIndex(55);
 
     m_CloseBtn->SetOnClick(
         [this]()
         {
+            Util::SFX(
+                RESOURCE_DIR "/music/clickbtn.mp3"
+            ).Play();
+
             if (m_OnClose)
             {
                 m_OnClose();
@@ -104,40 +106,9 @@ PauseMenu::PauseMenu() {
     );
 
     // =========================
-    // 幫助 / Debug Menu
-    // =========================
-
-    m_HelpBtn =
-        std::make_shared<Button>(
-            -0.20f,
-            0.10f,
-            210.0f,
-            70.0f,
-            RESOURCE_DIR "/img/helpbtn.png",
-            " ",
-            30,
-            Util::Color(255, 255, 255, 255)
-        );
-
-    m_HelpBtn->SetZIndex(55);
-
-    m_HelpBtn->SetOnClick(
-        [this]()
-        {
-            if (m_OnHelp)
-            {
-                m_OnHelp();
-            }
-        }
-    );
-
-    // =========================
     // BGM 音量按鈕
     // =========================
 
-    m_BgmVolumeLevel =
-        PlayerData::GetInstance()
-            ->GetBgmVolumeLevel();
     m_BgmVolumeBtn =
         std::make_shared<Button>(
             0.16f,
@@ -172,12 +143,22 @@ PauseMenu::PauseMenu() {
             );
 
             playerData->SaveToFile();
+
             if (m_OnBgmVolumeChanged)
             {
                 m_OnBgmVolumeChanged(
                     m_BgmVolumeLevel
                 );
             }
+
+            Util::SFX(
+                RESOURCE_DIR "/music/clickbtn.mp3"
+            ).Play();
+
+            LOG_DEBUG(
+                "StartOptionMenu: BGM Volume Level = {}",
+                m_BgmVolumeLevel
+            );
         }
     );
 
@@ -185,14 +166,10 @@ PauseMenu::PauseMenu() {
     // SFX 音量按鈕
     // =========================
 
-    m_SfxVolumeLevel =
-        PlayerData::GetInstance()
-            ->GetSfxVolumeLevel();
-
     m_SfxVolumeBtn =
         std::make_shared<Button>(
             0.16f,
-            -0.1f,
+            -0.10f,
             75.0f,
             75.0f,
             GetSfxVolumeImagePath(m_SfxVolumeLevel),
@@ -214,6 +191,7 @@ PauseMenu::PauseMenu() {
                     m_SfxVolumeLevel
                 )
             );
+
             auto playerData =
                 PlayerData::GetInstance();
 
@@ -222,39 +200,15 @@ PauseMenu::PauseMenu() {
             );
 
             playerData->SaveToFile();
-            int volume = 0;
 
-            if (m_SfxVolumeLevel == 0)
-            {
-                volume = 0;
-            }
-            else if (m_SfxVolumeLevel == 1)
-            {
-                volume = 40;
-            }
-            else if (m_SfxVolumeLevel == 2)
-            {
-                volume = 80;
-            }
-            else if (m_SfxVolumeLevel == 3)
-            {
-                volume = 128;
-            }
+            int volume =
+                VolumeLevelToMixerVolume(
+                    m_SfxVolumeLevel
+                );
 
             Util::SFX::SetGlobalVolume(
                 volume
             );
-
-            LOG_DEBUG(
-                "SFX Volume Level = {}, Volume = {}",
-                m_SfxVolumeLevel,
-                volume
-            );
-
-            // 播放測試音效，讓玩家立刻聽到目前音量
-            Util::SFX(
-                RESOURCE_DIR "/music/clickbtn.mp3"
-            ).Play();
 
             if (m_OnSfxVolumeChanged)
             {
@@ -262,48 +216,52 @@ PauseMenu::PauseMenu() {
                     m_SfxVolumeLevel
                 );
             }
+
+            Util::SFX(
+                RESOURCE_DIR "/music/clickbtn.mp3"
+            ).Play();
+
+            LOG_DEBUG(
+                "StartOptionMenu: SFX Volume Level = {}, Volume = {}",
+                m_SfxVolumeLevel,
+                volume
+            );
         }
- );
-
+    );
     // =========================
-    // 脫離戰鬥透明點擊區
+    // 幫助按鈕
     // =========================
-    // 注意：
-    // 因為 pauseMenuBg.png 裡已經有「脫離戰鬥」外觀，
-    // 這顆按鈕只負責接收點擊。
-    // Draw() 裡不要畫它。
 
-    m_QuitBtn =
+    m_HelpBtn =
         std::make_shared<Button>(
-            0.0f,
-            -0.43f,
-            430.0f,
-            90.0f,
-            RESOURCE_DIR "/img/black.png",
+            -0.20f,
+            0.10f,
+            210.0f,
+            70.0f,
+            RESOURCE_DIR "/img/helpbtn.png",
             " ",
             30,
-            Util::Color(0, 0, 0, 0)
+            Util::Color(255, 255, 255, 255)
         );
 
-    m_QuitBtn->SetImage(
-        RESOURCE_DIR "/img/black.png"
-    );
+    m_HelpBtn->SetZIndex(55);
 
-    m_QuitBtn->SetZIndex(56);
-
-
-    m_QuitBtn->SetOnClick(
+    m_HelpBtn->SetOnClick(
         [this]()
         {
-            if (m_OnQuit)
+            Util::SFX(
+                RESOURCE_DIR "/music/clickbtn.mp3"
+            ).Play();
+
+            if (m_OnHelp)
             {
-                m_OnQuit();
+                m_OnHelp();
             }
         }
     );
 }
 
-void PauseMenu::Update()
+void StartOptionMenu::Update()
 {
     if (m_CloseBtn)
     {
@@ -324,24 +282,10 @@ void PauseMenu::Update()
     {
         m_SfxVolumeBtn->Update();
     }
+}
 
-    if (m_QuitBtn)
-    {
-        m_QuitBtn->Update();
-    }
-}
-void PauseMenu::DrawBackgroundOnly()
+void StartOptionMenu::Draw()
 {
-    m_Background.DrawRect(
-        0.0f,
-        0.0f,
-        10.0f,
-        10.0f
-    );
-}
-void PauseMenu::Draw()
-{
-    // 黑色遮罩
     m_Background.DrawRect(
         0.0f,
         0.0f,
@@ -373,5 +317,85 @@ void PauseMenu::Draw()
     {
         m_SfxVolumeBtn->Draw();
     }
+}
+void StartOptionMenu::SetOnHelp(
+    std::function<void()> callback
+)
+{
+    m_OnHelp =
+        std::move(callback);
+}
 
+void StartOptionMenu::SetOnClose(
+    std::function<void()> callback
+)
+{
+    m_OnClose =
+        std::move(callback);
+}
+
+void StartOptionMenu::SetOnBgmVolumeChanged(
+    std::function<void(int)> callback
+)
+{
+    m_OnBgmVolumeChanged =
+        std::move(callback);
+}
+
+void StartOptionMenu::SetOnSfxVolumeChanged(
+    std::function<void(int)> callback
+)
+{
+    m_OnSfxVolumeChanged =
+        std::move(callback);
+}
+
+std::string StartOptionMenu::GetBgmVolumeImagePath(
+    int level
+) const
+{
+    return std::string(RESOURCE_DIR)
+        + "/img/bgmVolume"
+        + std::to_string(level)
+        + ".png";
+}
+void StartOptionMenu::DrawBackgroundOnly()
+{
+    m_Background.DrawRect(
+        0.0f,
+        0.0f,
+        10.0f,
+        10.0f
+    );
+}
+std::string StartOptionMenu::GetSfxVolumeImagePath(
+    int level
+) const
+{
+    return std::string(RESOURCE_DIR)
+        + "/img/sfxVolume"
+        + std::to_string(level)
+        + ".png";
+}
+
+int StartOptionMenu::VolumeLevelToMixerVolume(
+    int level
+) const
+{
+    if (level <= 0)
+    {
+        return 0;
+    }
+
+    if (level == 1)
+    {
+        return 40;
+    }
+
+    if (level == 2)
+    {
+        return 80;
+    }
+
+    return 128;
 }
