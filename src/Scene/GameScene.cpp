@@ -16,9 +16,9 @@ namespace StageReward
     const int NORMAL_TICKET_AMOUNT = 1;
     const int RARE_TICKET_AMOUNT = 1;
 
-    const int CAT_FOOD_DROP_RATE = 100;
-    const int NORMAL_TICKET_DROP_RATE = 100;
-    const int RARE_TICKET_DROP_RATE = 100;
+    const int CAT_FOOD_DROP_RATE = 50;
+    const int NORMAL_TICKET_DROP_RATE = 25;
+    const int RARE_TICKET_DROP_RATE = 15;
 }
 
 static bool RollPercent(
