@@ -489,30 +489,37 @@ void GameScene::UpdateRewardNotifyText()
 
     m_RewardNotifyTitle->SetZIndex(90);
 
-    m_RewardNotifyLine1 =
-        std::make_shared<UIText>(
-            -0.20f,
-            -0.33f,
-            rewardLine1,
-            30,
-            Util::Color(220, 220, 220, 255)
-        );
+    m_RewardNotifyLine1 = nullptr;
+    m_RewardNotifyLine2 = nullptr;
+    m_RewardNotifyLine3 = nullptr;
 
-    m_RewardNotifyLine1->SetZIndex(90);
+    if (!rewardLine1.empty())
+    {
+        m_RewardNotifyLine1 =
+            std::make_shared<UIText>(
+                -0.20f,
+                -0.33f,
+                rewardLine1,
+                30,
+                Util::Color(220, 220, 220, 255)
+            );
 
-    m_RewardNotifyLine2 =
-        std::make_shared<UIText>(
-            -0.10f,
-            -0.45f,
-            rewardLine2,
-            30,
-            Util::Color(220, 220, 220, 255)
-        );
+        m_RewardNotifyLine1->SetZIndex(90);
+    }
 
-    m_RewardNotifyLine2->SetZIndex(90);
+    if (!rewardLine2.empty())
+    {
+        m_RewardNotifyLine2 =
+            std::make_shared<UIText>(
+                -0.10f,
+                -0.45f,
+                rewardLine2,
+                30,
+                Util::Color(220, 220, 220, 255)
+            );
 
-    m_RewardNotifyLine3 =
-        nullptr;
+        m_RewardNotifyLine2->SetZIndex(90);
+    }
 }
 
 void GameScene::GiveStageClearRewards()
@@ -830,10 +837,6 @@ void GameScene::Draw() {
         {
             m_PauseMenu->Draw();
         }
-    }
-    if (m_ShowRewardNotify && m_RewardNotifyBar)
-    {
-        m_RewardNotifyBar->Draw();
     }
     if (m_StageNameTextShadow)
     {
